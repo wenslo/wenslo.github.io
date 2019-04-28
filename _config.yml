@@ -82,3 +82,4 @@ avatar: /uploads/images/fbb1.jpg
 deploy:
   type: git
   repo: git@github.com:wenslo/wenslo.github.io.git
+  branch: master
