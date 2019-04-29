@@ -430,4 +430,12 @@ private static class Node<E> {
 
 解读：
 
-* LinkedList惊现Stack的操作，看了下源码这两个操作实在Deque接口定义的。
+* LinkedList惊现Stack的操作，看了下源码这两个操作是在Deque接口定义的。
+
+
+
+问题解读：
+
+1. Sequentia意思为：顺序，连续。AbstractSequentialList继承于AbstractList，主要看AbstractSequentiaList实现了什么方法。图就不上了，实现的方法，都是通过Iterator来进行的实现（大量用到了策略模式），而AbstractList中，使用for循环来实现的。**迭代器模式是为了提供方法访问聚合对象的元素，但是不暴露对象的内部表示**。由注释可知**This class provides a skeletal implementation of the List interface to minimize the effort required to implement this interface backed by a "sequential access" data store (such as a linked list). For random access data (such as an array), AbstractList should be used in preference to this class.**  LinkedList使用该类会有更好的性能，而如果是支持随机访问的数据，比如ArrayList，应该优先使用AbstractList，会有更好的性能。
+2. LinkedList不实现RandomAccess的原因有：使用AbstractSequentialList会有更好的性能。RandomAccess对于支持随机访问的(如ArrayList)有更好的性能。与Collections的indexedBinarySearch可以看到。对于实现了RandomAccess的接口，可以用二分方法进行更好的排序，拥有更好的性能。
+3. 总之，实现了RandomAccess 的接口，使用for i 循环会有更好的性能。而没有实现的，链表操作的，使用interator会有更好的性能。
