@@ -283,4 +283,32 @@ static class Node<K,V> implements Map.Entry<K,V> {
     int h;
     return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
   }
+  /**
+   * Returns a power of two size for the given target capacity.
+   */
+  //卧槽嘞，这个就更尼玛看不懂了啊，注释倒是很简单，返回两倍目标容量的大小，最大值是MAXIMUM_CAPACITY，最小值是1，这个numberOfLeadingZeros留岛问题里解答吧
+  static final int tableSizeFor(int cap) {
+    int n = -1 >>> Integer.numberOfLeadingZeros(cap - 1);
+    return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
+  }
+  /**
+   * The table, initialized on first use, and resized as
+   * necessary. When allocated, length is always a power of two.
+   * (We also tolerate length zero in some operations to allow
+   * bootstrapping mechanics that are currently not needed.)
+   */
+ //这个table在第一次使用的时候初始化，然后大小一定会改变。当进行分配空间的时候，大小通常都会是2的倍数(我们也会允许启动执行的机器上当前非必须的一些操作，它大小为0)
+  transient Node<K,V>[] table;
+
+  /**
+   * Holds cached entrySet(). Note that AbstractMap fields are used
+   * for keySet() and values().
+   */
+  //entrySet的缓存，记录AbstractMap字段里keySet和values方法的使用
+  transient Set<Map.Entry<K,V>> entrySet;
+  /**
+   * The number of key-value mappings contained in this map.
+   */
+  //key-value映射在map里的大小
+  transient int size;
 ```
