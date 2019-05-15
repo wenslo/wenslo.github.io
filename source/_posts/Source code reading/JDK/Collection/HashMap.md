@@ -9,7 +9,7 @@ tags:
 
 - JDK源码
 
-
+mathjax: true
 ---
 
 > 阅读源码之前还是应该阅读注释
@@ -104,23 +104,25 @@ tree bins may be delayed in the course of table methods.
 然后，通常桶的大多数使用都是在数据不多的时候。在使用table的方法的时候可能延迟检查桶是否存在
 
 Tree bins (i.e., bins whose elements are all TreeNodes) are ordered primarily by hashCode, but in the case of ties, if two
-elements are of the same "class C implements Comparable<C>", type then their compareTo method is used for ordering. (We conservatively check generic types via reflection to validate this -- see method comparableClassFor).  The added complexity of tree bins is worthwhile in providing worst-case O(log n) operations when keys either have distinct hashes or are orderable, Thus, performance degrades gracefully under accidental or malicious usages in which hashCode() methods return values that are poorly distributed, as well as those in which many keys share a hashCode, so long as they are also Comparable. (If neither of these apply, we may waste about a factor of two in time and space compared to taking no precautions. But the only known cases stem from poor user programming practices that are already so slow that this makes little difference.)
+elements are of the same "class C implements Comparable<C>", type then their compareTo method is used for ordering. (We conservatively check generic types via reflection to validate this -- see method comparableClassFor).  
 
-树桶(桶里所有的元素都是TreeNodes)主要是根据hashCode排序的，但是在关联的情况下，如果两个元素是同样的类，都实现了Comparable接口，然后他们进行排序(我们保守检查类的类型通过反射来验证--see method co-mparableClassF-or)。
+树桶(桶里所有的元素都是TreeNodes)主要是根据hashCode排序的，但是在关联的情况下，如果两个元素是同样的类，都实现了Comparable接口，然后他们进行排序(我们保守检查类的类型通过反射来验证--see method comparableClassF-or)。
 
-Because TreeNodes are about twice the size of regular nodes, we
-use them only when bins contain enough nodes to warrant use
-(see TREEIFY_THRESHOLD). And when they become too small (due to
-removal or resizing) they are converted back to plain bins.  In
-usages with well-distributed user hashCodes, tree bins are
-rarely used.  Ideally, under random hashCodes, the frequency of
-nodes in bins follows a Poisson distribution
-(http://en.wikipedia.org/wiki/Poisson_distribution) with a
-parameter of about 0.5 on average for the default resizing
-threshold of 0.75, although with a large variance because of
-resizing granularity. Ignoring variance, the expected
-occurrences of list size k are (exp(-0.5) * pow(0.5, k) /
-factorial(k)). The first values are:
+The added complexity of tree bins is worthwhile in providing worst-case O(log n) operations when keys either have distinct hashes or are orderable, Thus, performance degrades gracefully under accidental or malicious usages in which hashCode() methods return values that are poorly distributed, as well as those in which many keys share a hashCode, so long as they are also Comparable. (If neither of these apply, we may waste about a factor of two in time and space compared to taking no precautions. But the only known cases stem from poor user programming practices that are already so slow that this makes little difference.)
+
+当key有不同的hashCode或者说是已排序的话，树桶（翻译很别扭，有时间看看别人怎么翻译的）的添加操作的最坏时间复杂度是O(log n)。然后，在hashCode()的意外或异常执行，产生不均匀的分布的话，性能将会平缓降级，除此之外，许多key共享一个hashCode，只要是可比较的。(如果两种情况都无法匹配的话，我们将会浪费factor两倍的时间和空间性能相对于不采取预防措施。但是这种仅知的情况来源于糟糕的用户代码实践，它们已经非常缓慢了，所以基本没有什么去呗)
+
+Because TreeNodes are about twice the size of regular nodes, we use them only when bins contain enough nodes to warrant use (see TREEIFY_THRESHOLD). 
+
+因为TreeNodes的大小事普通节点的两倍，我们仅仅在桶里包含足够的节点的时候去保证使用它(参见 树化阈值--TREEIFY_THRESHOLD)
+
+And when they become too small (due to removal or resizing) they are converted back to plain bins.
+
+然后当它是比较小的时候(由于删除或者大小改变)，它将退化为普通箱。
+
+  In usages with well-distributed user hashCodes, tree bins are rarely used.  Ideally, under random hashCodes, the frequency of nodes in bins follows a Poisson distribution (http://en.wikipedia.org/wiki/Poisson_distribution) with a
+parameter of about 0.5 on average for the default resizing threshold of 0.75, although with a large variance because of
+resizing granularity. Ignoring variance, the expected occurrences of list size k are (exp(-0.5) * pow(0.5, k) / factorial(k)). The first values are:
 
 0:    0.60653066
 1:    0.30326533
@@ -133,35 +135,152 @@ factorial(k)). The first values are:
 8:    0.00000006
 more: less than 1 in ten million
 
-The root of a tree bin is normally its first node.  However,
-sometimes (currently only upon Iterator.remove), the root might
-be elsewhere, but can be recovered following parent links
-(method TreeNode.root()).
+在拥有良好分布的hashCode的时候，树桶很少被使用。通常情况，在随机的hashCode情况中，树桶的节点分布遵循于Poisson distribution 分布方式（泊松分布），参数在在默认阈值0.75的条件下，平均数为0.5，尽管因为重新调整粒度有很大的方差变化。预计list的大小k公式是：$$10^{-0.5} 0.5^k/k!$$
 
-All applicable internal methods accept a hash code as an
-argument (as normally supplied from a public method), allowing
-them to call each other without recomputing user hashCodes.
-Most internal methods also accept a "tab" argument, that is
-normally the current table, but may be a new or old one when
-resizing or converting.
+概率小于千万分之一
 
-When bin lists are treeified, split, or untreeified, we keep
-them in the same relative access/traversal order (i.e., field
-Node.next) to better preserve locality, and to slightly
-simplify handling of splits and traversals that invoke
-iterator.remove. When using comparators on insertion, to keep a
-total ordering (or as close as is required here) across
-rebalancings, we compare classes and identityHashCodes as
-tie-breakers.
+The root of a tree bin is normally its first node.  However, sometimes (currently only upon Iterator.remove), the root might be elsewhere, but can be recovered following parent links (method TreeNode.root()).
 
-The use and transitions among plain vs tree modes is
-complicated by the existence of subclass LinkedHashMap. See
-below for hook methods defined to be invoked upon insertion,
-removal and access that allow LinkedHashMap internals to
-otherwise remain independent of these mechanics. (This also
-requires that a map instance be passed to some utility methods
-that may create new nodes.)
+树桶的root节点通常都是它的第一个节点。然而，有些时候(当前已知的情况就是Interator的remove)，root可能会不是第一个节点，但是可以被父链接节点所恢复(TreeNode.root())
 
-The concurrent-programming-like SSA-based coding style helps
-avoid aliasing errors amid all of the twisty pointer operations.
+All applicable internal methods accept a hash code as an argument (as normally supplied from a public method), allowing them to call each other without recomputing user hashCodes. Most internal methods also accept a "tab" argument, that is normally the current table, but may be a new or old one when resizing or converting.
 
+所有可使用的内部方法接受hash code作为参数(还有被支持的公开方法)，允许他们互相调用，且不进行重新计算hashCode。大多数内部方法通常接受tab这个参数，通常代表当前table，但是也可能是新的或者旧的当大小改变或者被覆盖的时候。
+
+When bin lists are treeified, split, or untreeified, we keep them in the same relative access/traversal order (i.e., field
+Node.next) to better preserve locality, and to slightly simplify handling of splits and traversals that invoke iterator.remove. When using comparators on insertion, to keep a total ordering (or as close as is required here) across
+rebalancings, we compare classes and identityHashCodes as tie-breakers.
+
+当桶的列表为树，分隔，或者非树的时候，我们保证他们在相同的访问/遍历顺序时能更好的保留位置。并且简单的处理split和遍历在调用iterator.remove的时候。当在插入的时候使用比较器，来在重新平衡的过程中保证总体是有序的(或者按要求关闭？)，我们使用类和hashcode作为连接断开器。
+
+The use and transitions among plain vs tree modes is complicated by the existence of subclass LinkedHashMap. See
+below for hook methods defined to be invoked upon insertion,removal and access that allow LinkedHashMap internals to otherwise remain independent of these mechanics. (This also requires that a map instance be passed to some utility methods that may create new nodes.)
+
+由于存在子类LinkedHashMap，普通模式和树模式之间的使用和转变会变得复杂。参考钩子方法定义在了调用插入，删除和访问的时候，来允许LinkedHashMap使用其他方式来保证独立性(也同样需要这一个映射实例来传递一些有用的可能创建新节点的方法)。
+
+The concurrent-programming-like SSA-based coding style helps avoid aliasing errors amid all of the twisty pointer operations.
+
+这个并行编码方式用于SSA的编码风格的话有助于避免混乱错误在一些指针操作上面。
+
+
+
+————————————————————————————————————————————————————
+
+分割线。最长的注释就在上面，现在开始代码的阅读，产生的问题，会收集在另一篇文章里
+
+```java
+/**
+ * The default initial capacity - MUST be a power of two.
+ */
+ //默认初始化大小必须为1左移4位，也就是2^4，也就是16，必须是2的倍数
+static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16
+
+/**
+ * The maximum capacity, used if a higher value is implicitly specified
+ * by either of the constructors with arguments.
+ * MUST be a power of two <= 1<<30.
+ */
+ //最大容量，如果需要更大的容量，需要在构造方法中通过参数定义，必须是2的倍数，并且<= 2^30
+static final int MAXIMUM_CAPACITY = 1 << 30;
+
+/**
+ * The load factor used when none specified in constructor.
+ */
+//当构造方法不进行指定的时候，默认加载因子为0.75f
+static final float DEFAULT_LOAD_FACTOR = 0.75f;
+
+/**
+ * The bin count threshold for using a tree rather than list for a
+ * bin.  Bins are converted to trees when adding an element to a
+ * bin with at least this many nodes. The value must be greater
+ * than 2 and should be at least 8 to mesh with assumptions in
+ * tree removal about conversion back to plain bins upon
+ * shrinkage.
+ */
+//使用树而不是使用桶的数量的阈值。当在有很多元素的桶里最后添加一个元素的时候，桶会转换为树。这个值必须大于2而且应该最少有8个，以符合树移除元素后压缩转换为普通箱的假定
+static final int TREEIFY_THRESHOLD = 8;
+
+/**
+ * The bin count threshold for untreeifying a (split) bin during a
+ * resize operation. Should be less than TREEIFY_THRESHOLD, and at
+ * most 6 to mesh with shrinkage detection under removal.
+ */
+//再重新设定大小操作的时候，何时进行树的分割退化操作的阈值。应该小于TREEIFY_THRESHOLD，然后最多6个匹配的在删除操作之后的收缩检测
+static final int UNTREEIFY_THRESHOLD = 6;
+
+/**
+ * The smallest table capacity for which bins may be treeified.
+ * (Otherwise the table is resized if too many nodes in a bin.)
+ * Should be at least 4 * TREEIFY_THRESHOLD to avoid conflicts
+ * between resizing and treeification thresholds.
+ */
+//每个可能被树化的桶的最小的链表的容量（或者说桶里的表的重新分配大小并且有太多节点的时候）
+//应该至少有32的空间阈值来避免在重新分配大小和树化的时候产生的hash冲突
+static final int MIN_TREEIFY_CAPACITY = 64;
+/**
+ * Basic hash bin node, used for most entries.  (See below for
+ * TreeNode subclass, and in LinkedHashMap for its Entry subclass.)
+ */
+//基本hash桶节点，被大多数实体使用。看下面的TreeNode子类和LinkedHashMap都是Entry的子类
+static class Node<K,V> implements Map.Entry<K,V> {
+  final int hash;
+  final K key;
+  V value;
+  Node<K,V> next;
+
+  Node(int hash, K key, V value, Node<K,V> next) {
+    this.hash = hash;
+    this.key = key;
+    this.value = value;
+    this.next = next;
+  }
+
+  public final K getKey()        { return key; }
+  public final V getValue()      { return value; }
+  public final String toString() { return key + "=" + value; }
+
+  public final int hashCode() {
+    return Objects.hashCode(key) ^ Objects.hashCode(value);
+  }
+
+  public final V setValue(V newValue) {
+    V oldValue = value;
+    value = newValue;
+    return oldValue;
+  }
+
+  public final boolean equals(Object o) {
+    if (o == this)
+      return true;
+    if (o instanceof Map.Entry) {
+      Map.Entry<?,?> e = (Map.Entry<?,?>)o;
+      if (Objects.equals(key, e.getKey()) &&
+          Objects.equals(value, e.getValue()))
+        return true;
+    }
+    return false;
+}
+  /**
+   * Computes key.hashCode() and spreads (XORs) higher bits of hash
+   * to lower.  Because the table uses power-of-two masking, sets of
+   * hashes that vary only in bits above the current mask will
+   * always collide. (Among known examples are sets of Float keys
+   * holding consecutive whole numbers in small tables.)  So we
+   * apply a transform that spreads the impact of higher bits
+   * downward. There is a tradeoff between speed, utility, and
+   * quality of bit-spreading. Because many common sets of hashes
+   * are already reasonably distributed (so don't benefit from
+   * spreading), and because we use trees to handle large sets of
+   * collisions in bins, we just XOR some shifted bits in the
+   * cheapest possible way to reduce systematic lossage, as well as
+   * to incorporate impact of the highest bits that would otherwise
+   * never be used in index calculations because of table bounds.
+   */
+  //又是一大段注释，真不想翻译这些，不想翻译吧，有些代码又看不懂，妈的还是自己太菜了。专八在乎这？
+  //计算key的hashcode，然后高位和低位进行异或。因为链表使用了两倍的掩码，hashcode的集合仅仅在当前掩码变化的时候将会一直碰撞冲突。(已知的例子,一组浮点数会在小点的表里保持连续整数。)所以我们使用异或来将高位的冲撞向下传播。这是比特扩展在速度，功能和质量之间的折中。因为许多内容hash的集合是已经合理分布了的（所以不会从扩散中受益），而且因为我们使用树来处理桶中的大量元素，我们用一个比较便宜的方法来降低系统性能损耗，就是使用异或来转换一些bit。除此之外，包含最高位的bit位，因为表边界的原因，将不会使用计算过的下标，来归并高位的碰撞。
+  //也不知道翻译对不对，哪里来个大佬带带我~~~
+  static final int hash(Object key) {
+    int h;
+    return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+  }
+```

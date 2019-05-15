@@ -28,3 +28,15 @@ rather than：而不是
 generally speaking：一般来说
 
 vast majority：绝大多数
+
+[as well as](https://fanyi.baidu.com/#en/zh/as well as)：既…又…; 除…之外; 此外
+
+so long as：只要。“as/so long as”的变体
+
+little difference：相差不大，没什么区别
+
+due to ：由于
+
+rather than：而不；与其…倒不如...
+
+conflicts：冲突
