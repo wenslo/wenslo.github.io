@@ -311,4 +311,262 @@ static class Node<K,V> implements Map.Entry<K,V> {
    */
   //key-value映射在map里的大小
   transient int size;
+  /**
+     * The number of times this HashMap has been structurally modified
+     * Structural modifications are those that change the number of mappings in
+     * the HashMap or otherwise modify its internal structure (e.g.,
+     * rehash).  This field is used to make iterators on Collection-views of
+     * the HashMap fail-fast.  (See ConcurrentModificationException).
+     */
+  //modCount是HashMap发生变化或者修改了内部结构的时候（rehash），会改变这个数字，这个字段在iterator的集合视图操作的时候会产生 快速失败
+  transient int modCount;
+
+  /**
+     * The next size value at which to resize (capacity * load factor).
+     *
+     * @serial
+     */
+  //下一个值当大小改变的时候(容量 * 负载因子)
+  int threshold;
+
+  /**
+     * The load factor for the hash table.
+     *
+     * @serial
+     */
+  //hashtable 的负载因子
+  final float loadFactor;
+  /**
+     * Constructs an empty {@code HashMap} with the specified initial
+     * capacity and load factor.
+     *
+     * @param  initialCapacity the initial capacity
+     * @param  loadFactor      the load factor
+     * @throws IllegalArgumentException if the initial capacity is negative
+     *         or the load factor is nonpositive
+     */
+  //注释没什么翻译的，从这里能看出来，初始化的时候，容量最大为MAXIMUM_CAPACITY，不过话说Float.isNaN这个方法没看懂啊，先记下来，等等再看
+  public HashMap(int initialCapacity, float loadFactor) {
+    if (initialCapacity < 0)
+      throw new IllegalArgumentException("Illegal initial capacity: " +
+                                         initialCapacity);
+    if (initialCapacity > MAXIMUM_CAPACITY)
+      initialCapacity = MAXIMUM_CAPACITY;
+    if (loadFactor <= 0 || Float.isNaN(loadFactor))
+      throw new IllegalArgumentException("Illegal load factor: " +
+                                         loadFactor);
+    this.loadFactor = loadFactor;
+    this.threshold = tableSizeFor(initialCapacity);
+  }
+
+  /**
+     * Constructs an empty {@code HashMap} with the specified initial
+     * capacity and the default load factor (0.75).
+     *
+     * @param  initialCapacity the initial capacity.
+     * @throws IllegalArgumentException if the initial capacity is negative.
+     */
+  //也没什么翻译的，就是修改默认初始容量
+  public HashMap(int initialCapacity) {
+    this(initialCapacity, DEFAULT_LOAD_FACTOR);
+  }
+
+  /**
+     * Constructs an empty {@code HashMap} with the default initial capacity
+     * (16) and the default load factor (0.75).
+     */
+  //更加没什么翻译的
+  public HashMap() {
+    this.loadFactor = DEFAULT_LOAD_FACTOR; // all other fields defaulted
+  }
+
+  /**
+     * Constructs a new {@code HashMap} with the same mappings as the
+     * specified {@code Map}.  The {@code HashMap} is created with
+     * default load factor (0.75) and an initial capacity sufficient to
+     * hold the mappings in the specified {@code Map}.
+     *
+     * @param   m the map whose mappings are to be placed in this map
+     * @throws  NullPointerException if the specified map is null
+     */
+  //也没啥翻译的，下面的方法看起来比较重要
+  public HashMap(Map<? extends K, ? extends V> m) {
+    this.loadFactor = DEFAULT_LOAD_FACTOR;
+    putMapEntries(m, false);
+  }
+  /**
+     * Implements Map.putAll and Map constructor.
+     *
+     * @param m the map
+     * @param evict false when initially constructing this map, else
+     * true (relayed to method afterNodeInsertion).
+     */
+  //实现了Map的putAll方法和构造器，由此可见，map的putAll方法也是用的这个putMapEntries方法，等等到下面的时候验证下
+  final void putMapEntries(Map<? extends K, ? extends V> m, boolean evict) {
+    int s = m.size();
+    if (s > 0) {
+      if (table == null) { // pre-size
+        //size/loadFactor + 1，他为什么要ft命名啊，特么的。先解释一下，因为所hashmap的capacity = threshold * loadFactor  ，所以用 size/loadFactor+1 就能得到threshold
+        float ft = ((float)s / loadFactor) + 1.0F;
+        int t = ((ft < (float)MAXIMUM_CAPACITY) ?
+                 (int)ft : MAXIMUM_CAPACITY);
+        //这里会判断capacity是否大于threshold，大于的话，毫无一人，threshold扩容吧。。。
+        if (t > threshold)
+          threshold = tableSizeFor(t);
+      }
+      //和上面一样，不重复写了
+      else if (s > threshold)
+        resize();
+      //capacity和threshold确定之后，通过put方法进行设置
+      for (Map.Entry<? extends K, ? extends V> e : m.entrySet()) {
+        K key = e.getKey();
+        V value = e.getValue();
+        putVal(hash(key), key, value, false, evict);
+      }
+    }
+  }
+  /**
+     * Returns the value to which the specified key is mapped,
+     * or {@code null} if this map contains no mapping for the key.
+     *
+     * <p>More formally, if this map contains a mapping from a key
+     * {@code k} to a value {@code v} such that {@code (key==null ? k==null :
+     * key.equals(k))}, then this method returns {@code v}; otherwise
+     * it returns {@code null}.  (There can be at most one such mapping.)
+     *
+     * <p>A return value of {@code null} does not <i>necessarily</i>
+     * indicate that the map contains no mapping for the key; it's also
+     * possible that the map explicitly maps the key to {@code null}.
+     * The {@link #containsKey containsKey} operation may be used to
+     * distinguish these two cases.
+     *
+     * @see #put(Object, Object)
+     */
+  //map的重头方法，get和put，这里到了get了，来翻一下。
+  //返回value当key被映射的时候，如果不包含则返回null。通常情况下，map的key可以为null，有则返回value，没有则返回null，这里最多返回一个映射(value)。
+  //当这个map不包含这个key的时候，返回null并不是必须的情况，这个key通常有可能就是为null，然后containsKey操作可能在使用的时候返回两种情况。distinguish是啥意思。。。擦泪
+  public V get(Object key) {
+    Node<K,V> e;
+    //重头戏就是这个getNode了，下面解释
+    return (e = getNode(hash(key), key)) == null ? null : e.value;
+  }
+
+  /**
+     * Implements Map.get and related methods.
+     *
+     * @param hash hash for key
+     * @param key the key
+     * @return the node, or null if none
+     */
+  //实现了map接口的get方法和relate方法
+  final Node<K,V> getNode(int hash, Object key) {
+    Node<K,V>[] tab; Node<K,V> first, e; int n; K k;
+    //hashmap是数组加链表的实现方式，所以说，现根据hashcode获取到第一个链表的节点，等于null的话说明没有呗，[(n - 1) & hash]得专门解读一下。
+    if ((tab = table) != null && (n = tab.length) > 0 &&
+        (first = tab[(n - 1) & hash]) != null) {
+      //每次都检测第一个链表节点，为了下面的递归或者说while循环做准备
+      if (first.hash == hash && // always check first node
+          ((k = first.key) == key || (key != null && key.equals(k))))
+        return first;
+      //循环链表进行查找，找到到的话，就返回去，不然null呗
+      if ((e = first.next) != null) {
+        //链表在达到阈值(8)之后会转换为树节点，这个树是红黑树，树是怎么获取的，下面再写吧。
+        if (first instanceof TreeNode)
+          return ((TreeNode<K,V>)first).getTreeNode(hash, key);
+        do {
+          if (e.hash == hash &&
+              ((k = e.key) == key || (key != null && key.equals(k))))
+            return e;
+        } while ((e = e.next) != null);
+      }
+    }
+    return null;
+  }
+
+  /**
+     * Returns {@code true} if this map contains a mapping for the
+     * specified key.
+     *
+     * @param   key   The key whose presence in this map is to be tested
+     * @return {@code true} if this map contains a mapping for the specified
+     * key.
+     */
+  //不解释
+  public boolean containsKey(Object key) {
+    return getNode(hash(key), key) != null;
+  }
+  /**
+     * Associates the specified value with the specified key in this map.
+     * If the map previously contained a mapping for the key, the old
+     * value is replaced.
+     *
+     * @param key key with which the specified value is to be associated
+     * @param value value to be associated with the specified key
+     * @return the previous value associated with {@code key}, or
+     *         {@code null} if there was no mapping for {@code key}.
+     *         (A {@code null} return can also indicate that the map
+     *         previously associated {@code null} with {@code key}.)
+     */
+  //重头戏之二，put方法。
+  //将key和value的关联放到这个map，如果key之前已经有值，将会被替换。
+  public V put(K key, V value) {
+    //难怪叫hashmap啊，都是需要根据hash进行操作的，所以，重写hashcode方法是多么的重要，对不对
+    return putVal(hash(key), key, value, false, true);
+  }
+
+  /**
+     * Implements Map.put and related methods.
+     *
+     * @param hash hash for key
+     * @param key the key
+     * @param value the value to put
+     * @param onlyIfAbsent if true, don't change existing value
+     * @param evict if false, the table is in creation mode.
+     * @return previous value, or null if none
+     */
+  //实现了Map的put方法和related方法，related是啥意思，重新延迟？
+  //onlyIfAbsent是ture的话，不改变已经存在的value，应该是会被某些包装方法使用
+ //evict如果是false，这个table将会是创建模式
+  final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
+                 boolean evict) {
+    Node<K,V>[] tab; Node<K,V> p; int n, i;
+    if ((tab = table) == null || (n = tab.length) == 0)
+      n = (tab = resize()).length;
+    if ((p = tab[i = (n - 1) & hash]) == null)
+      tab[i] = newNode(hash, key, value, null);
+    else {
+      Node<K,V> e; K k;
+      if (p.hash == hash &&
+          ((k = p.key) == key || (key != null && key.equals(k))))
+        e = p;
+      else if (p instanceof TreeNode)
+        e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+      else {
+        for (int binCount = 0; ; ++binCount) {
+          if ((e = p.next) == null) {
+            p.next = newNode(hash, key, value, null);
+            if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
+              treeifyBin(tab, hash);
+            break;
+          }
+          if (e.hash == hash &&
+              ((k = e.key) == key || (key != null && key.equals(k))))
+            break;
+          p = e;
+        }
+      }
+      if (e != null) { // existing mapping for key
+        V oldValue = e.value;
+        if (!onlyIfAbsent || oldValue == null)
+          e.value = value;
+        afterNodeAccess(e);
+        return oldValue;
+      }
+    }
+    ++modCount;
+    if (++size > threshold)
+      resize();
+    afterNodeInsertion(evict);
+    return null;
+  }
 ```
