@@ -529,44 +529,156 @@ static class Node<K,V> implements Map.Entry<K,V> {
  //evict如果是false，这个table将会是创建模式
   final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
                  boolean evict) {
+    //n是用来记录hashmap大小的，tab是内部table，p是当前节点。i是当前hash对应数组下标
     Node<K,V>[] tab; Node<K,V> p; int n, i;
     if ((tab = table) == null || (n = tab.length) == 0)
+      //如果这个hashmap初始化后还从未使用过，那么就用resize进行初始化操作
       n = (tab = resize()).length;
+    //先根据hash看数组是否有值，没有值得话，直接将新节点放进去。
     if ((p = tab[i = (n - 1) & hash]) == null)
       tab[i] = newNode(hash, key, value, null);
     else {
+      //如若不然，就开始链表(红黑树)的遍历，
       Node<K,V> e; K k;
+      //会先看当前链表首个元素的key和即将放入的key是否相等，相等的话，就不进行后面的遍历了。直接对它进行处理。不然的话，需要整体遍历去看hash是否有对应的节点存储。
       if (p.hash == hash &&
           ((k = p.key) == key || (key != null && key.equals(k))))
         e = p;
+      //当链表的元素的个数大于一定阈值的话，会转换为红黑树，所以，这里看节点是否已经变为了红黑树，如果已经变了，那么久按照红黑树的标准进行元素的插入，putTreeVal，后面看的时候在进行解释。
       else if (p instanceof TreeNode)
         e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
       else {
+        //非红黑树，那就普通链表遍历
         for (int binCount = 0; ; ++binCount) {
+          //因为说第一个元素已经进行过判断，所以直接next就可以。然后到了链表的最后一个位置，将val放到最后
           if ((e = p.next) == null) {
             p.next = newNode(hash, key, value, null);
+            //这里会看链表中的值是否已经到了树化的阈值，到了之后，会将链表转换为红黑树。
             if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
+              //treeifyBin放到下边说
               treeifyBin(tab, hash);
             break;
           }
+          //如果key已经存在的话，那就直接break返回去。
           if (e.hash == hash &&
               ((k = e.key) == key || (key != null && key.equals(k))))
             break;
           p = e;
         }
       }
+      //不为null的话，说明key已经存在，那么进行覆盖，新值覆盖，旧值返回。
       if (e != null) { // existing mapping for key
         V oldValue = e.value;
+        //onlyIfAbsent猜测是为了某些工具类的方便而使用的，后面验证
         if (!onlyIfAbsent || oldValue == null)
           e.value = value;
+        //linkedHashMap的回调，到时候再看吧
         afterNodeAccess(e);
         return oldValue;
       }
     }
+    //put会触发modCount的变化。
     ++modCount;
+    //size变化，如果超过阈值的话，那么hashmap进行扩容
     if (++size > threshold)
       resize();
+    //linkedHashMap's callback ，后面说
     afterNodeInsertion(evict);
     return null;
+  }
+  /**
+     * Initializes or doubles table size.  If null, allocates in
+     * accord with initial capacity target held in field threshold.
+     * Otherwise, because we are using power-of-two expansion, the
+     * elements from each bin must either stay at same index, or move
+     * with a power of two offset in the new table.
+     *
+     * @return the table
+     */
+  //用于初始化或者表空间扩张(双倍)，如果是null的话，分配的空间是initial capactiy * threshold，另外，因为我们使用的是两倍膨胀，table里的每个元素都必须待在同样的下表下，或者两倍位移在新的table中。
+  final Node<K,V>[] resize() {
+    Node<K,V>[] oldTab = table;
+    int oldCap = (oldTab == null) ? 0 : oldTab.length;
+    int oldThr = threshold;
+    int newCap, newThr = 0;
+    //如果table不为null
+    if (oldCap > 0) {
+      //如果容量已经达到了最大的话，那么，不进行扩容，直接return
+      if (oldCap >= MAXIMUM_CAPACITY) {
+        threshold = Integer.MAX_VALUE;
+        return oldTab;
+      }
+      //如果newCapactiy < oldCap/2 && < max_cap && >= inital_cap，那么，表进行双倍扩充
+      else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
+               oldCap >= DEFAULT_INITIAL_CAPACITY)
+        //double
+        newThr = oldThr << 1; // double threshold
+    }
+    //threshold不为0的话，那么，capacity = threshold
+    else if (oldThr > 0) // initial capacity was placed in threshold
+      newCap = oldThr;
+    else {               // zero initial threshold signifies using defaults
+      //都没初始化，那就取默认值，capacity == 1 << 4 == 16，
+      //threshold == 0.75f * 16 == 12
+      //也就是说，阈值是总容量的3/4，也就是说，hashmap中，有至少四分之一的容量是被浪费了的
+      newCap = DEFAULT_INITIAL_CAPACITY;
+      newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+    }
+    //如果只有capacity设置了，但是threshold没设置的话，会进入这里
+    if (newThr == 0) {
+      //这里其实结果还是12，ft的意思应该是float_threshold
+      float ft = (float)newCap * loadFactor;
+      //判断是否超出了最大值，然后阈值设置
+      newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
+                (int)ft : Integer.MAX_VALUE);
+    }
+    // threshold setting
+    threshold = newThr;
+    @SuppressWarnings({"rawtypes","unchecked"})
+    Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
+    table = newTab;
+    if (oldTab != null) {
+      for (int j = 0; j < oldCap; ++j) {
+        Node<K,V> e;
+        if ((e = oldTab[j]) != null) {
+          oldTab[j] = null;
+          if (e.next == null)
+            newTab[e.hash & (newCap - 1)] = e;
+          else if (e instanceof TreeNode)
+            ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
+          else { // preserve order
+            Node<K,V> loHead = null, loTail = null;
+            Node<K,V> hiHead = null, hiTail = null;
+            Node<K,V> next;
+            do {
+              next = e.next;
+              if ((e.hash & oldCap) == 0) {
+                if (loTail == null)
+                  loHead = e;
+                else
+                  loTail.next = e;
+                loTail = e;
+              }
+              else {
+                if (hiTail == null)
+                  hiHead = e;
+                else
+                  hiTail.next = e;
+                hiTail = e;
+              }
+            } while ((e = next) != null);
+            if (loTail != null) {
+              loTail.next = null;
+              newTab[j] = loHead;
+            }
+            if (hiTail != null) {
+              hiTail.next = null;
+              newTab[j + oldCap] = hiHead;
+            }
+          }
+        }
+      }
+    }
+    return newTab;
   }
 ```

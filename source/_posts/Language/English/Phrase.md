@@ -40,3 +40,5 @@ due to ：由于
 rather than：而不；与其…倒不如...
 
 conflicts：冲突
+
+[in accord with](https://fanyi.baidu.com/#en/zh/in accord with)：一致; 相符
