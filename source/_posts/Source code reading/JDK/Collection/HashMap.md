@@ -635,23 +635,37 @@ static class Node<K,V> implements Map.Entry<K,V> {
     // threshold setting
     threshold = newThr;
     @SuppressWarnings({"rawtypes","unchecked"})
+    //设置新的node数组大小
     Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
+    //然后将table指向新的table
     table = newTab;
+    //如果hashmap没值得话，那就直接return，大小为初始化的值，如果不然，就进行数据迁移
     if (oldTab != null) {
+      //循环数组
       for (int j = 0; j < oldCap; ++j) {
         Node<K,V> e;
+        //如果数组的内容不为null的话，进行处理
         if ((e = oldTab[j]) != null) {
+          //将oldTab数组对应的值设置为null，方便GC回收
           oldTab[j] = null;
+          //进行链表首个节点的判断
           if (e.next == null)
             newTab[e.hash & (newCap - 1)] = e;
           else if (e instanceof TreeNode)
+            //如果是treeNode的话，需要进行红黑树的扩容，至于这个split，后面碰到的话，再进行解释吧。
             ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
           else { // preserve order
+            //还是挺反感这种命名方式的。写全点还是来的更直观一点。lo=low,hi=high。
+            //low,high头尾节点，将单向链表变为双向链表。
             Node<K,V> loHead = null, loTail = null;
             Node<K,V> hiHead = null, hiTail = null;
             Node<K,V> next;
+            //do-while进行链表的遍历操作
             do {
               next = e.next;
+              //这个e.hash & oldCap是什么操作。。。
+              //因为前面的hash方法没看，这里往下的东西，就看不懂了。。。
+              //TODO 记得补充这里的内容
               if ((e.hash & oldCap) == 0) {
                 if (loTail == null)
                   loHead = e;
@@ -667,6 +681,7 @@ static class Node<K,V> implements Map.Entry<K,V> {
                 hiTail = e;
               }
             } while ((e = next) != null);
+            //判断数据迁移到新table的时候，index是保持不变，还是进行位移
             if (loTail != null) {
               loTail.next = null;
               newTab[j] = loHead;
