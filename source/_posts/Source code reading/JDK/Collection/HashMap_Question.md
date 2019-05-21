@@ -62,7 +62,33 @@ tags:
 
    解答：
 
-   明天写吧
+   ```java
+   static final int tableSizeFor(int cap) {
+     	//capacity默认值为16，以默认情况来看
+       int n = -1 >>> Integer.numberOfLeadingZeros(cap - 1);
+       return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
+   }
+   public static int numberOfLeadingZeros(int i) {
+     //默认情况，i==2^4-1;
+     // HD, Count leading 0's    HD是啥意思？应该是计算前导数的0有多少了吧
+     //由此可见，i的最小值为0。
+     if (i <= 0)
+       return i == 0 ? 32 : 0;
+     int n = 31;
+     //i >= 2^16，n == 15;
+     if (i >= 1 << 16) { n -= 16; i >>>= 16; }
+     //i >= 2^8，n == 23;
+     if (i >= 1 <<  8) { n -=  8; i >>>=  8; }
+     //i >= 2^4，n == 27;
+     if (i >= 1 <<  4) { n -=  4; i >>>=  4; }
+     //i >= 2^2，n == 29;
+     //初次默认情况会进入下面的判断(i == 2^4 - 1)，
+     if (i >= 1 <<  2) { n -=  2; i >>>=  2; }
+     return n - (i >>> 1);
+   }
+   ```
+
+   是防守打法
 
 9. 初始容量和负载因子如果在构造方法中改变的话，会有什么影响？
 
