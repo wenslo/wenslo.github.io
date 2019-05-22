@@ -64,7 +64,9 @@ tags:
 
    Returns a power of two size for the given target capacity。
 
-   意思为：返回给定目标容量的2次方幂的数字。实际上，是返回一个比指定整数大，且是接近2次方幂的一个整数。可能是翻译不正确吧
+   意思为：返回给定目标容量的2次方幂的数字。实际上，是返回一个比指定整数大，且是接近2次方幂的一个整数。
+
+   因为移位的速度是最快的，能够以很高的效率来获取。看到是看明白了，这个是怎么推出来的？百思不得其解啊。
 
    ```java
    static final int tableSizeFor(int cap) {
@@ -96,7 +98,12 @@ tags:
 
 9. 初始容量和负载因子如果在构造方法中改变的话，会有什么影响？
 
+   * 和上面的tableSizeFor方法相关，上面已经说了一部分了，如果修改了initial_capacity的话，会将这个值赋值给threshold，因为hashmap的扩容方法是触发threshold才会进行，也就是达到了capacity*loadFactor。如果赋值的是20，根据tableSizeFor方法，容量会变成为2^5(32)，当容量到了32之后，才会进行扩容，而不是说32\*0.75之后才扩容。
+   * 如果loadFactor修改为1，那么，首先来说，当所有容量用完了，才会进行扩容；如果修改的太小了，那么数据刚扩容相对来说就会非常快（假设为0.1，到了十分之一就扩容和到了四分之三扩容，这个不言而喻）；还有个问题，hashmap是基于hash分布，如果说loadFactor设置太高的话，那么所有bucket都会被利用，不利于良好的hash分布，hash冲突就会增大，hashmap查询性能就会降低，如果太小，bucket空间又浪费太多。0.75是比较合适的一个值。结合上面的一起。
+
 10. Float.isNaN = return v != v ，为什么这么写？
+
+   水电费
 
 11. tab[(n - 1) & hash，这个操作是什么意思？
 
