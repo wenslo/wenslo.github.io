@@ -665,7 +665,7 @@ static class Node<K,V> implements Map.Entry<K,V> {
               next = e.next;
               //这个e.hash & oldCap是什么操作。。。
               //因为前面的hash方法没看，这里往下的东西，就看不懂了。。。
-              //TODO 记得补充这里的内容
+              //把hash方法看完回来了。e.hash是通过hash()方法获取到的值，在put的时候存放进去得，并不是说这个node本身的hashcode，这个还是得注意下。
               if ((e.hash & oldCap) == 0) {
                 if (loTail == null)
                   loHead = e;
