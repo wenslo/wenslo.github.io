@@ -692,6 +692,7 @@ static class Node<K,V> implements Map.Entry<K,V> {
               hiTail.next = null;
               newTab[j + oldCap] = hiHead;
             }
+            //上面这一段前移节点的代码，意思理解，但是为啥这么写，为啥用这种写法，还是不太理解。等自己实现一遍hashmap，应该说就能懂了吧。
           }
         }
       }
