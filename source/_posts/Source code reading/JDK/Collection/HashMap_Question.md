@@ -105,7 +105,7 @@ mathjax: true
 
    isNaN接收的参数是一个float，而该方法判断这个值是否是一个数字，NaN(Not a Number)，而查看float的源码，里面有个常量，float NaN = 0.0f/0.0f。而hashmap源码里，会先进行判断，loadFactor<=0，如果这里满足的话，因该是不会进行后面的操作的，可能是因为hashmap不是线程安全的，虽然刚开始loadFactor是正确的值，然后被其他线程修改之后，就变成了0.0f/0.0f，就会变成一个not a number的数。
 
-11. tab[(n - 1) & hash，这个操作是什么意思？
+11. tab[(n - 1) & hash]，这个操作是什么意思？
 
    是用来定位数组位置的，上面说了这个hash值是自身的hashcode的高16位与低16位进行异或产生的结果，而n-1是当前hashmap的长度，通过(length-1) & hash的话，就能够得到所需要查找的下标，然后就可以通过index来获取到需要get或者说需要put的数据。
 

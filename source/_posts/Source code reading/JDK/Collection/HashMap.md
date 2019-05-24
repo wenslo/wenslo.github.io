@@ -665,7 +665,8 @@ static class Node<K,V> implements Map.Entry<K,V> {
               next = e.next;
               //这个e.hash & oldCap是什么操作。。。
               //因为前面的hash方法没看，这里往下的东西，就看不懂了。。。
-              //把hash方法看完回来了。e.hash是通过hash()方法获取到的值，在put的时候存放进去得，并不是说这个node本身的hashcode，这个还是得注意下。
+              //把hash方法看完回来了。e.hash是通过hash()方法获取到的值，在put的时候存放进去得，并不是说这个node本身的hashcode，这个还是得注意下。在另一篇文章里说了：hash & (length-1)得到的是该元素对应的数字下标值，至于为什么(length-1)，是因为length是2的倍数，转换为二进制的话就是0010,0100,1000,10000等，所以需要-1变成为0001,0011,0111,1111来方便进行&的操作。但是如果不-1的话，那么就是用最高位的1进行&的操作（oldCap就是tableLength），也就是说，e.hash & oldCap得到的值，如果hash是小于oldCap的话，那么一定是0，也就是说，随着oldCap的变化（2的倍数增长），e.hash & oldCap的值就不一定一直为0了，比如说，14 & 16，为0，17 & 16 为1，但是随着oldCap变化为32的时候，再次到了这里，14 & 31 == 0 ，但是17 & 31 就也等于0了。
+              //如果等于0的话，那么该hash是值比较小的，那么用lowTail来存储
               if ((e.hash & oldCap) == 0) {
                 if (loTail == null)
                   loHead = e;
@@ -673,6 +674,7 @@ static class Node<K,V> implements Map.Entry<K,V> {
                   loTail.next = e;
                 loTail = e;
               }
+              //否则的话，说明hash>=oldCap，值相对来说大一点，所以用highTail来存储
               else {
                 if (hiTail == null)
                   hiHead = e;
@@ -680,8 +682,8 @@ static class Node<K,V> implements Map.Entry<K,V> {
                   hiTail.next = e;
                 hiTail = e;
               }
+              //hash值相对来说小点的node节点，用lowTail链表来存储，而大于oldCap的，用highTail存储，而且由于 hash & oldCap != 0 ，因此，在扩容之后，该节点并不在原先数组的下标中存放。而是进行等量平移
             } while ((e = next) != null);
-            //判断数据迁移到新table的时候，index是保持不变，还是进行位移
             if (loTail != null) {
               loTail.next = null;
               newTab[j] = loHead;
