@@ -704,7 +704,7 @@ static class Node<K,V> implements Map.Entry<K,V> {
      * Replaces all linked nodes in bin at index for given hash unless
      * table is too small, in which case resizes instead.
      */
-  //
+  //根据得到的hash替换桶里的所有link node，除非表非常小，这种情况的话，用resize操作来代替
   final void treeifyBin(Node<K,V>[] tab, int hash) {
     int n, index; Node<K,V> e;
     if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY)
