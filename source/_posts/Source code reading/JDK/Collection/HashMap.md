@@ -708,12 +708,17 @@ static class Node<K,V> implements Map.Entry<K,V> {
   //试一下windows是不是比较卡，好想确实比较卡啊
   final void treeifyBin(Node<K,V>[] tab, int hash) {
     int n, index; Node<K,V> e;
+    //如果说tab的长度小于最小树化阈值的话，那么只改变大小，否则，进行树化
     if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY)
       resize();
     else if ((e = tab[index = (n - 1) & hash]) != null) {
+      //首先根据hash获取到当前下边的元素
+      //这个hd是Head ...的意思，tl 是tail ..的意思，能不用简写嘛
       TreeNode<K,V> hd = null, tl = null;
       do {
+        //返回一个tree node ，也就是将链表的节点换为红黑树的节点
         TreeNode<K,V> p = replacementTreeNode(e, null);
+        //然后进行关系的连接
         if (tl == null)
           hd = p;
         else {
@@ -722,8 +727,55 @@ static class Node<K,V> implements Map.Entry<K,V> {
         }
         tl = p;
       } while ((e = e.next) != null);
+      //根据index获取到数组的元素，且设置为头结点，如果不为null的话，那么从头结点开始进行树化
       if ((tab[index] = hd) != null)
+        //转换为红黑树
         hd.treeify(tab);
     }
+  }
+  /**
+   * Forms tree of the nodes linked from this node.
+   */
+  //要注意的是，之前一直以为，HashMap是数组+红黑树，现在来看并不是这样，是红黑树+红黑树，每次会进行root节点的修正
+  final void treeify(Node<K,V>[] tab) {
+    TreeNode<K,V> root = null;
+    for (TreeNode<K,V> x = this, next; x != null; x = next) {
+      next = (TreeNode<K,V>)x.next;
+      x.left = x.right = null;
+      if (root == null) {
+        x.parent = null;
+        x.red = false;
+        root = x;
+      }
+      else {
+        K k = x.key;
+        int h = x.hash;
+        Class<?> kc = null;
+        for (TreeNode<K,V> p = root;;) {
+          int dir, ph;
+          K pk = p.key;
+          if ((ph = p.hash) > h)
+            dir = -1;
+          else if (ph < h)
+            dir = 1;
+          else if ((kc == null &&
+                    (kc = comparableClassFor(k)) == null) ||
+                   (dir = compareComparables(kc, k, pk)) == 0)
+            dir = tieBreakOrder(k, pk);
+
+          TreeNode<K,V> xp = p;
+          if ((p = (dir <= 0) ? p.left : p.right) == null) {
+            x.parent = xp;
+            if (dir <= 0)
+              xp.left = x;
+            else
+              xp.right = x;
+            root = balanceInsertion(root, x);
+            break;
+          }
+        }
+      }
+    }
+    moveRootToFront(tab, root);
   }
 ```
