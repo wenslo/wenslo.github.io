@@ -718,7 +718,7 @@ static class Node<K,V> implements Map.Entry<K,V> {
       do {
         //返回一个tree node ，也就是将链表的节点换为红黑树的节点
         TreeNode<K,V> p = replacementTreeNode(e, null);
-        //然后进行关系的连接
+        //然后进行关系的连接，虽然是tree node，但是这里，只是将单向链表转换为了双向链表
         if (tl == null)
           hd = p;
         else {
@@ -736,18 +736,19 @@ static class Node<K,V> implements Map.Entry<K,V> {
   /**
    * Forms tree of the nodes linked from this node.
    */
-  //要注意的是，之前一直以为，HashMap是数组+红黑树，现在来看并不是这样，是红黑树+红黑树，每次会进行root节点的修正
   final void treeify(Node<K,V>[] tab) {
     TreeNode<K,V> root = null;
     for (TreeNode<K,V> x = this, next; x != null; x = next) {
       next = (TreeNode<K,V>)x.next;
       x.left = x.right = null;
+      //如果root节点尚未设置的话，那么先指向root节点
       if (root == null) {
         x.parent = null;
         x.red = false;
         root = x;
       }
       else {
+        //然后根据hash值，进行左右节点的设置，然后进行红黑树的平衡
         K k = x.key;
         int h = x.hash;
         Class<?> kc = null;
