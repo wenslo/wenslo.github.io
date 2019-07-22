@@ -126,6 +126,8 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
  * merely querying the map with {@code get} is a structural modification.
  * </strong>)
  *
+ 	添加，删除一个或者多个元素都会修改结构，并且在这些情况中都会影响LinkdHashMap的迭代顺序。如果只是修改一个存在的key-value的映射关系的话并不会修改结构。在LinkedHashMap中，仅仅使用get是一种结构修改。
+ 	
  * <p>The iterators returned by the {@code iterator} method of the collections
  * returned by all of this class's collection view methods are
  * <em>fail-fast</em>: if the map is structurally modified at any time after
