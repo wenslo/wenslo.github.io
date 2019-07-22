@@ -70,23 +70,29 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
  * <i>No other methods generate entry accesses.</i>  In particular, operations
  * on collection-views do <i>not</i> affect the order of iteration of the
  * backing map.
- *
+ * 这种类型的map非常适合于构建一个LRU缓存(Least Recently Used),使用put,putIfAbsent,get,getOrDefault,apmpute,aomputeIfAbsent,aomputeInfPresent
+ merge等方法来记录访问缓存(在调用完成之后记录)。如果value被替换的话，replace方法仅仅返回entry中被访问过的对象，putAll方法生成一个访问记录给每个在这个map里的entry，在这种情况下，这个key-value映射将会被支持于map的set iterator，没有其他方法生成entry 访问记录。通常情况下，集合视图的操作不会修改map的iterator的顺序。
  * <p>The {@link #removeEldestEntry(Map.Entry)} method may be overridden to
  * impose a policy for removing stale mappings automatically when new mappings
  * are added to the map.
  *
+ removeEldestEntry这个方法可能被重载来在remove的时候或者在新的映射添加到map的时候。安全自动的使用
+ 
  * <p>This class provides all of the optional {@code Map} operations, and
- * permits null elements.  Like {@code HashMap}, it provides constant-time
- * performance for the basic operations ({@code add}, {@code contains} and
+ * permits null elements.  Like {@code HashMap}, it provides constant-time performance for the basic operations ({@code add}, {@code contains} and
  * {@code remove}), assuming the hash function disperses elements
- * properly among the buckets.  Performance is likely to be just slightly
+ * properly among the buckets. 
+ LinkedHashMap支持Map的所有操作，并且允许null元素。像HashMap，假设这个hash方法均匀分布key的话，它的add，contains，remove等基础操作拥有稳定的性能。
+ * Performance is likely to be just slightly
  * below that of {@code HashMap}, due to the added expense of maintaining the
  * linked list, with one exception: Iteration over the collection-views
  * of a {@code LinkedHashMap} requires time proportional to the <i>size</i>
  * of the map, regardless of its capacity.  Iteration over a {@code HashMap}
  * is likely to be more expensive, requiring time proportional to its
  * <i>capacity</i>.
- *
+ * 
+ 	LinkedHashMap的性能仅仅稍微比HashMap低一点，由于添加操作使用的是Linked list，所以性能消耗全在这里，除了一个情况，迭代LinkedHashMap的集合试图需要O(map.size)，不管他的capacity多大。而迭代HashMap的时候与它很像，但是需要更多的花费，需要O(map.capacity)的花费。
+ 	
  * <p>A linked hash map has two parameters that affect its performance:
  * <i>initial capacity</i> and <i>load factor</i>.  They are defined precisely
  * as for {@code HashMap}.  Note, however, that the penalty for choosing an
@@ -94,18 +100,24 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
  * than for {@code HashMap}, as iteration times for this class are unaffected
  * by capacity.
  *
+ 	一个LinkedHashMap有连个参数影响他的性能(initial capacity , load factor),他们在HashMap中被精确定义。但是需要注意的是，相对于HashMap来说，选择一个非常大的initial capacity的值产生的影响是非常小的，LinkedHashMap的迭代时间并不受capacity的影响。
+ 
  * <p><strong>Note that this implementation is not synchronized.</strong>
  * If multiple threads access a linked hash map concurrently, and at least
  * one of the threads modifies the map structurally, it <em>must</em> be
  * synchronized externally.  This is typically accomplished by
  * synchronizing on some object that naturally encapsulates the map.
  *
+ 	注意：这个实现并不是线程安全的，如果两个以上的线程并发访问LinkedHashMap，同时至少有一个线程修改了map的结构，外部操作必须是线程安全的，这通常使用某个对象的同步操作来包装这个map。
+ 
  * If no such object exists, the map should be "wrapped" using the
  * {@link Collections#synchronizedMap Collections.synchronizedMap}
  * method.  This is best done at creation time, to prevent accidental
  * unsynchronized access to the map:<pre>
  *   Map m = Collections.synchronizedMap(new LinkedHashMap(...));</pre>
  *
+ 如果没有对象存在的话，那么这个map应该使用Collections.synchronizedMap来包装。它最好在创建的时候使用，来防止线程不安全的访问。
+ 
  * A structural modification is any operation that adds or deletes one or more
  * mappings or, in the case of access-ordered linked hash maps, affects
  * iteration order.  In insertion-ordered linked hash maps, merely changing
