@@ -203,6 +203,7 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
     /**
      * HashMap.Node subclass for normal LinkedHashMap entries.
      */
+     //继承自HashMap的node，区别就是多了个前驱节点和后继节点，也就是从单链表变成了双向链表
     static class Entry<K,V> extends HashMap.Node<K,V> {
         Entry<K,V> before, after;
         Entry(int hash, K key, V value, Node<K,V> next) {
@@ -215,11 +216,13 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
     /**
      * The head (eldest) of the doubly linked list.
      */
+     //双向链表的头结点
     transient LinkedHashMap.Entry<K,V> head;
 
     /**
      * The tail (youngest) of the doubly linked list.
      */
+     //为节点
     transient LinkedHashMap.Entry<K,V> tail;
 
     /**
@@ -228,11 +231,13 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
      *
      * @serial
      */
+     //true为访问排序，false为插入排序
     final boolean accessOrder;
 
     // internal utilities
 
     // link at the end of list
+    //将entry放入到链表最后
     private void linkNodeLast(LinkedHashMap.Entry<K,V> p) {
         LinkedHashMap.Entry<K,V> last = tail;
         tail = p;
@@ -245,6 +250,7 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
     }
 
     // apply src's links to dst
+    //两个链表合并为一个
     private void transferLinks(LinkedHashMap.Entry<K,V> src,
                                LinkedHashMap.Entry<K,V> dst) {
         LinkedHashMap.Entry<K,V> b = dst.before = src.before;
@@ -260,19 +266,19 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
     }
 
     // overrides of HashMap hook methods
-
+		//重新初始化
     void reinitialize() {
         super.reinitialize();
         head = tail = null;
     }
-
+    //新的node，并且放入链表最后
     Node<K,V> newNode(int hash, K key, V value, Node<K,V> e) {
         LinkedHashMap.Entry<K,V> p =
             new LinkedHashMap.Entry<>(hash, key, value, e);
         linkNodeLast(p);
         return p;
     }
-
+		//将next放到p的后面
     Node<K,V> replacementNode(Node<K,V> p, Node<K,V> next) {
         LinkedHashMap.Entry<K,V> q = (LinkedHashMap.Entry<K,V>)p;
         LinkedHashMap.Entry<K,V> t =
@@ -280,20 +286,20 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
         transferLinks(q, t);
         return t;
     }
-
+		//treenode entry 在这里其实一样
     TreeNode<K,V> newTreeNode(int hash, K key, V value, Node<K,V> next) {
         TreeNode<K,V> p = new TreeNode<>(hash, key, value, next);
         linkNodeLast(p);
         return p;
     }
-
+		//同上
     TreeNode<K,V> replacementTreeNode(Node<K,V> p, Node<K,V> next) {
         LinkedHashMap.Entry<K,V> q = (LinkedHashMap.Entry<K,V>)p;
         TreeNode<K,V> t = new TreeNode<>(q.hash, q.key, q.value, next);
         transferLinks(q, t);
         return t;
     }
-
+		//元素删除后的回调方法，取消关联
     void afterNodeRemoval(Node<K,V> e) { // unlink
         LinkedHashMap.Entry<K,V> p =
             (LinkedHashMap.Entry<K,V>)e, b = p.before, a = p.after;
@@ -307,7 +313,7 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
         else
             a.before = b;
     }
-
+		//插入元素后的回调
     void afterNodeInsertion(boolean evict) { // possibly remove eldest
         LinkedHashMap.Entry<K,V> first;
         if (evict && (first = head) != null && removeEldestEntry(first)) {
@@ -315,7 +321,7 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
             removeNode(hash(key), key, null, false, true);
         }
     }
-
+		//元素访问后的回调
     void afterNodeAccess(Node<K,V> e) { // move node to last
         LinkedHashMap.Entry<K,V> last;
         if (accessOrder && (last = tail) != e) {
