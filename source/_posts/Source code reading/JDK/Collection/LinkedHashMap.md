@@ -299,7 +299,7 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
         transferLinks(q, t);
         return t;
     }
-		//元素删除后的回调方法，取消关联
+		//下面三个方法，在HashMap中只是一个钩子，实现在LinkedHashMap，元素删除后的回调方法，删除e节点的引用
     void afterNodeRemoval(Node<K,V> e) { // unlink
         LinkedHashMap.Entry<K,V> p =
             (LinkedHashMap.Entry<K,V>)e, b = p.before, a = p.after;
@@ -313,7 +313,7 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
         else
             a.before = b;
     }
-		//插入元素后的回调
+		//插入元素后的回调，evict为true的话，会删除链表最老的元素，但是，这个removeEldestEntry方法，里面永久返回的是false，因此，如果想删除老的元素的话，需要重写这个方法。删除老的元素，有两种策略，按照访问，按照插入，上面又说。
     void afterNodeInsertion(boolean evict) { // possibly remove eldest
         LinkedHashMap.Entry<K,V> first;
         if (evict && (first = head) != null && removeEldestEntry(first)) {
@@ -321,7 +321,7 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
             removeNode(hash(key), key, null, false, true);
         }
     }
-		//元素访问后的回调
+		//元素访问后的回调，如果在构造方法中设置了按照访问排序的话，那么这里会执行。其实也就是将当前元素e，将其在链表中的位置后移一下而已
     void afterNodeAccess(Node<K,V> e) { // move node to last
         LinkedHashMap.Entry<K,V> last;
         if (accessOrder && (last = tail) != e) {
@@ -363,6 +363,7 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
      * @throws IllegalArgumentException if the initial capacity is negative
      *         or the load factor is nonpositive
      */
+     //构造方法，默认accessOrder为false，也就是插入排序，下面都一样
     public LinkedHashMap(int initialCapacity, float loadFactor) {
         super(initialCapacity, loadFactor);
         accessOrder = false;
@@ -431,6 +432,7 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
      * @return {@code true} if this map maps one or more keys to the
      *         specified value
      */
+     //从此看出，LinkedHashMap的containsValue速度并不会很快，数据量大的话
     public boolean containsValue(Object value) {
         for (LinkedHashMap.Entry<K,V> e = head; e != null; e = e.after) {
             V v = e.value;
@@ -455,6 +457,7 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
      * The {@link #containsKey containsKey} operation may be used to
      * distinguish these two cases.
      */
+     //和HashMap的区别就是，当accessOrder为true的话，会执行afterNodeAccess的回调
     public V get(Object key) {
         Node<K,V> e;
         if ((e = getNode(hash(key), key)) == null)
@@ -467,6 +470,7 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
     /**
      * {@inheritDoc}
      */
+     //这个没啥写的
     public V getOrDefault(Object key, V defaultValue) {
        Node<K,V> e;
        if ((e = getNode(hash(key), key)) == null)
@@ -525,6 +529,7 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
      * @return   {@code true} if the eldest entry should be removed
      *           from the map; {@code false} if it should be retained.
      */
+     //注释比较简单，不翻译了，就是想删除比较老的元素，就重写它，put和putAll的时候回调用该方法
     protected boolean removeEldestEntry(Map.Entry<K,V> eldest) {
         return false;
     }
