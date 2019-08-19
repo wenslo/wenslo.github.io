@@ -552,6 +552,7 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
      *
      * @return a set view of the keys contained in this map
      */
+     //获取map中所有key的驶入，支持Iterator的操作，不支持add和addAll，顺序执行的性能更快，但是，并发执行不如hashmap
     public Set<K> keySet() {
         Set<K> ks = keySet;
         if (ks == null) {
@@ -605,6 +606,7 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
      *
      * @return a view of the values contained in this map
      */
+     //同上，不翻译了，也没啥可问的
     public Collection<V> values() {
         Collection<V> vs = values;
         if (vs == null) {
@@ -780,3 +782,4 @@ HashMap是无序的，那么说，Map接口有没有说有序的实现？有，�
 }
 ```
 
+比较简单啊，除了双向链表和访问排序以外，好像没什么可以问的。
