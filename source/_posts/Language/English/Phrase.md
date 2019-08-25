@@ -42,3 +42,5 @@ rather than：而不；与其…倒不如...
 conflicts：冲突
 
 [in accord with](https://fanyi.baidu.com/#en/zh/in accord with)：一致; 相符
+
+performed by：由…...执行
