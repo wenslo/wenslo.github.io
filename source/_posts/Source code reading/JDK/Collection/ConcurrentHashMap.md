@@ -107,3 +107,50 @@ tags:
      * iterators in the same way.
 ```
 
+```java
+	 /**
+     * The array of bins. Lazily initialized upon first insertion.
+     * Size is always a power of two. Accessed directly by iterators.
+     */
+    transient volatile Node<K,V>[] table;
+
+    /**
+     * The next table to use; non-null only while resizing.
+     */
+    private transient volatile Node<K,V>[] nextTable;
+
+    /**
+     * Base counter value, used mainly when there is no contention,
+     * but also as a fallback during table initialization
+     * races. Updated via CAS.
+     */
+    private transient volatile long baseCount;
+
+    /**
+     * Table initialization and resizing control.  When negative, the
+     * table is being initialized or resized: -1 for initialization,
+     * else -(1 + the number of active resizing threads).  Otherwise,
+     * when table is null, holds the initial table size to use upon
+     * creation, or 0 for default. After initialization, holds the
+     * next element count value upon which to resize the table.
+     */
+    private transient volatile int sizeCtl;
+
+    /**
+     * The next table index (plus one) to split while resizing.
+     */
+    private transient volatile int transferIndex;
+
+    /**
+     * Spinlock (locked via CAS) used when resizing and/or creating CounterCells.
+     */
+    private transient volatile int cellsBusy;
+
+    /**
+     * Table of counter cells. When non-null, size is a power of 2.
+     */
+    private transient volatile CounterCell[] counterCells;
+```
+
+这里就发现，所有的变量都是volatile的，而volatile这个关键字的作用，就是首先保证可见性，然后禁止指令重排序，单次读写的原子性
+
