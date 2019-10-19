@@ -10,7 +10,7 @@ tags:
 - 栈和队列
 
 
-
+date: 2019-04-07
 ---
 
 &emsp;&emsp;**栈（Last In First Out）**和**队列（First In First Out）**

@@ -8,7 +8,7 @@ categories:
 tags: 
 
 - JDK源码
-
+date: 2019-04-27
 ---
 
 > LinkedList是基于链表，是Java中线性表的链表实现。

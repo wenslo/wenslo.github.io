@@ -10,6 +10,7 @@ tags:
 - 图
 
 mathjax: true
+date: 2019-04-16
 ---
 
 1. 图的概念
@@ -18,7 +19,7 @@ mathjax: true
      * 数据对象V：数据元素集合，顶点集；
      * 数据关系R：
        * R={VR}
-       * VR={<v,w>| $$v,w \in V​$$ 且P(v,w)，<v,w>表示从v到w的弧，P(v,w)定义了弧<v,w>的意义或者信息}
+       * VR={<v,w>| $$v,w \in V$$ 且P(v,w)，<v,w>表示从v到w的弧，P(v,w)定义了弧<v,w>的意义或者信息}
    *  顶点：图中的数据元素
    *  弧：<v,w>表示从v到w的一条弧;v是顶点的集合；vr是两个顶点之间关系的集合
      * 有向图
@@ -27,7 +28,7 @@ mathjax: true
        * 若$$<v,w> \in VR$$，必有$$<w,v> \in VR$$，用(v,w)表示一条边
      * ![有向图和无向图图例](https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/Graph/01.png)
    *  定点数n和弧的数目e：
-     * 无向图：$$0 \le e \le {\frac 1 2} n(n-1)​$$
+     * 无向图：$$0 \le e \le {\frac 1 2} n(n-1)$$
      * 有向图：$$0 \le e \le  n(n-1)$$
    *  完全图：有n(n-1)/2条边的无向图
    *  有向完全图：有n(n-1)条弧的有向图
