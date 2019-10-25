@@ -4,7 +4,7 @@ subtitle: 技术，工作，生活，随笔
 description: Fake it, make it!
 keywords:
 author: 温海林
-language: zh-Hans
+language: zh-CN
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
@@ -68,9 +68,7 @@ pagination_dir: page
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-theme: next
-
-avatar: /uploads/images/fbb1.jpg
+theme: next-reloaded
 
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
@@ -78,13 +76,3 @@ deploy:
   type: git
   repo: git@github.com:wenslo/wenslo.github.io.git
   branch: master
-
-toc:
-  maxdepth: 3
-  class: toc
-  slugify: transliteration
-  decodeEntities: false
-  anchor:
-    position: after
-    symbol: '#'
-    style: header-anchor
