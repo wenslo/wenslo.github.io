@@ -14,6 +14,8 @@ date: 2019-08-19
 
 > Map的另一种有序实现，上一种是LinkedHashMap
 
+<!-- more -->
+
 ```java
 /**
  * A Red-Black tree based {@link NavigableMap} implementation.

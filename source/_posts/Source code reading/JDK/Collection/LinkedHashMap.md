@@ -15,6 +15,8 @@ date: 2019-07-18
 
 HashMap是无序的，那么说，Map接口有没有说有序的实现？有，两种，一种LinkedHashMap，一种就是TreeMap，先来看看LinkedHashMap。
 
+<!-- more -->
+
 照旧，先来翻译一下LinkedHashMap的注释。好长啊，Map的注释怎么就这么长。
 
 ```java

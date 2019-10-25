@@ -13,6 +13,8 @@ date: 2019-04-27
 
 > LinkedList是基于链表，是Java中线性表的链表实现。
 
+<!-- more -->
+
 ```java
 public class ArrayList<E> extends AbstractList<E>
         implements List<E>, RandomAccess, Cloneable, java.io.Serializable{}
