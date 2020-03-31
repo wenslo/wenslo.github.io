@@ -22,25 +22,109 @@ date: 2020-03-24 17:00:21
 - doggie 小狗
 - kitty 小猫
 - rooster 公鸡
+  - It's hard to see a rooster in bi cities.
+  - I saw a rooster this morning.
+  - The rooaster is dead.
 - hen 母鸡
+  - My sister keeps a few hens.
+  - The hens lay eggs every day.
+  - The eggs laid by these haes taste yummy.
 - chicken 小鸡，鸡肉
+  - The chickens are very cute.
+  - My son likes the chickens very much.
+  - My friends gave me three chickens last week.
 - duck 鸭子
+  - Peking Roast Duck
 - duckling 小鸭子
+  - The ugly duckling.
 - goose 鹅  复数：geese
+  - a goose is bigge than a duck.
 - pig 猪
+  - He keeps pigs.I don't like pigs.
+  - You a such a pi.
 - piggy 小猪
 - piggy bank 储蓄罐
 - cow 奶牛，母牛
+  - She is milking the cow.
 - cowboy 西部牛仔，牧童
 - bull 公牛
 - horse 马
+  - I have never ridden a horse before.
+  - I's so hangry! I could eat a horse.
+  - A horse race.
 - donkey 驴
+  - I've never seen a donkey before.
+  - you stupid a donkey.
 - sheep 绵羊
+  - He is a sheep farmer.
+  - A black sheep.
 - goat 山羊
+  - Goat's milk
+  - Let me go ! You old goat.
 - lamb 羊羔
 - lion 狮子
+  - Mark is as brave as a lion.
 - lioness 母狮子
 - tiger 老虎
+  - I saw two tigers in the zoo today.
+  - A paper tiger.
 - tigress 母老虎
 - leopard 豹
+  - A leopard can't change its spots.
+  - Wanna see me be leopard.
 - wolf 狼
+  - He is a wolf in sheeps clothiing.
+- Wolf Totem 狼图腾
+- zebra 斑马
+  - Looking! There is a zebre .
+  - Zebra crossing.
+- bear 熊
+  - bear marker.
+  - He gave me a bear-hug.
+- polar bear 北极熊
+- panda
+- giant panda
+  - The panda is a national treasure of China.
+- camel 骆驼
+  - Camels live in desserts.
+- deer 鹿  复数 deer
+  - The deer eating grass.
+- giraffe 长颈鹿
+  - A giraffe has a very long neck
+- elephant 大象
+  - You can see many elephant in Thailand.
+  - A white elephant.
+- fox 狐狸
+  - Julie is as sly as a fox.
+  - I don't like that sly old fox.
+- kangraoo 蜥蜴
+  - Kangraoo are found in Australia.
+- koala 考拉
+  - I love koalas! They are just so cute!.
+- ostrich 鸵鸟
+  - An ostrich can't fly. but it can run vary fast.
+- rabbit 兔子
+  - Bob keeps a rabbit as a pet.
+- snake  蛇
+  - I am scared of snakes.
+  - Steve wa bitten by a snake.
+  - Stay awar from him. He is a snake.
+- mouse 老鼠 鼠标  复数:mice
+  - Mickey Mouse
+  - a mouse mat
+- squirrel 松鼠
+  - Squirrels like eating nuts.
+  - The squirrel in the movie **Ice Age** is very funny;
+- monkey 猴子，顽皮的儿童
+  - Look at the monkey! It's climbing up the tree so fast!
+  - Stop that, you little monkey!
+- turkey 火鸡，火鸡肉
+  - roast turkey
+  - People eat turkey on Thanks-giving Day.
+- lizard 蜥蜴
+  - A lizard is a reptile with shor legs and a long tail.
+- penguin 企鹅
+  - A penguin is a type of sea bird. It can not fly but it can swim.
+- swan 天鹅
+  - She is as graceful as a swan.
+  - Swan Lake.
