@@ -128,3 +128,72 @@ date: 2020-03-24 17:00:21
 - swan 天鹅
   - She is as graceful as a swan.
   - Swan Lake.
+- frog 青蛙
+  - The Frog Prince
+- frogman 蛙人，潜水员
+- crocodile 鳄鱼，鳄鱼皮
+  - A crocodile handbag
+  - Crocodile tears
+- rhinoceros(rhino) 犀牛
+- hippopotamus(hippo) 河马
+- gorilla 大猩猩
+  - A gorilla is very large ape(猿)
+- peacock 孔雀
+  - Peter is as proud as a peacock.
+  - Peacoke is blue.
+- dinosaur 恐龙
+  - Boys usually like dinosaurs.
+  - If you want to see dinosayrs, go to Beijing Museum of Natural History.
+- ant 蚂蚁
+  - Ants live in large groups.
+  - I hate to see ants in my house.
+- spider 蜘蛛
+  - Many grils are afraid of spiders.
+- Sipder-Man 蜘蛛侠
+- snail 蜗牛
+  - The snail came out of its shell.
+  - The old woman crossed the street at a snail's pace.
+- cockroach 蟑螂
+  - I hate cockroaches. They are so disgusting.
+- brid 鸟
+  - The early bird catches the worm.
+  - You are an eraly bird.
+  - **A little bird told me** that you've got engaged（订婚）.
+- parrot 鹦鹉
+  - I have a parrot named Henry.
+  - The parrot can say 'good morning' and 'Good night'.
+- magpie 喜鹊，爱收集或贮藏东西的人
+  - Magpies are common birds in China.
+  - She is quite a magpie.
+- sparrow 麻雀
+  - There are serveral sparrows twittering outside my window.
+- swallow 燕子
+  - One swallow does not make a summer.
+- dove 鸽子
+- crow 乌鸦
+  - She thinks something bad is going to happen bacause she saw a crow this morning.
+- owl 猫头鹰
+  - An owl ususlly sleeps with on eye open and the other closed.
+  - A night owl.
+- eagle 鹰
+  - An eagle is flying in the sky.
+  - The teacher's egale eye was always on us.
+  - Hotel California  -- Eagles
+- bee 蜜蜂
+  - John is as busy as a bee.
+  - I was stung（叮咬） by a bee.
+- bumblebee 大黄蜂
+- dragonfly 蜻蜓
+- dragon 龙
+- butterfly 蝴蝶
+  - I saw many beautiful butterflies in Melbon Zoo.
+  - The Butterfly Effect
+- fly 苍蝇
+  - Is summer you can see many flies near the river.
+  - My dog wouldn't hurt a fly.
+- mosquito 蚊子
+  - I was bitten by a mosquito.
+  - There is one thing i don't like about summer too many mosquitoes.
+- bat 蝙蝠
+  - A bat can fly around at night.
+- Batman
