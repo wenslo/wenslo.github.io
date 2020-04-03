@@ -1,5 +1,5 @@
 ---
-title: 名字-动物
+title: 名词-动物
 
 categories: 
 
@@ -7,7 +7,7 @@ categories:
 
 tags: 
 
-date: 2020-03-24 17:00:21
+date: 2020-04-01 21:00:21
 
 ---
 
@@ -197,3 +197,45 @@ date: 2020-03-24 17:00:21
 - bat 蝙蝠
   - A bat can fly around at night.
 - Batman
+- seagull 海鸥
+- fish 鱼 复数：fish
+  - fish and chips
+  - A big fish in a little pond.
+  - A cold fish.
+- tuna 金枪鱼
+  - tuna fish sandwich
+- dolphin 海豚
+  - a dolphin show
+  - The dolphin is a smart animal.
+- whale 鲸
+  - The whale is not a fish.
+  - The whale is a kind of mamal.
+- seal 海豹
+  - Do you know a sea lion is a large type of seal?
+- sea lion 海狮
+  - There are sea lions and dolphins in Beijing Oceanarium.
+- sea horse 海马
+  - A sea horse has a head that looks like the head of a horse.
+- turtle 海龟
+- tortoise 陆龟
+  - That tortoise is fifty years old , but it looks small.
+- shrimp 小虾
+  - Do you know a shrimp has ten legs?
+- lobster 龙虾
+  - I bought several live lobsters. They are so expensive.
+- crab 蟹
+  - Don't touch the crab! It has two powerful claws.
+- jellyfish 水母
+  - A jellyfish is swimming after you.
+  - I can see thougn the jellyfish . It's so funny.
+- startfish 海星 复数 starfish
+  - I found a starfish on the beach.
+- squid 鱿鱼，乌贼
+  - I've never seen a live squid before.
+- walrus 海象
+  - A walrus also has two long teeth called tusks.
+- shark 鲨鱼
+  - a great white shark.
+  - The move **Jaws** is about a man-eating shark.
+- octopus 章鱼
+  - There was an amazing octopus during the World Cup in 2010.
