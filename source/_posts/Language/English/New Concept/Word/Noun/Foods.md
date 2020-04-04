@@ -1,5 +1,5 @@
 ---
-title: 名词-动物
+title: 名词-食物
 
 categories: 
 
@@ -12,3 +12,329 @@ date: 2020-04-03 22:2:21
 
 ---
 
+- food 食物
+  - Everyone needs food.
+  - Fast food.
+  - Junk food.
+- fruit 水果
+  - Try to eat plenty of fresh furit.
+  - Fruit and vegetables.
+  - Fruit juice.
+- apple 苹果
+  - apple pie.
+  - an apple tree.
+  - An apple a day keeps the doctor away.
+- pear 梨
+  - I like apples , but not pears.
+- peach 桃子
+  - I like fresh juicy peaches.
+- banana 香蕉
+  - a bunch of bananas.
+  - Look! The monkey is eating a banana.
+- orange 柑橘，橙子
+  - orange juice
+  - Peel the oranges.
+- cherry 樱桃
+  - a cherry tree.
+  - There is a cherry on the cake.
+- strawberry 草莓
+  - The strawberry is my favorite fruit.
+- blueberry 蓝莓
+  - blueberry pie
+  - The blueberry is good for your eyes.
+- lemon 柠檬
+  - a lemon tree
+  - a slice of lemon
+- lemonage 柠檬水
+- mango 芒果
+  - Some people are allergic（过敏） to mango.
+- pineapple 菠萝
+  - pineapple juice
+- grape 葡萄
+  - a bunch of grapes.
+  - seedless grapes.
+- plum 李子
+  - juicy ripe plums
+  - a plum tree
+- kiwi fruit 猕猴桃
+  - Kiwi fruit is rich in vitamin C.
+- druian 榴莲
+  - I can't bear the smell of a durain.
+- coconut 椰子
+  - coconut mile 椰奶
+  - I was hit by a coconut when i was sitting under a coconut palm.
+- papaya 木瓜
+- pawpaw 木瓜
+  - pawpaw ointment 木瓜粥
+- pomegranate 石榴
+  - pomegranate juice
+  - pomegranate seeds
+- persimmon 柿子
+  - A persimmon is a soft sweet fruit that looks like a large orange-colored tomata and grows on a persimmon tree.
+- watermelon 西瓜
+  - In summer, out main fruit is watermelon.
+  - Of all the fruits, I like watermelon most.
+- lychee 荔枝
+  - We all know that Princess Yang Kwei-fei liked lychees.
+- vegetable 蔬菜
+  - green vegetables
+  - organic（有机） vegetables
+  - You should eat more fruit and vegetables.
+- tomato 西红柿
+  - tomato soup
+  - Is the tomato a fruit or vegetables?
+  - The tomato is a round soft read fruit **eaten raw**（生吃） or cooked as a vegetable.
+- ketchup 番茄酱
+  - a bottle of ketchup
+  - Do you want some ketchup with you hamburger?
+- potato 土豆
+  - potato soup
+  - Marie is pelling potatoes.
+  - mashed potatoes.
+- sweet potato 红薯
+  - A sweet potato is sweeter than a potato.
+- cabbage 卷心菜
+  - Do you like cabbage?
+  - Chinese cabbage.
+- cucumber 黄瓜
+  - Have some cucumber.
+  - cucumber salad.
+  - sea cucumber 海参
+- celery 芹菜
+  - a stick of celery.
+  - I dont't like eating celery. It's like eating grass.
+- leek 韭菜
+  - A leek tastes like an onion.
+- carrot 胡萝卜
+  - carrot juice
+  - Have some carrot.
+  - We are like peas and carrots.
+- pea 豌豆
+  - The twins are like two peas in a pod.
+  - The Princess and the Pea.
+- radish 萝卜
+  - I don't like radished. Most of them are spicy.
+- spinach 菠菜
+  - Popeye loves spinach.
+  - spinach soup.
+- mushroom 蘑菇
+  - wild mushroom
+  - Some types of mushrooms are poisonous.
+- eggplant 茄子
+  - My husband likes eggplant no matter how it cooked.
+- bean 豆子
+  - soya beans.
+  - bean curd.
+  - Jack and the Beanstalk.
+- pumpkin 南瓜
+  - pumpkin pie
+  - pumpkin lanterns
+- green pepper 青椒
+  - sharedded beef with green pepper.
+- lettuce 生菜
+  - a lettuce and tomato salad.
+- onion 洋葱
+  - I alaways cry when I'm chopping oinions.
+  - There is too much onion is the salad.
+- lotus root 莲藕
+  - Sister lotus
+- noodle 面条
+  - egg noodles
+  - instant noodles
+- pasta 意大利面
+  - Every time i eat pasta, i eat a lot.
+- rice 米，米饭
+  - rice fields
+  - I like noodles more than rice.
+- corn 玉米，谷物
+  - All their chickens are fed on corn.
+- popcorn 爆米花
+  - It doesn't feel like a moive without popcorn.
+- sandwich 三明治
+  - a ham sandwich
+  - He usually just has a sandwich for lunch.
+- ham 火腿
+  - a slice of ham.
+- sauasge 香肠
+  - garlic sausage.
+  - pork sausage.
+- bread 面包
+  - a slice of bread.
+  - a loaf of bread.
+  - bread and butter.
+- steamed bread 馒头
+  - My dad eats steamed bread every day.
+- biscuit 饼干
+  - chocolate biscuits.
+  - a packet of biscuits.
+  - We had tea and biscuits.
+- cookie 曲奇，饼干
+  - I had a glass of mile and a cookie for breakfasf.
+  - Don't eat my cookie.
+- dessert 餐后甜点
+  - Shall we move on to dessert?
+  - I forgot to prepare dessert, so we had ice-cream.
+- candy 糖果
+  - a candy shop
+  - a box of candy
+  - You had too much candy today.
+- cake 蛋糕
+  - birthday cake
+  - chocolate cake
+  - fruit cake
+- pizza 比萨饼
+  - Would you like some more pizza?
+  - a slice of pizza.
+- hamburger 汉堡包
+  - I hate eating hamburgers. I'd rather be hungry.
+- French fries 炸薯条
+  - I usually have French fries with ketchup.
+- potato chips 薯片
+  - When i feel blue, i like eating a lot of potato chips.
+- flour 面粉
+  - I was busy mixing water and flour.
+- oat 燕麦
+  - oat biscuits.
+  - oatmeal
+- butter 黄油
+  - bread and butter
+  - Should i use oil or butter for frying the onions.
+- cheese 奶酪
+  - a piece of cheese
+  - a cheese sandwich
+  - Say 'cheese'!
+- soup 汤
+  - vegetable soup
+  - Chicken Soup for the Soul.
+  - Would you like a bowl of soup?
+- dumpling 饺子
+  - I miss the dumplings that my mom makes.
+- salad 沙拉
+  - fruit salad
+  - potato salad
+  - Would you like some salad with you paste?
+- egg 鸡蛋
+  - fresh eggs
+  - fried eggs
+  - I don't like boiled eggs.
+- meat 肉
+  - fresh meat
+  - frozen meat
+  - I gave up eating meat a few months ago.
+- pork 猪肉
+  - portk sausages
+  - pork chops
+- beef 牛肉
+  - a beef sandwich
+  - roast beef
+- steak 牛排
+  - How would you like you steak cooked?
+  - I'd like my steak rare.
+- rare 三分熟
+- medium rare 四分熟
+- medium 五分熟
+- medium well 七八分熟
+- well-done 全熟
+- mutton 羊肉
+  - I perfer mutton to beef.
+- lamb 羔羊肉
+  - lamb chops
+- chicken 鸡肉
+  - chicken soup
+  - fried chicken
+- fish 鱼肉
+  - fresh fish
+  - frozen fish
+  - smoked fish
+- vinegar 醋
+  - Would you like some vinegar with you dumplings?
+- soy sauce 酱油
+  - Would you pass me the soy sauce?
+- jam 果酱
+  - strawberry jam
+  - a jar of jam
+- salt 盐
+  - table salt
+  - There is too much salt in the soup.
+- sugar 糖
+  - white sugar
+  - brown sugar
+  - Dont't eat too much sugar.
+- oil 油
+  - cooking oil
+  - olive oil
+  - sunflower oil
+- pepper 胡椒粉
+  - You can put some salt and papper in you soup if you like.
+- ginger 姜
+  - ginger ale
+- garlic 大蒜
+  - a clove of garlic
+- spring onion 大葱
+  - I just hate the smell of spring onion and garlic.
+- nut 坚果
+  - a pine nut
+  - We were sitting around the fireplace cracking nuts.
+- peanut 花生
+  - peanut oil
+  - peanut butter
+- chestnut 栗子
+  - A man in the street is selling roast chestnuts.
+  - chestnut cake
+- sesame 芝麻
+  - sesame seeds
+  - sesame oil
+  - open sesame
+- chocolate 巧克力
+  - a bar of chocolate
+  - a box of chocolate
+  - Life is like a box of chocolate
+  - dark chocolate
+  - chocolate mousse
+  - Would you like a chocolate?
+  - I'll have a hot chocolate, please.
+- beverage 饮料
+  - foods and beverages
+  - Hot beberages include tea, coffee and hot chocolate.
+- milk 牛奶
+  - a bottle of mile
+  - Would you like some milk in you tea?
+  - breast milk.
+- yoghurt 酸奶
+  - plain yoghurt
+  - strawberry yoghurt
+  - low-fat yoghurt
+- wine 葡萄酒，果酒
+  - red wine
+  - white wine
+  - I love Australian wines.
+  - Would you like to see the wine list, sir?
+- champagne 香槟酒
+  - a glass of champagne
+  - They celebrated their wedding anniversary with a bottle of champagne.
+- beer 啤酒
+  - My brother has every dinner with beer.
+  - Two beers, please.
+- juice 果汁
+  - tomato juice
+  - orange juice
+  - apple juice
+- tea 茶
+  - lemon tea
+  - iced tea
+  - Shall i make tea?
+  - Would you like some tea?
+  - I'd love a cup of tea, please.
+  - How about a nice cup of tea? That'll make you feel better.
+  - afternoon tea
+- coffee 咖啡
+  - coffee bean
+  - coffee house
+  - instant coffee
+  - I'll make some coffee.
+  - Do you like your coffee white or black?
+  - Two coffees, to go, please.
+- water 水
+  - running water
+  - drinking water
+  - Fish live in water.
