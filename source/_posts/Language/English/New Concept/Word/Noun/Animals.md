@@ -11,6 +11,10 @@ date: 2020-04-01 21:00:21
 
 ---
 
+动物的一些名词
+
+<!-- more -->
+
 - dog 狗
   - I love dogs;
   - Dogs are man's best friends;

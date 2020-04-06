@@ -12,6 +12,10 @@ date: 2020-04-03 22:2:21
 
 ---
 
+食物的一些名词
+
+<!-- more -->
+
 - food 食物
   - Everyone needs food.
   - Fast food.
