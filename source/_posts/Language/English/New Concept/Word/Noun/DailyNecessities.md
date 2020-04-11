@@ -304,3 +304,48 @@ date: 2020-04-04 21:12:01
   - A button was missing from his shirt.
   - Press the 'play' button.
 - zipper 拉链
+  - The zipper doesn't look good.
+  - I can't open my bag - the zipper has stuck
+- lighter 打火机
+  - Do you have a lighter?
+- torch 手电筒，火炬
+  - flashlight 手电筒
+  - Take a torch.  It's dark outside.
+  - the Olympic torch
+- bulb 电灯泡
+  - I've never changed a buld.
+  - a 60-watt bulb
+- battery 电池
+  - The torch needs two batteries.
+  - When the red light is on, you should chage batteries.
+- lock 锁
+  - There isn't a lock on the bathroom door.
+  - He slowly turned the key in the lock.
+- key 钥匙
+  - the car keys
+  - a bunch of keys
+  - the key to the front door
+  - the spare key to the front door
+- watch 表
+  - a pocket watch
+  - a wrist watch
+  - My watch is five minutes fast.
+  - My watch is five minutes slow.
+- backpack 背包
+  - I want to take my backpack and go on a trip alone.
+- handbag 手提包
+  - purse
+  - She carried a green leather hadnbag.
+  - I bought a new handbag.
+- suitcase 衣箱
+  - Have you packed you suitcase yet?
+  - Could you keep an eye on my suitcase for a moment, please.
+- jewel 珠宝
+  - precious jewels
+  - She loves wearing priceless jewels.
+- jewel case 珠宝盒
+  - There are many beautiful jewels in her jewel case.
+  - She opened her jewel case and said: 'Pick one'.
+- ring 戒指
+  - a diamond ring
+  - 
