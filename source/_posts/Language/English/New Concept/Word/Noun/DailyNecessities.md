@@ -348,4 +348,91 @@ date: 2020-04-04 21:12:01
   - She opened her jewel case and said: 'Pick one'.
 - ring 戒指
   - a diamond ring
-  - 
+  - an engagement ring
+  - a wedding ring
+- earring 耳环
+  - gold errring
+  - She was wearing a pair of beautiful diamond earrings.
+- necklace 项链
+  - a peral necklace
+  - a gold necklace
+  - That necklace you borrowed from me wasn't diamond necklace.
+- bracelet 手镯，手链
+  - a gold bracelet
+  - He bought her a new bracelet.
+- brooch 胸针
+  - Excuse me, could you tell me how much this brooch costs?
+  - She is wearing a gold brooch.
+- pearl 珍珠
+  - a string of pearls
+  - a peral necklace
+  - Pearl Harbor
+- diamond 钻石
+  - a diamond ring
+  - a diamond necklace
+- jade 玉，翡翠
+  - a jade vase
+  - a jade necklace
+- crib 婴儿床
+  - The baby is sleeping quietly in his crib.
+- cradle 摇篮，发源地
+  - The mother rocked the baby to sleep in its cradle.
+  - Greece, the cradle of Western culture.
+- diaper 纸尿裤
+  - She was changing the baby's diaper.
+  - I knew William when he was still in diaper.
+- stroller 婴儿车
+  - I saw her pushing a stroller down the street.
+  - The baby was trying to get out of the stroller.
+- razor 剃须刀
+  - an electric razor
+  - a disposable razor
+- umbrella 伞，雨伞
+  - a folding umbrella
+  - put up an umbrella
+  - take down an umbrella
+  - Take an umbrella with you, in case it rains.
+  - It started to rain, so i put up my umbrella.
+  - The rain stopped, so i took down my umbrella.
+- sun umbrella 太阳伞
+  - Chinese girls usually carry sun umbrellas in summer.
+- stationery 文具
+  - I must go to the stationer's to get some stationary.
+- paper 纸，报纸
+  - a piece of paper
+  - a sheet of paper
+  - writing paper
+- a paper bag
+  - I wrote down her phone number on a piece of apper.
+  - Have you seen today's paper?
+- pen 笔，钢笔
+  - Do you have a pen and paper?
+  - Please fill out the form in pen.
+  - pen name
+  - pen pal
+- pencil 铅笔
+  - a sharp pencil
+  - a box of coloured pencils
+  - a note written in pencil
+- ruler 尺子
+  - Do you have a ruler?
+- eraser 橡皮，板擦
+  - May i borrow your erase?
+  - If you write in pencil, you can always rub out your mistakes with an earser?
+- glue 胶水
+  - a tube of glue
+  - He sticks to her like glue.
+- toy 玩具
+  - Annice was playing happily with her toys.
+  - Put your toys away now - it's time for bed.
+  - Leave daddy's camera alone - it isn't a toy!
+- bag 袋，包
+  - a paper bag
+  - a plastic bag
+  - a garbage bag
+  - a shoppng bag
+- box 盒子，箱子
+  - a tool box
+  - a cardboard box
+  - a box of chocolates
+  - black box
