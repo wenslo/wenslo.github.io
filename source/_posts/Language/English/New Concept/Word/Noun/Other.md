@@ -1,0 +1,227 @@
+---
+title: 名词-其他
+
+categories: 
+
+- 英语学习
+
+tags: 
+
+date: 2020-04-12 15:42:41
+
+
+
+
+---
+
+其他常见的一些名词
+
+<!-- more -->
+
+- meal 餐，饭
+  - breakfast, the first meal of the day
+  - Why don't you ask him out for a meal?
+  - We must have a meal together some time.
+- breakfast 早餐
+  - a light breakfast
+  - a big breakfast
+  - a working breakfast
+  - I'm having breakfast.
+- lunch 午餐
+  - What's for lunch?
+  - I'll have soup for lunch.
+  - I'm afraid he's at lunch
+  - I'll take you out to lunch next time.
+- supper 晚餐
+  - the Last Supper
+  - We had supper in a small Italian place.
+  - Why don't you come over for supper on sunday?
+- dinner 晚餐，正餐
+  - It's time for dinner.
+  - Have you had dinner yet?
+  - Perhaps we should invite them to dinner.
+- eye 眼睛
+  - She opened her eyes.
+  - She closed her eyes.
+  - I've got something in my eye!
+- eyebrow 眉毛
+  - He's got thick eyebrows.
+  - eyebrow pencil
+  - She is plucking her eyebrows.
+- forehead 额头
+  - She's got a high forehead.
+- neck 脖子，颈
+  - Giraffes have very long necks.
+  - Jean wore a string of pearis around he neck.
+- shoulder 肩膀
+  - shrug one's shoulders
+  - a person with broad shoulders
+- heart 心，心脏
+  - His heart stopped beating.
+  - He has a kind heart.
+  - You broke my heart.
+- stomach 胃
+  - My stomach is completely full.
+- stomachache 胃痛
+  - The baay-sister says she has a stomachache
+- arm 胳膊
+  - left arm
+  - right arm
+  - Peter was carrying a box under his arm.
+  - They walked alone the beach arm in arm.
+- hand 手
+  - Go wash you hands.
+  - The young couple were holding hands.
+  - The two leaders shook hands.
+  - Could you give me a hand?
+- finger 手指
+  - Everyone has ten fingers.
+  - We ate with our fingers.
+- fingernail 指甲
+  - She had long red fingernails.
+- thumb 大拇指
+  - The baby is sucking his thumb.
+- forefinger 食指
+  - index finger
+- middle finger 中指
+- ring finger 无名指
+- little finger 小指
+- waist 腰，腰部，腰围
+  - He put his arm around her waist.
+  - She has a 26-inch waist.
+- his 臀部
+  - He stood with his hands on his hips.
+- leg 腿
+  - She fell and broke her leg.
+  - a young boy with skinny legs
+- knee 膝盖，膝
+  - He went down on one kenn and asked her to marry him.
+  - Sit on my knee.
+- foot 脚
+  - My foot hurts.
+  - I've been on my feet all day.
+  - It takes about 30 minutes on foot.
+- toe 脚趾
+  - Can you touch your toes?
+- bone 骨头
+  - This fish has a lot of bones in it.
+  - She was all skin and bone.
+- skin 皮，皮肤
+  - She has a dark skin.
+  - a skin disease.
+- hat 帽子
+  - Put on you hat.
+  - Take off you hat.
+  - Maria was wearing a beautiful new hat.
+- scarf 围巾
+  - You need a scarf on such a cold day.
+- coat 上衣，外套
+  - Billy! Put on your coat. It's cold outside!
+- shirt 衬衣
+  - a cotton shirt
+  - I wear a shirt and tie at work.
+- tie 领带
+  - black tie
+  - white tie
+- blouse 女衬衫
+  - She was wearing a skirt and blouse.
+- sweater 针织套衫，羊毛套衫
+  - a V-necked sweater
+  - Put a sweater on if you're cold.
+- trousers 裤子
+- pants 裤子
+  - a pair of pants
+- jeans 牛仔裤
+  - a T-shirt and jeans
+  - She was wearing a pair of tight blue jeans
+- jacket 短上衣，夹克
+  - a black leather jacket
+- dress 连衣裙
+  - Susan is wearing a long red dress.
+- skirt 裙子
+  - a short skirt and high heels
+- miniskrit 超短裙，迷你裙
+- suit 套装
+  - a business suit
+- shoe 鞋
+  - a pair of shoes
+  - I took off my shoes.
+- sock 袜子
+  - a pair of socks
+  - Put on your shoes and socks.
+- stocking 长筒袜
+  - a pair of silk stockings
+- glove 手套
+  - a paire of gloves
+  - boxing gloves
+- pajamas 睡衣裤
+  - pyjamas
+  - Why are you still in your pajamas?
+- cotton 棉花，棉布
+  - a white cotton shirt
+  - 100% cotton
+  - cotton candy
+- wool 羊毛
+  - a pure wool skirt
+  - 100% wool
+- silk 丝
+  - a silk blouse
+  - silk stockings
+  - Her skin was as smooth as silk.
+- leather 皮，毛皮
+  - leather shoes
+  - a leather jacket
+- family 家庭，家人
+  - a one-parent family
+  - Do you know the family next door?
+- mother 母亲，妈妈
+  - Good night, Mother.
+  - His mother is a doctor.
+  - mother cat
+- mom 妈妈
+  - mommy
+  - I miss my mom a lot.
+  - Mom, I'm hungry.
+- father 父亲，爸爸
+  - Ben's a wonderful father.
+  - My boss is a father of three.
+- dad 爸爸
+  - daddy
+  - Dad, will you help me?
+- son 儿子
+  - He has a son and two daughters.
+- daughters 女儿
+  - My daughter is three years old.
+- grandfather 祖父
+  - His grandfather was a professor.
+- grandmother 祖母
+  - My grandmother passed away two years ago.
+- uncle 叔叔，伯父，舅父，姑父，姨夫
+  - Uncle Philip
+  - Uncle sam
+- aunt 姨妈，姑妈，伯母，舅妈
+  - auntie
+  - Aunt Mary
+- brother 兄，弟
+  - big brother
+  - little brother
+- sister 姐，妹
+  - big sister
+  - little sister
+  - Do you have any brothers or sisters?
+- cousin 堂（表）兄弟姐妹
+  - She is my cousin.
+- husband 丈夫
+  - This is my husband, Steve.
+  - ex-husband 前夫
+- wife 妻子
+  - She is a good wife and mother.
+  - ex-wife 前妻
+- boyfriend 男朋友
+  - He's not my boyfriend - we're just good friends!
+- girlfriend 女朋友
+  - Does he have a girlfriend?
+- friend 朋友
+  - We are good friends.
+- plane 飞机
+- 
