@@ -224,4 +224,242 @@ date: 2020-04-12 15:42:41
 - friend 朋友
   - We are good friends.
 - plane 飞机
-- 
+  - The plane is aboud to land.
+  - travel by plane
+  - The plane will take off in twenty minutes.
+- train 火车
+  - I went to Qingdao by train last year.
+  - get on the train
+  - get off the train
+- bus 公共汽车
+  - Shall we walk or go by bus?
+  - Hurry up or we'll miss the bus!
+- coach 长途公共汽车
+  - a coach station
+- subway 地铁
+  - a subway train
+  - a subway station
+- taxi 出租汽车
+  - I **took a taxi** to the airport.
+  - She arrived by taxi.
+- bike 自行车
+  - They'll come **by bike**.
+- motorbike 摩托车
+  - She jumped on her motorbike.
+- boat 小船
+  - a fishing boat
+  - row a boat
+  - We crossed the river **by boat**.
+- ship 轮船
+  - She travelled to Japan by ship.
+- ferry 渡船
+  - The ferry leaves for France at one o'clock.
+- truck 卡车
+  - a truck driver
+- car 小汽车
+  - I bought a new car.
+  - He always goes to work by car.
+- jeep 吉普车
+  - Is this a jeep or a truck?
+- bus stop 公共汽车站
+  - She is waiting at the bus stop.
+- railway station 火车站
+  - I'll meet you at the railway statoin.
+- subway station 地铁站
+  - Excuse me, how can i get on the subway station.
+- airport 机场
+  - Her family went to see her off at the airport.
+- teacher 教师
+  - I'm an English teacher.
+- professor 教授
+  - Professor Stephen Hawking
+- writer 作家，作者
+  - He is a writer of children's stories.
+- doctor 医生
+  - You'd better see a doctor.
+- dentist 牙医
+  - I'm going to **the dentist's** this afternoon.
+- nurse 护士
+  - His aunt is a nurse.
+- singer 歌手
+  - My favorite **pop singer** is Michael Jackson.
+- dancer 舞蹈演员，舞者
+  - His ex-girlfriend was a dancer.
+- painter 画家
+  - a famous painter
+- lawyer 律师
+  - I want to see my lawyer before i say anything.
+- engineer 工程师
+  - They're sending an engineer to fix the telephone line.
+- designer 设计师
+  - I want to be a fashion disigner.
+- actor 演员
+  - You have to be a very good actor to play that part.
+- actress 女演员
+  - She's a great dramatic actress.
+- waiter 服务员
+  - Waiter, could you bring me some water?
+- waitress 女服务员
+  - I'll ask the waitress for the bill.
+- businessman 商人
+  - Her husband is a successful businessman.
+- taxi driver 出租车司机
+  - He was once a taxi driver; now he is a college student.
+- bus driver 公交车司机
+  - Why don't you ask the bus driver?
+- accountant 会计师
+  - Certified public accountant（CPA）
+- cashier 出纳员
+  - She is a cashier in a supermarket.
+- salesperson 售货员，推销员
+  - a car salesperson
+- vet 兽医
+  - I'm going to take the dog to the vet's tomorrow.
+- worker 工人
+  - part-time workters
+  - blue-collar workers
+  - white-collar workers
+- clerk 职员
+  - a bank clerk
+  - an office clerk
+- boss 老板
+  - I'll have to ask my boss for a day off.
+  - I'll my own boss.
+- model 模特
+  - a male model
+  - a fashion model
+- cook 厨师
+  - He works as a cook in a local restaurant.
+  - Who was the cook?
+- chef 大厨，厨师长
+  - He is one of the top chefs in China.
+- farmer 农场主，农民
+  - a pig farmer 
+- pilot 飞机员
+  - Her husband is very good pilot.
+- captain 船长，机长，队长
+  - Captain Cook
+  - Captain American
+- flight attendant 空中乘务员
+  - It's not easy to be a good flight attendant.
+- policeman 男警察
+  - That policeman's waving to you.
+  - policewoman
+- firefighter 消防队员
+  - He wants to be a firefighter.
+- dustman 清洁工
+  - Alf's wife has never discovered that she married a dustman.
+- hairdresser 理发师
+  - That hairdresser curled my hair.
+- milkman 送牛奶的人
+  - Have you paid the milkman this month?
+- postman 邮递员
+  - Has the postman come this morning?
+- scientist 科学家
+  - When i was a kid, my dream was to be a scientist.
+- baker 面包师傅
+  - I'm just going to the baker's.
+- mayor 市长
+  - the mayor of New York
+- president 总统
+  - President Obama
+  - Do you have any comment, Mr.President?
+- priest 牧师，神父
+  - He had trained to be a Catholic priest.
+- editor 编辑
+  - the editor of the Washington Post
+- real estate agent 房产中介
+  - I spoke to a real estate agent about mu house.
+- journalist 新闻记者
+  - a well-known journalist
+- tour guide 导游
+  - A tour guide took us around the city.
+- manager 经理
+  - a bank manager
+  - a hotel manager
+  - I'd like to speak to the manager.
+- secretary 秘书
+  - My secretary will fax you all the details.
+- sun 太阳
+  - The sun rises in the east and sets in the west.
+  - The sun is shining and birds are singing.
+- earth 地球
+  - The moon goes round the earth.
+  - I must be the happiest person **on the earch**.
+- moon 月球
+  - full moon
+  - the Americans landed on the moon in 1969.
+- star 星星
+  - The sky was filled with stars.
+  - Twinkle, twinkle, little star, How i wonder what you are. Up above the world so high, Like a diamond in the sky.
+- air 空气
+  - Let's go outside and get some fresh air.
+  - I'd prefer to travel **by air**.
+- sky 天空
+  - a clear blue sky
+  - There isn't a cloud in the sky.
+- cloud 云
+  - dark cloud
+  - The sun went behind a cloud.
+- tree 树
+  - As a kid, i loved to climb trees.
+  - We planted a peach tree in the backyard.
+- leaf 叶子，树叶
+  - fallen leaves
+  - He was sweeping up leaves in his garden.
+- branch 树枝
+  - She climbed the tree and hid in the branch.
+- trunk 树干
+  - the trunk of an old oak tree
+- root 根
+  - I pulled the plant up by the roots.
+  - root vegetables
+- grass 草
+  - Keep off the grass.
+  - The dry grass caught fire.
+- flower 花
+  - a flower garden
+  - a flower show
+  - She bent down and picked a flower.
+- bud 花蕾，芽
+  - rose bug
+- rose 玫瑰
+  - a bunch of red rose
+  - a rose garden
+- lily 百合花
+  - The are always fresh lilies on her desk.
+- tulip 郁金香
+  - Tulip is the national flower of Holland.
+- sunflower 向日葵
+  - sunflower seeds
+  - A bee sits on a sunflower in the garden.
+- daisy 雏菊
+  - A daisy is a small wild flower with a yellow center and white petals.
+- road 路
+  - road signs
+  - All roads lead to Rome.
+- street 街道
+  - I met a friend **in the street**.
+  - The bank is just **across the street**.
+- way 道路，方法
+  - This way, please.
+  - No way!
+  - I'm sure he loves you, **in his own way**.
+- building 建筑物，大楼
+  - They were on the upper floor of the building.
+- floor 地板，楼层
+  - wooden floor
+  - kitchen floor
+  - We live on the eighth floor.
+- basement 地下室
+  - Dad is working in the basement.
+- ground 地面
+  - He lay on the ground and stared up at sky.
+  - playground 操场
+- door 门
+  - Could you **open the door** for me?
+  - He quickly **shut the door**.
+  - Someone is **knocking at the door**.
+- gate 门
+  - Please wait **at the gate**.
+  - Two guards are standing **at the gate**.
