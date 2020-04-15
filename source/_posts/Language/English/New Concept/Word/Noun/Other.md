@@ -463,3 +463,171 @@ date: 2020-04-12 15:42:41
 - gate 门
   - Please wait **at the gate**.
   - Two guards are standing **at the gate**.
+- window 窗户
+  -  a broken window
+  - I saw them through the window.
+  - She looked out of the window.
+- glass 玻璃
+  - a glass bowl
+  - a piece of broken glass
+- metal 金属
+  - a small black metal box
+  - The gate is made of metal.
+- rain 雨
+  - heavy rain
+  - light rain
+  - Don't go out in the rain.
+- rainbow 彩虹
+  - Oh look, a rainbow!
+  - all the clolors of the rainbow
+- snow 雪
+  - The snow began to fall.
+  - Children were playing in the snow
+  - snowman
+- wind 风
+  - strong/heavy winds
+  - a north wind
+  - **A gust of wind** blew my hat off.
+- lightning 闪电
+  - a flash of lightning
+  - The poor dog **was struck by lightning**.
+- thunder 雷
+  - **a peal of thunder**
+  - a storm with thunder and lightning
+- storm 暴风雨，暴风雪
+  - a dust storm
+  - A storm is coming.
+- kindergarten 幼儿园
+  - Susie is in kindergarten now.
+- school 学校
+  - a school bus
+  - go to school
+  - It's **time for school**.
+- primary school 小学
+  - elementary school
+  - junior high school
+  - senior high school
+- college 大学，学院
+  - a college professor
+  - King's College, Cambridge
+  - She's at college.
+- university 大学
+  - She hopes to **go to university** next year.
+  - He studied Physics **at university**.
+- grade 年级
+  - My son's in the third grade.
+- class 班级，课
+  - We were in the same class at scool.
+  - I have a math class at 9 o'clock.
+- classroom 教室
+  - She is in the classroom.
+- classmate 同班同学
+  - The gril with long hair is my classmate.
+- department 系，部门
+  - the Engligh department
+  - the Educatoin Department
+- subject 学科，话题
+  - Physics and math are my favouite subject.
+  - an interesting subject of conversation
+  - Chinese 语文
+  - English 英语
+  - math 数学
+  - physics 物理
+  - chemistry 化学
+  - history 历史
+  - geology 地理
+- country 国家
+  - European countries
+  - There will be rain in all parts of the country.
+  - China 中国
+  - America 美国
+  - England 英国
+  - France 法国
+  - Germany 德国
+  - Italy 意大利
+  - Austria 奥地利
+  - Turkey 土耳其
+  - Spain 西班牙
+  - Greece 希腊
+  - Sweden 瑞典
+  - Switzerland 瑞士
+  - Russia 俄罗斯
+  - Canada 加拿大
+  - Australia 澳大利亚
+  - New Zealand 新西兰
+  - Japan 日本
+  - Korea 朝鲜，韩国
+  - India 印度
+  - Vietnam 越难
+  - Malaysia 马来西亚
+  - Philippines 菲律宾
+- time 时间
+  - **Long time no see.**
+  - That will **take time**.
+  - **Time heals all wounds.**
+- year 年，年纪
+  - last year
+  - this year
+  - next year
+  - My son is 4 **years old**.
+- month 月
+  - She'll be thirteen **this month**.
+  - He'll be away for two months.
+  - I haven't seen him **for months**.
+- week 星期
+  - I can't see you this weak.
+  - See you next week.
+  - Last week I was very busy.
+- weekend 周末
+  - Have a nice weekend!
+  - What are you doing **on the weekend**?
+- day 一天，白天
+  - There are seven days in a week.
+  - He has been working all day.
+- night 夜晚，晚上
+  - Good night!
+  - These animals only comt out **at night**.
+- morning 上午，早晨
+  - Good morning!
+  - I'll see you **tomorrow morning**.
+  - I prefer coffee **in the morning**.
+- afternoon 下午
+  - Good afternoon, ladies and gentlemen!
+  - **In the afternoon** they went shopping.
+- evening 晚上
+  - Good evening, everyone.
+  - What do you usually do **in the evening**?
+- tomorrow 明天
+  - See you tomorrow!
+  - We're meeting **tomorrow evening**.
+  - **the day after tomorrow**
+- yesterday 昨天
+  - Where were you yesterday morning?
+  - **yeserday once more**
+  - **the day before yesterday**
+- hour 小时
+  - The movie lasts two hours.
+  - I'll be back in three hours.
+- minute 分钟
+  - Just a minue.
+  - Our guests will be here **in a minute**!
+  - He returned **a few minutes later**.
+- second 秒
+  - Hold you breath for six seconds.
+  - I'll be back in a second.
+  - Just a second, I'll come and help.
+- moment 瞬间，片刻，时机
+  - Could you wait a moment, please?
+  - I'll be back **in a moment**.
+  - Wait for the right moment.
+- Monday 星期一
+  - last Monday
+  - next Monday
+  - They met **on Monday** and got married on Friday.
+- Tuesday 星期二
+- Wednesday 星期三
+- Thursday 星期四
+- Friday 星期五
+- Saturday 星期六
+- Sunday 星期天
+- January 一月
