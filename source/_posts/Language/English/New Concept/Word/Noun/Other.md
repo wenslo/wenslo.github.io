@@ -631,3 +631,33 @@ date: 2020-04-12 15:42:41
 - Saturday 星期六
 - Sunday 星期天
 - January 一月
+  - She started working there **in January**.
+- February 二月
+- March 三月
+- April 四月
+- May 五月
+- June 六月
+- July 七月
+- August 八月
+- September 九月
+- October 十月
+- November 十一月
+- December 十二月
+- season 季节
+  - the dry season
+  - the rainy season
+  - Spring is my favorite season.
+- spring 春季
+  - He was born **in the spring** of 1944.
+  - There's a feeling of spring in the air today.
+- summer 夏天
+  - **In (the) summer**, we often go on holiday,
+  - We're going to Italy **next summer**.
+- autumn 秋天
+  - fall
+  - in the early autumn
+  - in the late autumn
+- winter 冬天
+  - It usually snows here **in the winter**.
+- holiday 假日，节日
+- 
