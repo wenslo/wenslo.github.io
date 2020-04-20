@@ -660,4 +660,211 @@ date: 2020-04-12 15:42:41
 - winter 冬天
   - It usually snows here **in the winter**.
 - holiday 假日，节日
-- 
+  - The school holidays start tomorrow.
+  - I'm taking two weeks holiday.
+- ocean 海洋
+  - the Pacific Ocean
+  - the Atlantic Ocean
+  - the Indian Ocean
+  - the Arctic Ocean
+- sea 大海
+  - travel **by sea**
+  - a cottage **by the sea**
+- beach 海滩
+  - a beautiful **sandy beach**
+  - I just want to lie **on the beach** in the sun.
+- river 河流
+  - the Mississippi River
+  - We went for a walk **alone the river**.
+- lake 湖
+  - Lake geneva
+  - We swam **in the lake**.
+- mountain 山
+  - the Rocky Mountains
+  - There is still snow on the mountain tops.
+- hill 小山
+  - The house is on the side of a hill.
+- land 陆地
+  - travel **by land**
+  - It was good to be back **on land**.
+- island 岛
+  - a remote island
+- cinema 电影院
+  - We dicided to **go to the cinema**.
+  - It's on **at the** local cinema.
+- theater 剧场，戏院
+  - an open-air theatre
+- library 图书馆
+  - a public library
+  - Let's meet outside the library.
+- museum 博物馆
+  - the Natural History Museum
+  - Night at the Museum
+- park 公园
+  - Let's go for a walk in the park.
+  - They stopped and sat on a park bench.
+- garden 花园
+  - Out house has a small garden.
+  - Children are playing in the garden.
+- hospital 医院
+  - He had to **go to hospital.**
+  - She spend two weeks **in hospital.**
+- church 教堂
+  - How often do you **go to church**?
+  - We didn't see you **at church** this morning.
+- shopping mall 购物中心
+  - They are planning to build another **shopping mall** around here.
+- post office 邮局
+  - You can buy your stamps at the post office.
+- bank 银行
+  - a bank manager
+  - a bank account
+- market 市场
+  - I usually buy fruit and vegetables at the market.
+- supermarket 超市
+  - Another supermarket opened last week.
+- restaurant 餐厅
+  - a Chinese restaurant
+  - We went out to a restaurant to celebrate.
+- farm 农场
+  - farm workers
+  - fresh farm produce
+- castle 城堡
+  - a medieval castle
+- place 地方
+  - public places
+  - The place was full of screaming children.
+- film 电影
+  - movie
+  - What's you favorite film?
+  - Let's **watch a film**.
+- play 戏剧
+  - We are going to see a new play.
+- game 游戏，比赛
+  - Game over
+  - Did you see the game on TV last night?
+- ball 球
+  - Go fetch the ball!
+- football 足球，橄榄球
+- basket 篮子
+  - a shopping basket
+- basketball 篮球
+- baseball 棒球
+  - a baseball bat
+  - a baseball team
+- tennis 网球
+  - a tennis player
+  - a tennis club
+- table tennis 乒乓球
+  - I've never played **table tennis** before.
+- piano 钢琴
+  - a piano teacher
+  - Do you **play the piano**?
+- violin 小提琴
+  - I used to **play the violin**.
+- guitar 吉他
+  - Her son **plays the guitar** in the rock band.
+- flute 长笛
+- drum 鼓
+- person 人
+  - You are a very nice person.
+  - I'm not really a city person.
+- people 人们
+  - How many people were at the meeting?
+  - I don't care what people thinks.
+- man 男人，男子汉
+  - Carson is a very busy man.
+  - There are two men and a woman in the car.
+  - Come on, be a man now. No more crying.
+- gentleman 先生，绅士，君子
+  - Thank you. You're a real gentleman.
+  - Good morning, ladies and gentleman.
+- woman 女人
+  - a single woman
+  - married women
+  - a woman driver
+- lady 女士，淑女
+  - Ask that lady to help you.
+  - She's a real lady. She never loses her temper.
+- boy 男孩，儿子
+  - The boys wanted to play football.
+  - How old is your little boy?
+- girl 女孩，女儿
+  - Good morning, girls and boys!
+  - They have two girls and a boy.
+- child 儿童，孩子
+  - I was very happy as a child.
+  - She is married with three children.
+- kid 小孩
+  - She's alwasy loved animals since she was a little kid.
+  - How are your wife and kids?
+- baby 婴儿，宝贝
+  - The baby is crying.
+  - Come here, baby.
+- nieighbor 邻居
+  - my next-door neighbor
+  - I'm you new neighbor.
+- Mr. 先生
+  - Mr. and Mrs. Smith
+  - Mr. President
+- Mrs 夫人，太太
+  - Mrs. Brown
+- Miss 小姐，女士
+  - That's all, thank you, Miss Lipman.
+  - Miss America
+  - I know the answer, Miss.
+- Ms. 女士
+- sir 先生
+  - Can i help you, sir?
+  - Are you ready to order, sir?
+  - Dear Sir
+- madam 女士，夫人
+  - ma'am
+- city 城市
+  - New York City
+  - Beijing is China's capital city.
+- town 城镇
+  - The village where I was born is a town now.
+- village 村子
+  - a fishing village
+  - a mountain village
+- color 颜色
+  - colour
+  - What color are his eyes?
+  - I love wearing bright colors.
+- white 白色
+- black 黑色
+- red 红色
+- pink 粉色
+- purple 紫色
+- green 绿色
+- yellow 黄色
+- blue 蓝色
+- orange 橘色
+- brown 棕色
+- gray grey 灰色
+- silver 银色
+- question 问题
+  - Can I ask you a question?
+  - I'm afraid I can't answer that questoin.
+  - Does anyone have any questions?
+- answer 回答，答复，答案
+  - You don't have to give them an answer now.
+  - What is the **answer to** question 4?
+- problem 问题
+  - No problem.
+  - What is you problem?
+  - That's not my problem.
+  - Do you have a problem with that?
+- letter 字母，信
+  - Fill you answers in **capital letters**, not **small letters**.
+  - I got a long **letter from** Melanie today.
+- word 单词
+  - Write an essay of about five hundred words.
+- sentence 句子
+  - It's difficult to sum it up in one sentence.
+- art 艺术，艺术品
+  - modern art
+  - an art lover
+  - an art exhibition
+- beauty 美，美人儿
