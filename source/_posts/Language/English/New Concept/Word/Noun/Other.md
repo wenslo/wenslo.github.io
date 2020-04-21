@@ -868,3 +868,113 @@ date: 2020-04-12 15:42:41
   - an art lover
   - an art exhibition
 - beauty 美，美人儿
+  - the beauty of the sunset
+  - She was a famous beauty in her youth.
+- bell 铃，钟
+  - church bells
+  - a bicycle bell
+  - He rang the bell and waited for someone to answer the door.
+- bridge 桥
+  - We walked across a wooden bridge.
+- blood 血
+  - He lost a lot of blood in the accident.
+  - I'm going to **give blood** this afternoon.
+- business 生意
+  - He wants to be a doctor or **go into business.**
+  - We **do business with** a number of local companies.
+- case 事例，实情，案例
+  - It's a clear case of blackmail!
+  - This is not alwasy **the case**.
+  - a case of murder
+- center 中心
+  - a shopping center
+  - There was a large table **in the center of** the room.
+- change 机会，可能性
+  - Give me a change.
+  - There is no change that he will change his mind.
+- Christmas 圣诞节
+  - a Christmas present
+  - We'll se you **at Christmas**.
+- company 公司
+  - Which company do you work for?
+- date 日期，约会
+  - What's the date today?
+  - I've got a date with David tomorrow night.
+- death 死亡
+  - Her death was a shock to him.
+  - Two men were burnt to death in the fire.
+- dream 梦，梦想
+  - Good night, Sweet dreams!
+  - I have a dream.
+- duty 职责，义务，职责
+  - I feel it is my duty to help her.
+  - I promise I will do my duty.
+- exercise 练习，运动
+  - an exercise book
+  - The doctor advised him to take more exercise.
+- experience 经历，经验
+  - We all learn by experience.
+  - It was her first experience of living alone.
+- excuse 借口
+  - What's your excuse for being late this time?
+  - I'm tired of listening to his excuses.
+- enemy 敌人
+  - Cats ant dogs have always been **natural enemies**.
+- fact 事实
+  - I can't believe the fact that he is married.
+  - **In fact**, i had dinner with her last week.
+- field 田地，领域
+  - a field of wheat
+  - Peter's an expert in his field.
+- forest 森林
+  - a forest fire
+  - The children got lost in the forest.
+- wood 木头
+  - Tables are usually made of wood.
+  - You'd better **knock on wood**.
+- factory 工厂
+  - a car factory
+  - She works in a factory.
+- future 未来，前途
+  - Who knows what will happen in the future?
+  - Does this school have a future?
+- fire 火
+  - The house is **on fire**!
+  - It took firefighters serveral hours to **put out the fire**.
+- gift 礼物
+  - present
+  - a birthday gift
+  - a wedding gift
+- habit 习惯
+  - Jeff is **in the habit of** taking a walk after dinner.
+  - Old habits die hard.
+- hobby 业余爱好
+  - What are you hobbies?
+  - My hobbies include swimming and travelling.
+- health 健康
+  - Exercise is good for the health.
+  - Smoking can seriously damage you health.
+- home 家
+  - He left home at sixteen.
+  - Last night we stayed **at home** and wathed TV.
+- homework 家庭作业
+  - How much homework do you get?
+  - I still haven't **done my homework**.
+- house 房子
+  - I bought a four-bedroom house with a beautiful garden.
+- housework 家务活
+  - I spend all morning **doing the housework.**
+- hope 希望
+  - There is now hope of a cure.
+  - Don't raise your hopes too high, or you may be disappointed.
+- help 帮助
+  - I need you help.
+  - Thank you for your kind help.
+- ice 冰
+  - Is the ice thick enough for skating?
+  - Her hands were **as cold as ice**.
+- idea 主意，想法
+  - I have an idea.
+  - That's a good idea.
+- lesson 功课
+  - The first lesson in driving is how to start the car.
