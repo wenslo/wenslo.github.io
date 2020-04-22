@@ -978,3 +978,243 @@ date: 2020-04-12 15:42:41
   - That's a good idea.
 - lesson 功课
   - The first lesson in driving is how to start the car.
+  - She geives piano lessons.
+- job 工作
+  - Good job!
+  - I'm looking for a new job.
+- work
+  - He's been **out of work** for two years.
+  - My father **started work** when he was just 14.
+- joy 喜悦，高兴
+  - the look of joy on her face
+  - She wept **for joy**.
+- king 国王
+  - King Edward VII
+  - The lion is the king of the jungle.
+- queue 女王，往后
+  - Queue Elizabeth II
+  - At eighteen, Victoria **was crown queen**.
+- prince 王子
+  - Prince William
+  - the Prince of Wales
+- princess 公主，王妃
+  - Lady Diana Spencer became Princess Diana when she married Prince Charles.
+- kiss 吻
+  - Give me a kiss.
+  - Do you remember your first kiss?
+- kite 风筝
+  - Let's go **fly a kite.**
+- knowledge 知识
+  - I have only limited knowledge of computers.
+- language 语言
+  - How many languages do you speak?
+  - Andrea's **native language** is German.
+- life 生命
+  - I've never been so embarrassed **in my life**.
+  - I've known John **all my life.**
+- love 爱
+  - What these kids need is love and support.
+  - Their love for each other grew deeper every day.
+- machine 机器
+  - Is the **washing machine** working now?
+  - The **fax machine ** is broken.
+- map 地图
+  - a street map of Beijing
+  - According to the map we should turn left.
+- matter 事情
+  - We have more important matters to discuss.
+  - What's the matter?
+- medicine 药
+  - Don't take too much medicine.
+- meeting 会议
+  - We're having a meeting next week.
+  - Mr.Black is **in a meeting** at the moment.
+- menu 菜单
+  - Could I have the menu, please?
+  - Is there any fish **on the menu**?
+- mile 海里
+  - We walked about half a mile.
+  - He was driving at 70 **miles per hour**.
+- mistake 错误
+  - I **made a** huge mistake.
+  - Sorry, I took you bag **by mistake.**
+- money 钱
+  - Don't spend all your money on the first day of you holiday!
+  - Could you lend me some money?
+- member 会员，成员
+  - He is a member of the local tennis club.
+  - The other members of his family were against this marriage.
+- coin 硬币
+  - two gold coins
+  - Let's **toss a coin** to see who goes first.
+- dollar 美元
+  - It cost three dollars.
+- pound 英镑，磅
+  - a pound of apples
+  - a five-pound note
+- music 音乐
+  - I often listen to music when I'm in the car.
+  - What's you favorite kind of music?
+- name 名字
+  - What's you name?
+  - Can I have you name?
+- nature 自然，天性
+  - I love the beauties of nature.
+  - She is a very kind person **by nature**.
+- news 消息，新闻
+  - What's the latest news?
+  - Have you heard the news? Mary has got a baby.
+- notice 布告，通知
+  - I'll **put up a notice** about the meeting.
+- number 数字，号码
+  - Five was her lucky number.
+  - Can I have you phone number?
+- peace 和平，安静
+  - After years of war the people longed for peace.
+  - May he **rest in peace**.
+- path 小路
+  - We took the path across the fields.
+- page 书页
+  - The answer is on **page 15**.
+  - I **turned the pages** of a magazine impatiently.
+- paint 油漆，颜料
+  - Wet paint.
+  - He brought his paints with him.
+- pleasure 快乐，乐事
+  - He smiled **with pleasure.**
+  - It's a pleasure to meet you.
+  - It's my pleasure.
+- power 能力，影响力
+  - It is beyond my power.
+  - You have no power here.
+- pair 一双，一对
+  - a pair of shoes
+  - the happy pair
+- couple 夫妻，情侣
+  - the couple next door
+  - a newly married couple
+- part 部分
+  - The front part of the car was damaged.
+  - The best part of the holiday was the food.
+- party 聚会
+  - a birthday party
+  - I'm giving a party next Saturday night.
+- pet 宠物
+  - pet food
+  - He was bitten by his pet dog.
+- pirce 价格
+  - What is the price of this table?
+  - House prices in this area are falling.
+- program 节目，程序
+  - What's you favorite television program?
+  - a computer program
+- right 右边，权利
+  - The school is **on you right.**
+  - Who gives you the right to do that?
+- seat 座位
+  - Please **take a seat**.
+  - You can book seats online.
+- sand 沙子
+  - I have sand in my shoe.
+- seed 种子
+  - sunflower seeds
+  - grass seed
+- shape 形状
+  - What shape is the table?
+  - The dining room was **square in shape**.
+- smile 微笑
+  - Come on, **give me a smile**.
+  - 'Oh, I'm fine', Anna replied **with a smile**.
+- side 边，面
+  - A man was watching me from **the other side** of the road.
+  - There is a scar **on the right side** of his face.
+- size 尺寸，大小
+  - Jason's house is about the same size as ours.
+  - The jacket was the wrong size.
+- smell 气味
+  - The air was filled with the smell of flowers.
+  - There's a delicious smell coming from the kitchen.
+- song 歌曲
+  - a love song
+  - a pop song
+  - We **sang a song** together.
+- sound 声音
+  - the sound of the wind
+  - the sound of the sea
+  - **The Sound of Music**
+  - I could hear the sound of voices.
+- voice 声音，嗓音
+  - She has a sweet voice.
+  - Keep your voice down.
+- noise 噪音
+  - What's that noise?
+  - Don't make so much noise.
+- stream 小溪
+  - A small stream runs through the woods.
+- stranger 陌生人，外地人
+  - Our dog barks at strangers.
+  - 'Excuse me, where's the railway statoins?' ' Sorry, I'm a stranger here myself'
+- space 空间
+  - The fridge takes up too much space.
+  - There isn't much space left for your luggage.
+- south 南方，南部
+  - Which way is south?
+  - The town is to **the south of** London.
+- north 北方，北部
+- east 东方，东部
+- west 西方，西部
+- sport 运动
+  - Which sport do you like best?
+  - My favorite sport is swimming.
+- store 商店
+  - shop
+  - a big department store
+  - At Christmas the stores stay open late.
+- story 故事
+  - a ture story
+  - a fairy story
+  - a ghost story
+  - Mommy, will you **read me a story?**
+- surprise 惊讶，惊喜
+  - What a surprise to find you here!
+  - Bill looked at him **in surprise**.
+- team 队，小组
+  - Which team do you play for?
+  - You need to choose a team leader.
+- test 考试
+  - She passed her driving test when she was 17.
+  - Did you get a good mark **in the test**?
+- thing 事情
+  - You are doing the right thing.
+  - First things first.
+- truth 真相
+  - How do I know you're **telling the truth**?
+  - The truth is, I forgot about it.
+- ticket 入场券，票
+  - I'd like to book two tickets to Berlin.
+  - A **return ticket** to London, please.
+- traffic 交通，路上的车辆
+  - a traffic accident
+  - traffic lights
+  - There's usually a lot of traffic at this time of day.
+- trip 旅行
+  - Have a nice trip!
+  - Did you enjoy your trip?
+  - We're thinking of **taking a trip** to Taiwan.
+- trouble 麻烦
+  - We're having trouble with our new car.
+  - You are in big trouble.
+- unit 单元
+  - The book has twenty units.
+- weather 天气
+  - What's the weather like today?
+  - The **weather forecase** said it would be fine all day.
+- world 世界
+  - I want to travel around the world.
+  - Students from **all over the world** come to study Oxford.
+- wall 墙
+  - the Great Wall
+  - I put up some pictures on the walls.
+- wing 翅膀
+  - The brid flapped its wings excitedly.
+  - 
