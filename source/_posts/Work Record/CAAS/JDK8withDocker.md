@@ -17,5 +17,5 @@ date: 2020-03-11
 然后基于该镜像构建容器。
 
 ```dockerfile
- docker run -dit --name XXX -w /root  -v /etc/localtime:/etc/localtime -v /XXX:/root  -p 8888:8080 adoptopenjdk/openjdk8 sh -c "java -jar api.jar"
+ docker run -dit --name XXX -w /root  -v /etc/timezone:/etc/timezone:ro -v /etc/localtime:/etc/localtime -v /XXX:/root  -p 8888:8080 adoptopenjdk/openjdk8 sh -c "java -jar api.jar"
 ```
