@@ -176,4 +176,27 @@ date: 2020-04-23 22:35:26
     2. I am going to have my hair cut.
 53. dance 跳舞
     1. Would you like to dance?
-    2. 
+    2. He danced with her all night.
+54. decide 决定
+    1. It's up to you to decide.
+    2. I can't decide what to wear.
+55. defeat 打败，难倒
+    1. Newcastle were defeated by 3 goals to 2.
+    2. The last question defeated me.
+56. depend 依靠，取决于
+    1. 'How long are you staying?' 'I don't know; **it depends.**'
+    2. I don't want to depend too much on my parent.
+57. describe 描述，形容
+    1. Words cannot describe the beauty of the scene.
+    2. Can you describe him to me?
+58. destory 摧毁，毁坏
+    1. The school was completely destoryed by fire.
+    2. They've destoryed all the evidence.
+59. develop 发展
+    1. Chicago developed into a big city.
+60. devote 奉献，致力于
+    1. She devoted herself to her career.
+61. die 死亡
+    1. He died in 1985 at the age of 76.
+    2. Flowers soon die without water.
+    3. 
