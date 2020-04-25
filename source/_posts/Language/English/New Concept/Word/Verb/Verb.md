@@ -107,3 +107,73 @@ date: 2020-04-23 22:35:26
     1. He can speak French.
     2. Can you cook?
 31. care 关系，在乎
+    1. Of course I care about you.
+    2. I don't care!
+    3. Who cares?
+32. carry 携带
+    1. She carried her baby in her arms.
+    2. He always carries a knife to protect himself.
+33. catch 接住；捉住；赶上
+    1. I threw a ball to her and she caught it.
+    2. Cats catch mice.
+    3. I'm catching a bus.
+34. change 改变
+    1. Our plans have changed.
+    2. I won't **change my mind.**
+35. chat 聊天
+    1. What are you **chatting about**?
+    2. You spend too much time **chatting on line.**
+36. cheat 欺骗，作弊
+    1. I feel cheated.
+    2. Don't look at my cards - that's **cheating**.
+37. check 检查
+    1. Could you go and check if the baby's asleep?
+    2. Check the oil and water before setting off.
+38. cheer 欢呼，高兴
+    1. The crowd cheered loudly as the Queen appeared.
+    2. Cheer up!
+39. choose 选择
+    1. Which one do you choose?
+    2. You chose wisely.
+40. clean 使...干净
+    1. You shoes need cleaning.
+    2. You have to clean your own room.
+41. climb 攀登，爬
+    1. The boy was climbing a tree.
+    2. She climbed up the stairs.
+42. close 关
+    1. The door closed quietly.
+    2. Close your eyes.
+43. collect 收集，收藏
+    1. to collect stamps
+    2. Annie collects teddy bears.
+44. consider 考虑
+    1. We are considering going to Canada.
+45. continue 继续
+    1. to be continued
+    2. He continued typing while he spoke.
+46. control 控制，管理
+    1. Can't you control you child?
+    2. By the age of 21 he controlled the cpmpany.
+47. cook 做饭
+    1. Where did you learn to cook?
+    2. He cooked me lunch.
+48. copy 复制，抄写，模仿
+    1. To copy a file, press F3.
+    2. He copied my answer.
+    3. Children often copy what they see on television.
+49. cost 花费
+    1. How much does it cost?
+    2. The meal cost us 30 dollars.
+50. cover 覆盖
+    1. Dan covered his face with his hands.
+    2. Much of the country is covered by snow.
+51. cry 哭，喊
+    1. The child was crying for his mother.
+    2. 'Help! Help!' he cried.
+52. cut 切，割，砍，剪
+    1. Do you want me to cut the cake?
+    2. I am going to have my hair cut.
+53. dance 跳舞
+    1. Would you like to dance?
+    2. 
