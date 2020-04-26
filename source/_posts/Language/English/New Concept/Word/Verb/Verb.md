@@ -199,4 +199,167 @@ date: 2020-04-23 22:35:26
 61. die 死亡
     1. He died in 1985 at the age of 76.
     2. Flowers soon die without water.
-    3. 
+62. discover 发现
+    1. Columbus discovered America.
+    2. She discovered that she was pregnant.
+63. discuss 讨论
+    1. Have you discussed the problem with anyone?
+    2. I'm not prepared to discuss this on the phone.
+64. do 做
+    1. What are you doing this evening?
+    2. What can i do for you?
+    3. Why can't you do as you're told?
+65. doubt 怀疑
+    1. You can complain, but I doubt if it'll make any difference.
+    2. 'Do you think there'll be any tickets left?' 'I doubt it.'
+66. draw 绘画，拉
+    1. She drew a house.
+    2. She drew me onto the balcony.
+67. dream 做梦；梦想
+    1. I dreamt about you last night.
+    2. She dreamed of becoming a movie star.
+68. dress 穿衣
+    1. Hurry up and **get dressed!**
+    2. Is she old enough to **dress herself?**
+    3. He **was dressed in** a blue jacket.
+69. drink 喝；喝酒
+    1. What wold you like to drink?
+    2. Don't drink and drive.
+70. drive 驾驶，开车
+    1. Can you drive?
+    2. When did you learn to drive?
+71. drop 落下
+    1. She dropped the torch.
+    2. The apples are beginning to drop from the trees.
+72. eat 吃，吃饭
+    1. Would you like something to eat?
+    2. Where shall we eat tonight?
+73. enjoy 享受；从...获得乐趣
+    1. Thanks for a great evening. I really enjoyed it.
+    2. They all enjoyed themselves at the party.
+74. expect 期望；预料
+    1. **As expected**, the whole family was shocked the news.
+    2. I didn't expect him to stay so long.
+75. explain 解释
+    1. Let me explain what i mean.
+    2. Wait! I can explain everything.
+76. face 面对，正视
+    1. She turned and faced him.
+    2. She's **faced with** a difficult decision.
+    3. Let's **face it**, we're not going to win.
+77. fail 失败；不及格
+    1. Doctors **failed to** save the gril's life.
+    2. He failed his driving-test.
+78. fall 落下；跌倒
+    1. One of the kids fell into the river.
+    2. Rob fell down the stairs.
+79. feed 喂养
+    1. Have you fed the chickens.
+80. feel 感觉
+    1. How are you feeling today?
+    2. I'm feeling a little better today.
+81. fetch 接来，取来
+    1. Quick! **Go and fetch** a doctor.
+    2. Please fetch the children from school.
+82. fight 打架，战斗
+    1. Stop fighting, boys!
+    2. He fought in Vietnam.
+83. find 发现，找到
+    1. Look what i've found.
+    2. I can't find the car keys.
+84. finish 结束，完成
+    1. Have you finished that book yet?
+    2. I've nearly finished.
+85. fire 开火
+    1. The officer ordered his men to fire.
+86. fit 适合
+    1. His clothes did not fit him very well.
+    2. I tried the dress on but it didn't fit.
+87. fix 安装，修理
+    1. He is fixing a shelf to the wall.
+    2. The car won't start. Can you fix it?
+88. fly 飞
+    1. A big bird flew past us.
+    2. She's flying back to she States tomorrow.
+89. follow 跟随
+    1. He followed her into the house.
+    2. Follow me please. I'll show you the way.
+90. force 强迫
+    1. I had to force myself to get up this morning.
+91. forget 忘记
+    1. Sorry, I forgot.
+    2. He forgot her birthday.
+    3. Don't forget to feed the cat.
+92. forgive 原谅，宽恕
+    1. I'll never forgive her for what she did.
+    2. Forgive and forget.
+93. get 得到，收到
+    1. What did you get for Christmas?
+    2. I got a letter from Dave this morning.
+94. give 给
+    1. Give me your hand.
+    2. I didn't steal it! Maria gave it to me!
+95. go 去，走
+    1. Go wash your hands.
+    2. Where are you going?
+    3. Let's go home.
+    4. Let me go.
+96. grow 生长；种植
+    1. A growing child needs plenty of sleep.
+    2. grow roses
+97. guess 猜
+    1. **Guess what**? I'm taking a day off tomorrow!
+    2. I don't really know. I'm just guessing.
+    3. You guessed right.
+    4. You guessed wrong.
+98. hand 传递
+    1. Please hand me that book.
+    2. Please hand that book to me.
+99. handle 处理，应付
+    1. Leave it to me. I'll handle it.
+    2. He doesn't handle stress very well.
+100. happen 发生
+    1. What happened next?
+    2. If anything **happens to** him, let me know.
+101. hate 讨厌，憎恨
+     1. He hates his job.
+     2. I hate to see you unhappy.
+     3. I hate to say it, but I don't think their marriage will last.
+102. have 有
+     1. He has a good memory.
+     2. Do you have any pets?
+     3. They've got two cars.
+103. hear 听说；听见
+     1. I couldn't hear anything.
+     2. Did you hear him go out?
+     3. I'm getting married. So i've heard.
+104. help 帮助
+     1. Can I help you?
+     2. He always **helps with** the housework.
+105. hide 隐藏，躲避
+     1. Harry hid under the bed.
+     2. The sun was hidden by the clouds.
+106. hit 打，击
+     1. She hit him on the head with a book.
+     2. His parents never hit him.
+     3. I was hit by a falling stone.
+107. hold 握住，保住，保持不变
+     1. Hold my hand.
+     2. Mom, hold me.
+     3. Hold that pose.
+108. hope 希望
+     1. **I hope so.**
+     2. **I hope not.**
+     3. Hope to see you soon.
+109. hunt 打猎；搜索
+     1. Lions sometimes hunt alone.
+     2. The police are still hunting the killer.
+110. hurry 匆忙，赶紧
+     1. Hurry up, we're late!
+     2. She hurried away without saying goodbye.
+111. hurt 伤害；感到疼痛
+     1. You are hurting me.
+     2. You hurt my heart.
+     3. Ouch, it hurts.
+     4. Where does it hurt?
+     5. 
