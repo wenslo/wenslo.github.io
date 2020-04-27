@@ -362,4 +362,321 @@ date: 2020-04-23 22:35:26
      2. You hurt my heart.
      3. Ouch, it hurts.
      4. Where does it hurt?
-     5. 
+112. introduce 介绍
+     1. Allow me to introduce my wife.
+     2. I don't think we've been introduced.
+113. invent 发明
+     1. Who invented the steam engine?
+     2. I wish mobile phones had never been invented.
+114. invite 邀请
+     1. I'm afraid I wasn't invited.
+     2. Who should we invite to the party?
+115. join 加入，参加
+     1. Will you join us for lunch?
+     2. I decided to join the army.
+116. judge 审判，评判
+     1. You should never judge a person by their looks.
+     2. Are you judgeing me?
+117. jump 跳
+     1. Quick, jump! he shouted.
+     2. Fans were jumping up and down and cheering.
+118. last 持续
+     1. This weather won't last.
+     2. Whe war lasted for eight years.
+119. laugh 笑
+     1. laugn out loud
+     2. He who laughs last laughs longest.
+     3. Don't laugh, but I've decided to teach myself French.
+120. lead 领导，带领
+     1. I'll take part, but I don't want to lead.
+     2. He led us into the house.
+121. learn 学习，学会
+     1. He's learning to dance.
+     2. I learned a lot from my father.
+     3. Watch and learn!
+122. leave 离开；使处于什么状态
+     1. It's time for us to leave.
+     2. When are you leaving?
+     3. Leave the door open.
+     4. **Leave me alone**!
+123. lend 借给
+     1. Can you lend me 5 dollars? I'll pay you back tomorrow.
+     2. I've lent the car to a friend.
+124. let 让，允许
+     1. Let me in.
+     2. Let me out.
+     3. Let me go.
+     4. Let's go home.
+125. lie 躺；位于；撒谎
+     1. Don't lie in bed all morning!
+     2. The town lies on the coast.
+     3. He's lying.
+126. lift 举起，抬起
+     1. Lift me up, mommy. I can't see.
+     2. The news lifted our spirits.
+127. light 点燃
+     1. She lit a candle.
+     2. He stopped to light a cigarette.
+128. like 喜欢
+     1. She likes him, but doesn't love him.
+     2. She's never liked swimming.
+     3. Would you like something to eat?
+129. listen 听
+     1. Listen! Someone is knocking at the door.
+     2. I like listening to music.
+     3. I told him not to go, but he just wouldn't listen.
+130. live 居住；生活
+     1. Where do you live?
+     2. The doctors said he only had six months to live.
+     3. How long do elephants live?
+131. look 看
+     1. Look! I'm sure that's Brad Pitt.
+     2. She **looked at** me and smiled.
+     3. Are you still **looking for** a job?
+132. lose 丢失，失去
+     1. I've lost my keys.
+     2. He's lost his job.
+133. love 爱，热爱
+     1. I love you.
+     2. I've always loved children.
+     3. I love my country.
+134. make 制造，做
+     1. **made in** France
+     2. She makes her own clothes.
+     3. I made a cake myself.
+135. marry 嫁，娶
+     1. Will you marry me?
+     2. He married a German.
+136. may （modal v）可以；可能
+     1. May I come in?
+     2. Thank you. You may go now.
+     3. I may be late, so don't wait for me.
+137. mean 意思是
+     1. What do you mean?
+     2. Do you know what i mean?
+     3. You mean we have to start all over again?
+138. meet 见面；遇见；人事
+     1. I hope we'll meet again soon.
+     2. I met her in the street.
+     3. **Nice to meet you .**
+139. mend 修理，修补
+     1. It's never too late to mend your fence.
+     2. Tim can mend any broken toy.
+140. mention 提到，提及
+     1. Don't mention it.
+     2. Sorry, I won't mention it again.
+141. mind 介意；注意
+     1. Would you mind my smoking here?
+     2. Mind your head!
+142. miss 想念；错过
+     1. I miss you.
+     2. Did you miss me?
+     3. You can't miss it.
+     4. What did I miss?
+143. move 移动；搬家
+     1. Don't move.
+     2. **Move on**.
+     3. We are **moving to** Melbourne soon.
+144. must 必须
+     1. I must go now.
+     2. Must you go so soon?
+145. need 需要
+     1. What do you need?
+     2. I need your help.
+     3. You needn't know it.
+146. nod 点头
+     1. I aksed him if he would help me and he nodded.
+     2. She nodded to me as she walked by.
+147. notice 注意到
+     1. I noticed that he left early.
+     2. I noticed them come in.
+148. pass 走过；通过；传递；不要
+     1. She passed me without even saying hello.
+     2. Did you pass the exam?
+     3. Pass me the salt, please.
+     4. I'll pass.
+149. pay 付款
+     1. I'll **pay for** the tickets.
+     2. How would you like to pay?
+150. permit 允许
+     1. Dogs are not permitted in the building.
+     2. I'll come tomorrwo, **weather permitting**.
+151. phone 打电话
+     1. Did anybody phone?
+     2. I'll phone you this evening.
+152. pick 采，摘；挑选
+     1. Don't pick flowers.
+     2. Stop **picking you nose**.
+     3. You can pick whichever you like.
+153. place 放置
+     1. He placed his hand on her shoulder.
+     2. Here! Place it on the table.
+154. plan 计划；打算
+     1. Everything went as planned.
+     2. When do you plan to take your holiday?
+155. plant 种植
+     1. We've planted tomatoes and carrots in the garden.
+     2. Do you want to help us plant trees?
+156. play 玩耍；参加比赛；演奏
+     1. You'll have to play inside today.
+     2. Do you play football?
+     3. He's learning to play the piano.
+157. point 指出，指向
+     1. It's rude to point.
+     2. She **pointed a**t a photo on the wall and said "That's my mother"
+158. practice 练习
+     1. You need to practice every day.
+     2. I need to practice my English.
+159. praise 称赞，赞赏
+     1. Aaron was praised by his teacher.
+     2. He praised her for her courage.
+160. pray 祈祷，祷告
+     1. I'll pray for you.
+     2. Let us **pray for** peace.
+     3. Martha prayed to God for help.
+161. prefer 更喜欢
+     1. There's coffee and tea. Which yould you prefer?
+     2. I prefer jazz to rock music.
+     3. Would you prefer me to stay?
+162. prepare 准备
+     1. I had no time to prepare.
+     2. He was in the kitchen preparing lunch.
+     3. The whole class is preparing for the exams.
+163. pretent 假装
+     1. I'm tired of having to pretent all the time.
+     2. I pretended to be asleep.
+164. prevent 预防，阻止
+     1. Nobody can prevent us getting married.
+     2. The accident could have been prevented.
+165. promise 答应，许诺
+     1. I can't promise, but I'll do my best.
+     2. 'Promise me you won't do any thing stupied'.  I promise.'
+166. protect 保护
+     1. You need warm clothes to protect you against the cold.
+     2. Are we doing enough to protect the environment?
+167. prove 证明
+     1. You're wrong, and I can prove it.
+     2. Just give me a chance and I'll prove it to you.
+168. pull 拉，扯
+     1. You push and I'll pull.
+     2. Stop pulling my hair!
+     3. She pulled open the door and hurried inside.
+169. punish 惩罚
+     1. He was punished for refusing to answer theri questions.
+     2. My parents used to punish my by not letting watch TV.
+170. push 推
+     1. Push hard when I tell you to.
+     2. I pushed the door open.
+     3. He tried to kiss her but she pushed him away.
+171. put 放
+     1. She put the book on the table.
+     2. Did you put sugar in my tea?
+     3. It's time to put the baby to bed.
+172. rain 下雨
+     1. Is it raining?
+     2. It started to rain.
+     3. It had been raining hard all night.
+173. raise 举起；增加；养育
+     1. Raise your hand if you know the right answer.
+     2. They raised their offer to $500.
+     3. I was raised in the countryside.
+174. reach 到达；伸手去拿
+     1. We reached London late at night.
+     2. He reached for his gun.
+175. read 读
+     1. She's still learning to read.
+     2. She read us a story.
+     3. Go on = read it to us.
+176. realize 意识到
+     1. I realized that she had been lying.
+     2. Do you realize you're an hour late?
+177. receive 收到，接到
+     1. Every child will receive a small gift.
+     2. We received a warm welcome.
+178. remember 记得，记住，回想起
+     1. Do you remember Rose?
+     2. Remember to locak the door.
+     3. I'm sorry - I can't remember your name.
+179. repair 修理，修补
+     1. Dad was repairing the roof.
+     2. Where can i get my shoes repaired?
+180. rest 休息
+     1. The doctor told me to rest.
+     2. Rest your eyes every half an hour.
+181. return 返回；归还
+     1. I had to return to the store to look for my purse.
+     2. I must return some books to the library.
+182. ring 响；按铃；电话
+     1. Just then, the doorbell rang.
+     2. I rang the bell but no one answered.
+     3. I'll ring you tonight.
+183. rise 上升；起身，起立
+     1. The sun rises in the east.
+     2. He rose to welcome me.
+     3. All rise!
+184. rob 抢劫
+     1. to rob a bank
+     2. I was robbed.
+185. run 跑，跑步
+     1. I had to run to catch the bus.
+     2. I often go running after work.
+186. take 拿，接受
+     1. He took some keys out of his pocket.
+     2. Someone has taken my scarf.
+     3. Don't give him money. He won't take it.
+187. talk 谈话，交谈
+     1. We talked for an hour.
+     2. He was talking to a friend.
+     3. What are they **talking about**?
+188. taste 尝起来，品尝
+     1. Mmm! This tastes good!
+     2. I can't really taste anything with this cold.
+189. teach 教书，教
+     1. She teaches at out local shcool.
+     2. I teach English.
+190. tell 说，告诉
+     1. Did she tell you her name？
+     2. He told everybody the news.
+     3. Are you telling the truth?
+191. thank 感谢
+     1. **Thank you** every much!
+     2. Thank God it's over!
+192. think 想，考虑；认为
+     1. I'll think about it.
+     2. Do you think it's going to rain? Yes, I think so.
+     3. I don't think so.
+193. throw 扔，投
+     1. Please throw me that towel.
+     2. Throw the ball to me.
+     3. Stop throwing stones at the dog!
+194. travel 旅行
+     1. I love travelling.
+     2. When I finished college I went travelling for six months.
+195. trust 相信，信赖
+     1. I just don't trust him.
+     2. Don't trust what the newspapers say.
+196. try 努力，尝试
+     1. I don't know if I can come, but I'll try.
+     2. He tried to control his voice.
+     3. John isn't here. Try phoning his home number.
+197. turn 转动；转身
+     1. He turned the key in the lock.
+     2. Ricky turned and walked away.
+     3. **Trun right** at the second crossing.
+198. understand 理解，明白
+     1. She doesn't understand English.
+     2. I'm sorry, I don't understand.
+     3. I don't want you to do that again. Do you understand?
+199. use 使用
+     1. May I use your phone?
+     2. Have you ever used this software before?
+     3. If you don't use your English you'll forget it.
+200. visit 访问；探望；参观
+     1. The Prime Minister is visiting Japan at the moment.
+     2. She doesn't visit her parents very often.
+     3. Which cities did you visit in Spain?
+201. work 工作
+     1. Where do you work?
+     2. She isn't working now.
+     3. I've been working all day.
+     4. 
