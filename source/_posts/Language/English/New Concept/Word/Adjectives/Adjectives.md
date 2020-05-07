@@ -325,4 +325,121 @@ date: 2020-04-28 22:46:31
 103. ill 生病的；不好的，坏的
      1. He's been ill for two weeks.
      2. He can't join the army because of ill health.
-     3. 
+104. important 重要的，重大的
+     1. an important meeting
+     2. VIP: very important person
+     3. Happiness is more important than money.
+105. impossible 不可能的
+     1. Mission impossible
+     2. I find it impossible to lie to her.
+106. incredible 不可思议的，难以置信的，非常好的
+     1. What an incredible story!
+     2. The view is just incredible.
+107. innocent 无辜的，清白的
+     1. Nobody would believe that i was innocent.
+108. interested 感兴趣的
+     1. There's a talk on Italian art - are you interested?
+     2. I've always been **interested in** music.
+109. interesting 令人感兴趣的，有趣的
+     1. That's an interesting question.
+     2. Did you meet any interesting people?
+110. kind 亲切的，和蔼的
+     1. Ther've been very kind to me.
+     2. It was really kind of you to help me.
+111. large 大的
+     1. He has a large house.
+     2. large sums of money
+112. last 最后的，上一个的
+     1. She was the last one to arrive.
+     2. Did you see the game on TV last night?
+113. late 晚的，迟到的
+     1. Sorry I'm late.
+     2. Dont't be late for school.
+114. lazy 懒惰的
+     1. He's not stupid, just lazy.
+     2. We spent a lazy day at the beach.
+115. legal 法律的；合法的
+     1. take legal action
+     2. What i have done is perfectly legal.
+116. light 轻的；浅色的
+     1. You can carry this bag -it's fairly light.
+     2. You look nice in light colors.
+117. little 小的，幼小的
+     1. six little puppies
+     2. I didn't have toys like this when i was little.
+118. lonely 孤独的，寂寞的
+     1. a lonely old man
+     2. a lonely journey
+119. long 长的；长时间的
+     1. You hair is longer than mine.
+     2. I haven't been there for a long time.
+120. loud 响亮的，大声的
+     1. That music's too loud.
+     2. Who's there?  asked David in a loud voice.
+121. lovely 可爱的，美丽的，令人愉快的
+     1. You look lovely in that dress.
+     2. What a lovely house!
+     3. What a lovely day!
+122. low 低的，矮的
+     1. a low wall
+     2. The river is very low today.
+123. lucky 幸运的
+     1. You are so lucky!
+     2. You lucky dog!
+     3. Seven is my lucky number.
+124. married 已婚的
+     1. Are you married or single?
+     2. They've been married for eight years.
+     3. We're getting married next mouth.
+125. messy 凌乱的，散乱的
+     1. Sorry my room is so messy.
+     2. The house was always messy.
+126. modern 现代的，当代的
+     1. in the modern world
+     2. modern dance
+127. naive 幼稚的，天真的
+     1. a naive young girl
+     2. Jim can be so naive sometimes.
+128. narrow 狭窄的，狭隘的
+     1. a narrow bed
+     2. The road was too narrow for cars to pass.
+129. nasty 恶心的，令人讨厌的，不善良的
+     1. a nasty smell
+     2. He has a nasty temper.
+     3. Don't be nasty to you little brother.
+130. natural 自然的，天生的
+     1. the natural world
+     2. My hair soon grew back to its natural color.
+131. naughty 顽皮的，淘气的
+     1. You're a very naughty boy!
+132. near 近的
+     1. His flat's very near.
+     2. Where's the nearest bus-stop?
+133. neat 整洁的，干净的，好的
+     1. His clothes were always neat and clean.
+     2. That's a really neat idea.
+134. necessary 必要的，必须的
+     1. Sleep is necessary for one's health.
+     2. It's not necessary to wear a tie.
+135. nervous 紧张的，焦虑的
+     1. You're making me nervous.
+     2. She was so nervous about her exams that she couldn't sleep.
+136. new 新的，新到的
+     1. Do you like my new dress?
+     2. They've just moved into their new house.
+137. nice 美好的，愉快的
+     1. It's such a nice day.
+     2. What a nice story!
+     3. You look nice in that suit.
+138. noisy 嘈杂的，喧闹的
+     1. The kids have been really noisy today.
+     2. The bar was very noisy.
+139. normal 正常的
+     1. It's normal to feel nervous before an exam.
+     2. Her room was messy, but that was quite normal.
+140. odd 奇怪的，奇数的
+     1. She gets odder as she grows older.
+     2. How odd!
+     3. odd numbers
+141. open 敞开的；公开的
+     1. 
