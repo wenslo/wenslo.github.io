@@ -442,4 +442,283 @@ date: 2020-04-28 22:46:31
      2. How odd!
      3. odd numbers
 141. open 敞开的；公开的
-     1. 
+     1. All the windows were wide open.
+     2. I was so sleepy, I couldn't keey my eyes open.
+     3. It is an open secret.
+142. ordinary 普通的，平常的
+     1. It's just an ordinary camera.
+     2. The book is about ordinary people.
+     3. The meal was very ordinary.
+143. organic 有机的
+     1. organic vegetables
+     2. The shop sells organic food.
+144. outstanding 杰出的，优秀的
+     1. an outstanding student
+     2. His performance was outstanding.
+145. painful 痛苦的，疼的
+     1. The divorce was painful for both of them.
+     2. Is you back still painful?
+146. past 过去的，以前的
+     1. The past month has been a difficult one for him.
+     2. From past experience I'd say she was a liar.
+147. perfect 完美的，极好的
+     1. That's perfect!
+     2. His English was perfect.
+     3. Nobody is perfect.
+148. plain 清楚的；相貌平平的
+     1. He made it plain that we should leave.
+     2. She had grown into a beautiful woman from a rather plain child.
+149. polite 有礼貌的
+     1. She's always very polite.
+     2. It's not polite to talk with your mouth full.
+150. poor 贫穷的；可怜的
+     1. He came from a poor family
+     2. Poor kid!
+151. possible 可能的
+     1. Is it possible to get tickets for the game?
+     2. I need the monty as soon as possible.
+152. powerful 强大的；权力大的
+     1. Jed was a powerful man.
+     2. a very powerful family
+     3. a powerful speech
+153. precious 宝贵的，珍贵的
+     1. precious stones
+     2. You're wasting precious time!
+154. present 目前的；出席的
+     1. the present situation
+     2. Everyone is present.
+155. pretty 漂亮的
+     1. a pretty little girl
+     2. What a pretty dress!
+156. previous 以前的
+     1. He was there the previous day.
+     2. Do you have any previous experiene?
+157. private 私人的；秘密的；私立的
+     1. This is a private house.
+     2. Don't read that - it's private.
+     3. a private hospital
+158. proud 骄傲的，自豪的
+     1. I'm very **proud of** you.
+     2. You make me proud.
+159. public 公共的；公立的
+     1. public places
+     2. public shcools
+160. quick 快的，迅速的
+     1. Be quick!
+     2. Tax is are quicker than buses.
+     3. I had to make a quick decision.
+161. quiet 安静的，平静的
+     1. Be quiet, please!
+     2. You're very quiet, Tom -is anything the matter?
+     3. The sea looks quieter now.
+162. rainy 下雨的，多雨的
+     1. a rainy morning
+     2. the rainy season
+163. ready 准备好的
+     1. Are you ready?
+     2. Dinner is ready.
+     3. I'm not **ready for** the test yet.
+164. real 真的，真实的
+     1. Tell me the real reason.
+     2. The children know that Santa Claus isn't a real person.
+165. regular 有规律的，定期的
+     1. regular meetings
+     2. our regular customers
+     3. His breathing was slow and regular.
+166. responsible 承担责任的，有责任感的
+     1. I'll find out who's responsible.
+     2. He was **responsible for** the accident.
+167. rich 富有的，油腻的
+     1. She was both beautiful and rich.
+     2. a rich cake
+168. right 右方的；正确的；合适的
+     1. He had a knife in his right hand.
+     2. I think you're right.
+     3. I'm glad you broke up. She wasn't right for you.
+169. romantic 浪漫的
+     1. How romantic!
+     2. romantic music
+170. round 圆形的
+     1. a big round table
+     2. round cheeks
+171. sad 伤心的，难过的
+     1. John is sad because his dog has died.
+     2. I'm sad you're leaving.
+172. safe 安全的
+     1. You are safe here.
+     2. You secret is safe with me.
+173. salty 含盐的，咸的
+     1. salty food
+     2. The soup is a little bit salty.
+174. same 相同的，同样的
+     1. He is **the same** age as his wife.
+     2. I bought **the same **car **as** yours.
+175. selfish 自私的
+     1. selfish behavior
+     2. How can you be so selfish?
+176. serious 严肃的，认真的；严重的
+     1. Are you serous?
+     2. This a very serious matter.
+177. sharp 锋利的；剧烈的
+     1. a sharp knife
+     2. a sharp drop in prices
+178. shocked 震惊的
+     1. He is shocked at what happened.
+     2. We were deeply shocked to hear of his death.
+179. shocking 令人震惊的
+     1. shocking news
+     2. It is shocking that he was killed in the accident.
+180. short 短的；短缺的；矮的
+     1. Winter is coming and the days are getting shorter.
+     2. I'm afraid I'm alittle **short of** money this month.
+     3. He's a bit shorter than me.
+181. shy 害羞的
+     1. Don't be shy - come and say hello.
+     2. He was too shy to speak to her.
+182. sick 生病的；恶心的，病态的
+     1. His mother's very sick.
+     2. Emma has just called in sick.
+     3. You're sick!
+183. silent 寂静的，无声的
+     1. Alan was silent.
+     2. The children went out, and the room was silent.
+184. silly 愚蠢的，傻的
+     1. Don't be silly!
+     2. Stop asking silly questions.
+185. simple 简单的
+     1. There is no simple answer to this question.
+     2. This machine is very simple to use.
+186. slow 慢的，迟钝的
+     1. Oh you're so slow; come on, hurry up!
+     2. My watch is five minutes slow.
+     3. He's the slowest in the class.
+187. small 小的，少的
+     1. The shirt was too small for him.
+     2. a small amount of money
+188. smart 聪明的；漂亮的，帅气的
+     1. Smart boy!
+     2. You look very smart in your new suit.
+189. soft 软的，柔软的；温和的
+     1. I like soft pillows.
+     2. a baby's soft skin
+     3. His voice was softer now.
+190. sour 有酸味的，酸的；馊的
+     1. This apple is really sour!
+     2. The milk's turned sour.
+191. special 特殊的，特别的，专门的
+     1. Are you doing anything special for Christmas?
+     2. She's a very special friend.
+     3. a special train
+192. spicy 辛辣的
+     1. Do you like spicy food?
+193. strange 奇怪的；陌生的
+     1. It's strange that we've never met before.
+     2. At first the place was **strange to** me.
+194. strong 强的，强壮的；坚强的；强烈的
+     1. Jack was tall and strong.
+     2. I must be strong.
+     3. The temptation is very strong.
+195. stupid 愚蠢的
+     1. I made a stupid mistake.
+     2. He understands - he's not stupid.
+     3. This stupid car won't start.
+196. successful 成功的
+     1. The play was very successful on Broadway.
+197. super 极好的
+     1. What a super idea!
+     2. You'll like her. She's super.
+198. sweet 甜的；温柔的，可亲的
+     1. This tea is too sweet.
+     2. a sweet smile
+     3. How sweet of you to remember my birthday.
+199. tall 高的，高大的
+     1. He was young and tall.
+     2. She's a little taller than her sister.
+200. tasty 美味的，可口的
+     1. This soup is very tasty.
+201. terrible 可怕的；糟糕的
+     1. What terrible news!
+     2. He's terrible driver.
+     3. I feel terrible - I think I'll go to bed.
+202. terrific 极好的
+     1. That's a terrific idea.
+     2. You look terrific in that dress.
+203. thankful 感谢的，感激的
+     1. I was thankful that the meeting didn't last long.
+204. thick 厚的；浓的，茂密的
+     1. a thick coat
+     2. a thick forest
+     3. thick hair
+205. thin 薄的；瘦的
+     1. That ice is too thin to stand on.
+     2. He's tall and thin.
+206. tidy 整洁的，整齐的
+     1. Ellen's room is always tidy.
+207. tight 紧的，绷紧的
+     1. The drawer is so tight I can't open it.
+     2. tight jeans
+208. tiny 极小的，微小的
+     1. a **tiny little** baby
+     2. Through she was tiny, she had a very loud voice.
+209. tired 疲倦的；厌烦的
+     1. I'm tired.
+     2. I'm **tired of** watching television; let's go for a walk.
+210. true 真正的，真实的
+     1. true love
+     2. This is a true story.
+     3. This is too good to be true.
+211. ugly 难看的，丑陋的
+     1. an ugly face
+     2. The Ugly Duckling
+212. unable 不能的，无能力的
+     1. She is **unable to** walk.
+     2. Some of the children were unable to read or wrote.
+213. upset 难过的，失望的，沮丧的
+     1. Why are you so upset?
+     2. She feels upest that we didn't tell her the truth.
+214. useful 有用的，有益的
+     1. The book is full of useful information.
+     2. He might be useful to us.
+215. useless 无用的，无效的
+     1. It was useless to complain.
+     2. All out efforts were useless.
+216. violent 暴力的
+     1. Her husband was a violent man.
+     2. Children should not be allowed to watch violent movies.
+217. warm 暖和的，保暖的；热情的
+     1. It's nice and warm in here.
+     2. Take some warm clothes.
+     3. We received a warm welcome.
+218. weak 虚弱的，软弱的
+     1. She is still weak after her illness.
+     2. a weak leader
+219. wealthy 富有的
+     1. He's a very wealthy man.
+     2. Early to bed, early to rise, makes a man healthy, wealthy and wise.
+220. wet 湿的；下雨的
+     1. Try not to get your shoes wet.
+     2. a wet day
+221. wide 宽的；有某种宽度的
+     1. a wide river
+     2. The garden is thirty feet wide.
+222. wild 野生的，野的
+     1. wild animals
+     2. wild flowers
+223. windy 有风的
+     1. a cold windy day
+     2. It's too windy to go out today.
+224. wise 有智慧的，明智的
+     1. a wise old man
+     2. a wise choice
+225. wonderful 极好的，精彩的
+     1. We had a wonderful time last night.
+     2. It's wonderful to see you!
+226. worried 担心的，焦虑的
+     1. You look worried. What's the matter?
+     2. I'm really **worred about** you.
+227. wrong 错误的，有毛病的
+     1. Wrong answer
+     2. You are wrong.
+     3. Is anything wrong?
+     4. What's wrong with you?
+     5. 
