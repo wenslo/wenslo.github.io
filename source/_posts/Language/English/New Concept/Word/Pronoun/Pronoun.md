@@ -238,4 +238,3 @@ date: 2020-05-17 23:27:50
 77. no one
     1. Nobody came to see me.
     2. I knocked on the door but nobody answered.
-    3. 
