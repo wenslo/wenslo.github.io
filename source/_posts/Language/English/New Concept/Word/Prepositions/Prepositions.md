@@ -119,4 +119,48 @@ date: 2020-05-18 22:56:58
 32. outside 在...的外面；超出...的范围
     1. You can park your car outside our house.
     2. The matter is outside my area of responsibility.
+33. over 越过；在...上面
+    1. There is a bridge over the river.
+    2. There was a lamp over the table.
+34. past 在...之后；经过
+    1. half past two
+    2. She walked past me without saying hi.
+35. since 自从
+    1. I haven't eaten since breakfast.
+    2. We've been waiting here since two o'clock.
+36. through 穿过
+    1. He got in through the window.
+    2. The River Thames flows through London.
+37. throughout 遍及...；自始至终
+    1. News spread throughout the country.
+    2. He remained in Paris throughout the war.
+38. till 直到
+    1. We're open till 6 o'clock.
+    2. The street is full of traffic from morning till night.
+39. to 向，朝着；到
+    1. I'm on my way to the airport.
+    2. I'm free from Monday to Friday.
+40. towards 朝，向
+41. toward
+    1. All the windows face towards the river.
+    2. Two policemen were coming towards him.
+42. under 在...下面
+    1. The cat was under the table.
+    2. Have you looked under the bed?
+43. until 直到
+    1. Wait until tomorrow.
+    2. Until now I haven't heard from him.
+44. with 和，跟；有；用
+    1. She lives with her parents.
+    2. Do you see the girl with red hair?
+    3. Cut it with a knife.
+45. within 在...内
+    1. You will receive a reply within seven days.
+    2. Is it within walking distance?
+46. without 没有
+    1. Don't go out without you coat.
+    2. He left without saying goodbye.
+47. worth 值得
+    1. The house must be worth a lot of money now.
+    2. The film is well worth seeing.
     3. 
