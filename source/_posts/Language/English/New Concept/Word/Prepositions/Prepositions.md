@@ -50,4 +50,73 @@ date: 2020-05-18 22:56:58
     2. We left at 2 o'clock.
 11. before 在...之前
     1. the day before yesterday
-    2. 
+    2. Larry arrived home before me.
+12. behind 在...的后面
+    1. Who's the girl standing behind Richard?
+    2. I hid behind a tree.
+13. below 在...下面，低于..
+    1. Please do not write below this line.
+    2. The temperatures remained below zero all day.
+14. beside 在...旁边
+    1. Sit beside your sister.
+    2. Put it on the table beside the bed.
+15. besides 除...之外（还有）
+    1. We have lots of things in common besides music.
+    2. There will be five of us, besides John.
+16. between 在...之间
+    1. Peter sat between Mary and Jane.
+    2. I don't eat between meals.
+17. beyond 超过，越过
+    1. It won't go on beyound midnight.
+    2. The bicycle is beyond repair.
+18. but 除...之外
+    1. Everyone was there but him.
+    2. Nobody but you could be so selfish.
+19. down 向下；沿着...向下
+    1. The stone rolled down the hill.
+    2. Go down the road till you reach the traffic lights.
+20. during 在...期间
+    1. During the summer she worked as a lifeguard.
+    2. He was taken to the hospital during the night.
+21. except 除...外
+    1. They all came except Matt.
+    2. The restaurant is open every day except Monday.
+22. for 为，为了
+    1. Is the present for me?
+    2. What can I do for you?
+23. from 从...;来自;
+    1. We're open from 8 to 7 every day.
+    2. Where are you from?
+24. in 在...里面，在...以内；进入；在...之后
+    1. the highest mountain in the world
+    2. What have you got in your hand?
+    3. Throw it in the fire.
+    4. I'll be back in two hours.
+25. inside 在（往）...里面
+    1. Go inside the house.
+    2. There was a gold watch inside the box.
+26. into 进入...中
+    1. There must be another way into the cave.
+    2. I nearly ran into a bus.
+27. like 像（某人/某事物），类似
+    1. He's like his father.
+    2. What's she like?
+28. near 接近，靠近
+    1. They live near London.
+    2. Don't sit near the door.
+29. of 属于...的；关于；表示数量
+    1. a friend of mine
+    2. the rights of man
+    3. a map of China
+    4. a piece of paper
+30. off 从...落下或离开
+    1. Keep off the grass.
+    2. The ball rolled off the table.
+31. on 在...上；在...之时；在某一天
+    1. Put the glasses on the table.
+    2. On hearing the news, she cried.
+    3. I was born on November 29th.
+32. outside 在...的外面；超出...的范围
+    1. You can park your car outside our house.
+    2. The matter is outside my area of responsibility.
+    3. 
