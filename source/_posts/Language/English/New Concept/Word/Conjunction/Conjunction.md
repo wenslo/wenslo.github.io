@@ -51,4 +51,22 @@ date: 2020-05-23 12:00:23
 11. until 直到
     1. Wait until the rain stops.
     2. Don't leave until I arrive.
-    3.  
+12. because 因为
+    1. I decided to go with them, because I had nothing to do.
+    2. Why can't I go? Because you're not old enough.
+13. for 因为，由于
+    1. I believed her, for she would not lie to me.
+    2. He had to give up smoking, for his wife was pregnant.
+14. so 因此
+    1. The shops were closed so I didn't get any milk.
+    2. I was hungry, so I made myself a sandwich.
+15. if 如果
+    1. If it is necessary I will come at 6.
+    2. You can stay to dinner if you like.
+16. unless 除非
+    1. He won't go to sleep unless you tell him a story.
+    2. I can't leave you unless I know you are all right.
+17. although 尽管，虽然
+18. though
+    1. Although we all tried our best, we lost the game.
+    2. Although he entered the game for fun, he won first prize.
