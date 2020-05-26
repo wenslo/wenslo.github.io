@@ -92,3 +92,22 @@ date: 2020-05-24 14:58:29
    6. She is pretty.  Is she pretty?
 
 > 单词
+
+1. pen 钢笔
+2. pencil 铅笔
+3. book 书
+   1. an English book
+   2. a book store
+   3. book one, book two, book three, book four
+4. watch 手表
+   1. look at my watch
+   2. Swatch
+5. coat 外套
+6. dress 连衣裙
+7. skirt 短裙
+8. car 小车
+9. bus 公共汽车
+10. coach 长途汽车
+11. house 别墅
+    1. flat 公寓楼  英
+    2. apartment 公寓楼 美 
