@@ -59,4 +59,29 @@ date: 2020-05-26 23:38:21
 1. 否定句
    1. 功能：说不
    2. 构成：is not/ am not/ are not
+   3. This is my name. This is not my name.
+   4. I am Venus. I am not Venus.
+   5. You are my friend. You are not my friend.
+   6. She is pretty. She is not pretty.
+   7. 这不是我的车。This is not my car. 
+   8. 我不是老师。 I am not a techer.
+2. is not = isn't
+   1. She is not here.  She isn't here.
+3. am not = 'm not
+   1. I am not Linda. I'm not Linda.
+4. are not = aren't
+   1. You are Tom. You aren't Tom.
+
+> 单词
+
+1. suit 一套衣服
+2. school 学校
+   1. 小学： primary school
+   2. 中学： middle school
+   3. 大学：university
+3. teacher 老师
+   1. 王老师：Mr.Wang/ Miss Wang
+4. son 儿子
+5. daughter 女儿
+6. 
 
