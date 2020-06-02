@@ -69,4 +69,28 @@ date: 2020-06-01 22:38:50
 
 1. father 父亲
    1. day / daddy 
-   2. 
+2. mother 母亲
+   1. mom / mum / mummy
+3. blouse 女衬衫
+4. sister 姐姐
+5. tie 领带
+6. brother 兄弟
+7. his 他的
+8. her 她的
+   1. 物主代词
+      1. 我的 my
+      2. 你的 your
+      3. 他的 his
+      4. 她的  her
+   2. my book
+   3. your house
+   4. his tie
+   5. Her sister is his girfriend.
+   6. His wife is her good friend.
+   7. His brother is her boss.
+9. Whose is this handbag?
+   1. Whose handbag is this?
+10. Whose is this car?
+   1. Whose car is this?
+11. Whose is this coat?
+    1. Whose coat is this? It's Sophies'
