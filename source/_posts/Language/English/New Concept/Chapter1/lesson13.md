@@ -77,4 +77,3 @@ date: 2020-06-02 23:23:18
    6. carpet
    7. blouse
    8. tie
-5. 
