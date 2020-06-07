@@ -84,8 +84,58 @@ date: 2020-06-06 22:48:31
 > 语法
 
 1. 名词的单数 & 复数
-   1. 单数：1
-   2. 复数：2 或 以上
-   3. a car - two cars
-   4. a bag - three bags
-   5. test
+   1. 定义
+      1. 单数：1
+      2. 复数：2 或 以上
+      3. a car - two cars
+      4. a bag - three bags
+   2. 规则
+      1. 一般的名字 +s
+         1. a girl  --- girls
+         2. an officer ---  officers
+         3. a coat  --- coats
+      2. 以s , sh , x , ch 结尾的加  es 
+         1. a bus   ---  buses
+         2. a box   ---  boxes
+         3. a brush  --- brushes
+      3. 以 f ,  fe  结尾的变 f, fe --- ves
+         1. a wife --- wives
+         2. a shelf --- shelves
+         3. a knife --- knives
+         4. a leaf --- leaves
+      4. 辅音字母+y结尾的名词，变y-i   + es
+         1. a baby -- babies
+         2. a lady --- ladies
+      5. 元音 + o  结尾  + s
+         1. a zoo --- zoos
+         2. a radio  --- radios
+         3. 辅音+o结尾 ， +  es
+         4. a hero --- heroes
+         5. a potato   --- patatoes
+         6. a tomato --- tomatoes
+   3. 单数-复数名词在句子中
+      1. 单数  + is
+      2. 复数 + are
+      3. The tourists  _ from Norway.
+      4. The teacher _ Aamercan.
+      5. These cars _ brown.
+
+> 单词句型
+
+1. Russian  俄罗斯人
+   1. Russia 俄罗斯
+2. Dutch 荷兰人
+   1. Holland / Netherland 荷兰
+3. these  这些
+   1. this  这个    these  这些
+   2. that  那个    those 那些
+   3. 这是他的手表。  This is his watch. These are their watches..
+4. red 红色的
+5. grey  灰色的
+   1. gray
+   2. grey hair 花白的头发
+6. black  黑色的
+7. black tea 红茶
+8. black coffee 纯咖啡
+9. yellow 黄色的
+10. orange 橘黄色的
