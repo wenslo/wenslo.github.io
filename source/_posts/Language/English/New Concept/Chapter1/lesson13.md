@@ -6,6 +6,7 @@ categories:
 - 英语学习
 
 tags: 
+- 新概念1
 
 date: 2020-06-02 23:23:18
 
@@ -15,6 +16,8 @@ date: 2020-06-02 23:23:18
 ---
 
 >单词
+
+<!-- more -->
 
 1. color / colour 颜色
    1. What color?

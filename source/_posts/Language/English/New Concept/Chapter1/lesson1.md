@@ -6,12 +6,15 @@ categories:
 - 英语学习
 
 tags: 
+- 新概念1
 
 date: 2020-05-24 14:58:29
 
 ---
 
 >单词
+
+<!-- more -->
 
 1. excuse
    1. Excuse me

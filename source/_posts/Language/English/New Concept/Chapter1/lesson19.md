@@ -6,18 +6,15 @@ categories:
 - 英语学习
 
 tags: 
+- 新概念1
 
 date: 2020-06-07 17:15:31
-
-
-
-
-
-
 
 ---
 
 >单词
+
+<!-- more -->
 
 1. matter 事情
    1. What's matter ?  wrong.
