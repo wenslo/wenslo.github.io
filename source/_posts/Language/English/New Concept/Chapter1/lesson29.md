@@ -18,6 +18,8 @@ date: 2020-06-10 23:21:24
 
 >单词
 
+<!-- more -->
+
 1. shut 关门
    1. The door is shut.  门是管着的
    2. Shut the door. 关门。
@@ -88,7 +90,7 @@ date: 2020-06-10 23:21:24
    3. 表示建议：Let's + 动词原型+...
       1. Let's go, ok?
 
-> 单词举行
+> 单词句型
 
 1. empty
    1. My mind is empty. adj
