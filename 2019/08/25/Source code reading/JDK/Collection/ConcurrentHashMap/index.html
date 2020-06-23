@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.2',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="ConcurrentHashMap，可以进行并发读，写操作互斥。HashMap是线程不安全的。  先翻译一下重点注释">
+<meta name="keywords" content="JDK源码">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ConcurrentHashMap源码">
+<meta property="og:url" content="http://yoursite.com/2019/08/25/Source code reading/JDK/Collection/ConcurrentHashMap/index.html">
+<meta property="og:site_name" content="温海林的博客">
+<meta property="og:description" content="ConcurrentHashMap，可以进行并发读，写操作互斥。HashMap是线程不安全的。  先翻译一下重点注释">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-06-20T16:51:23.175Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ConcurrentHashMap源码">
+<meta name="twitter:description" content="ConcurrentHashMap，可以进行并发读，写操作互斥。HashMap是线程不安全的。  先翻译一下重点注释">
+
+<link rel="canonical" href="http://yoursite.com/2019/08/25/Source code reading/JDK/Collection/ConcurrentHashMap/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>ConcurrentHashMap源码 | 温海林的博客</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">温海林的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">技术，工作，生活，随笔</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/25/Source code reading/JDK/Collection/ConcurrentHashMap/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
+      <meta itemprop="name" content="温海林">
+      <meta itemprop="description" content="Fake it, make it!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温海林的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          ConcurrentHashMap源码
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-08-25 00:00:00" itemprop="dateCreated datePublished" datetime="2019-08-25T00:00:00+08:00">2019-08-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-06-21 00:51:23" itemprop="dateModified" datetime="2020-06-21T00:51:23+08:00">2020-06-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/源码阅读/" itemprop="url" rel="index">
+                    <span itemprop="name">源码阅读</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>ConcurrentHashMap，可以进行并发读，写操作互斥。HashMap是线程不安全的。</p>
+</blockquote>
+<p>先翻译一下重点注释</p>
+<a id="more"></a>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Overview:</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * The primary design goal of this hash table is to maintain</span></span><br><span class="line"><span class="comment"> * concurrent readability (typically method get(), but also</span></span><br><span class="line"><span class="comment"> * iterators and related methods) while minimizing update</span></span><br><span class="line"><span class="comment"> * contention. Secondary goals are to keep space consumption about</span></span><br><span class="line"><span class="comment"> * the same or better than java.util.HashMap, and to support high</span></span><br><span class="line"><span class="comment"> * initial insertion rates on an empty table by many threads.</span></span><br><span class="line"><span class="comment"> 这个主要设计目标是为了保证并发读的最小竞争性(主要是get方法，但是也支持迭代器相关方法)，第二个目标是为了和hashMap一致或者更好的空间消耗，并且支持多线程下的空表的高并发初始化插入速度。</span></span><br><span class="line"><span class="comment"> * The table is lazily initialized to a power-of-two size upon the</span></span><br><span class="line"><span class="comment"> * first insertion.  Each bin in the table normally contains a</span></span><br><span class="line"><span class="comment"> * list of Nodes (most often, the list has only zero or one Node).</span></span><br><span class="line"><span class="comment"> * Table accesses require volatile/atomic reads, writes, and</span></span><br><span class="line"><span class="comment"> * CASes.  Because there is no other way to arrange this without</span></span><br><span class="line"><span class="comment"> * adding further indirections, we use intrinsics</span></span><br><span class="line"><span class="comment"> * (jdk.internal.misc.Unsafe) operations.</span></span><br><span class="line"><span class="comment"> 这个table是在首次插入之后进行延迟初始化的，大小为2的次方数，每个table中的子节点通常都包含一个node的list(大多数情况下，这个list仅仅只有一个Node或者没有Node)。访问tabe需要volatile/atomic 读，写和CAS操作。因为这里没有其他方法可以再不使用间接指令的情况下安排table，所以我们使用内在函数(Unsafe)操作。</span></span><br><span class="line"><span class="comment"> * We use the top (sign) bit of Node hash fields for control</span></span><br><span class="line"><span class="comment"> * purposes -- it is available anyway because of addressing</span></span><br><span class="line"><span class="comment"> * constraints.  Nodes with negative hash fields are specially</span></span><br><span class="line"><span class="comment"> * handled or ignored in map methods.</span></span><br><span class="line"><span class="comment"> //我们使用Node参与hash的字段的top位来达到控制的目的，由于地址约束的存在，它无论如何都是欧东可用的，Node的辣鸡hash 字段会被在map的方法里面特殊处理或者直接丢弃</span></span><br><span class="line"><span class="comment"> * Insertion (via put or its variants) of the first node in an</span></span><br><span class="line"><span class="comment"> * empty bin is performed by just CASing it to the bin.  This is</span></span><br><span class="line"><span class="comment"> * by far the most common case for put operations under most</span></span><br><span class="line"><span class="comment"> * key/hash distributions.  Other update operations (insert,</span></span><br><span class="line"><span class="comment"> * delete, and replace) require locks.  We do not want to waste</span></span><br><span class="line"><span class="comment"> * the space required to associate a distinct lock object with</span></span><br><span class="line"><span class="comment"> * each bin, so instead use the first node of a bin list itself as</span></span><br><span class="line"><span class="comment"> * a lock. Locking support for these locks relies on builtin</span></span><br><span class="line"><span class="comment"> * "synchronized" monitors.</span></span><br><span class="line"><span class="comment"> 在一个空桶中的首个node的插入操作(通过put或者它的变种方法)中，是通过CAS操作进行的。对于大多数的key/value分布情况下，这是最普通最常见的情况。其他修改操作需要锁(insert,delete,replace)，我们不去浪费空间在每个桶中挂上不同独立的锁，所以使用桶中第一个节点来作为锁，这些锁的锁定支持，依赖于内置的“同步”监视器。</span></span><br><span class="line"><span class="comment"> * Using the first node of a list as a lock does not by itself</span></span><br><span class="line"><span class="comment"> * suffice though: When a node is locked, any update must first</span></span><br><span class="line"><span class="comment"> * validate that it is still the first node after locking it, and</span></span><br><span class="line"><span class="comment"> * retry if not. Because new nodes are always appended to lists,</span></span><br><span class="line"><span class="comment"> * once a node is first in a bin, it remains first until deleted</span></span><br><span class="line"><span class="comment"> * or the bin becomes invalidated (upon resizing).</span></span><br><span class="line"><span class="comment"> 使用list中的首个节点来作为锁并不能够满足条件：当一个node被锁的时候，任何修改都必须在锁定之后进行首节点验证，验证它仍然是首节点。而且如果不是首节点就重新验证。因为时新的node通常都是添加到list里，第一次的时候node是桶里的第一个元素，它会保持第一知道删除或者桶变成不可用的状态（调整大小后）。</span></span><br><span class="line"><span class="comment"> * The main disadvantage of per-bin locks is that other update</span></span><br><span class="line"><span class="comment"> * operations on other nodes in a bin list protected by the same</span></span><br><span class="line"><span class="comment"> * lock can stall, for example when user equals() or mapping</span></span><br><span class="line"><span class="comment"> * functions take a long time.  However, statistically, under</span></span><br><span class="line"><span class="comment"> * random hash codes, this is not a common problem.  Ideally, the</span></span><br><span class="line"><span class="comment"> * frequency of nodes in bins follows a Poisson distribution</span></span><br><span class="line"><span class="comment"> * (http://en.wikipedia.org/wiki/Poisson_distribution) with a</span></span><br><span class="line"><span class="comment"> * parameter of about 0.5 on average, given the resizing threshold</span></span><br><span class="line"><span class="comment"> * of 0.75, although with a large variance because of resizing</span></span><br><span class="line"><span class="comment"> * granularity. Ignoring variance, the expected occurrences of</span></span><br><span class="line"><span class="comment"> * list size k are (exp(-0.5) * pow(0.5, k) / factorial(k)). The</span></span><br><span class="line"><span class="comment"> * first values are:</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * 0:    0.60653066</span></span><br><span class="line"><span class="comment"> * 1:    0.30326533</span></span><br><span class="line"><span class="comment"> * 2:    0.07581633</span></span><br><span class="line"><span class="comment"> * 3:    0.01263606</span></span><br><span class="line"><span class="comment"> * 4:    0.00157952</span></span><br><span class="line"><span class="comment"> * 5:    0.00015795</span></span><br><span class="line"><span class="comment"> * 6:    0.00001316</span></span><br><span class="line"><span class="comment"> * 7:    0.00000094</span></span><br><span class="line"><span class="comment"> * 8:    0.00000006</span></span><br><span class="line"><span class="comment"> * more: less than 1 in ten million</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * Lock contention probability for two threads accessing distinct</span></span><br><span class="line"><span class="comment"> * elements is roughly 1 / (8 * #elements) under random hashes.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> 当桶上锁时，桶中其他节点的其他操作会中止，比如使用equals或者mapping的方法将会执行很长时间。然后在统计中，在随机hash值的情况下，这不是一个常见的问题。理想情况下，在给定阈值给0.75的时候，桶中节点的分布遵循平均值约为0.5的泊松分布，尽管会因为resizing粒度具有较大方差，忽略方差，list的期望大小k为(exp(-0.5) * pow(0.5, k) / factorial(k))</span></span><br><span class="line"><span class="comment"> 两个线程访问不同的元素，锁竞争的概率大约为 1 / (* elements)</span></span><br><span class="line"><span class="comment"> * Actual hash code distributions encountered in practice</span></span><br><span class="line"><span class="comment"> * sometimes deviate significantly from uniform randomness.  This</span></span><br><span class="line"><span class="comment"> * includes the case when N &gt; (1&lt;&lt;30), so some keys MUST collide.</span></span><br><span class="line"><span class="comment"> * Similarly for dumb or hostile usages in which multiple keys are</span></span><br><span class="line"><span class="comment"> * designed to have identical hash codes or ones that differs only</span></span><br><span class="line"><span class="comment"> * in masked-out high bits. So we use a secondary strategy that</span></span><br><span class="line"><span class="comment"> * applies when the number of nodes in a bin exceeds a</span></span><br><span class="line"><span class="comment"> * threshold. These TreeBins use a balanced tree to hold nodes (a</span></span><br><span class="line"><span class="comment"> * specialized form of red-black trees), bounding search time to</span></span><br><span class="line"><span class="comment"> * O(log N).  Each search step in a TreeBin is at least twice as</span></span><br><span class="line"><span class="comment"> * slow as in a regular list, but given that N cannot exceed</span></span><br><span class="line"><span class="comment"> * (1&lt;&lt;64) (before running out of addresses) this bounds search</span></span><br><span class="line"><span class="comment"> * steps, lock hold times, etc, to reasonable constants (roughly</span></span><br><span class="line"><span class="comment"> * 100 nodes inspected per operation worst case) so long as keys</span></span><br><span class="line"><span class="comment"> * are Comparable (which is very common -- String, Long, etc).</span></span><br><span class="line"><span class="comment"> * TreeBin nodes (TreeNodes) also maintain the same "next"</span></span><br><span class="line"><span class="comment"> * traversal pointers as regular nodes, so can be traversed in</span></span><br><span class="line"><span class="comment"> * iterators in the same way.</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">   * The array of bins. Lazily initialized upon first insertion.</span></span><br><span class="line"><span class="comment">   * Size is always a power of two. Accessed directly by iterators.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">transient</span> <span class="keyword">volatile</span> Node&lt;K,V&gt;[] table;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * The next table to use; non-null only while resizing.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">transient</span> <span class="keyword">volatile</span> Node&lt;K,V&gt;[] nextTable;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Base counter value, used mainly when there is no contention,</span></span><br><span class="line"><span class="comment">   * but also as a fallback during table initialization</span></span><br><span class="line"><span class="comment">   * races. Updated via CAS.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">transient</span> <span class="keyword">volatile</span> <span class="keyword">long</span> baseCount;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Table initialization and resizing control.  When negative, the</span></span><br><span class="line"><span class="comment">   * table is being initialized or resized: -1 for initialization,</span></span><br><span class="line"><span class="comment">   * else -(1 + the number of active resizing threads).  Otherwise,</span></span><br><span class="line"><span class="comment">   * when table is null, holds the initial table size to use upon</span></span><br><span class="line"><span class="comment">   * creation, or 0 for default. After initialization, holds the</span></span><br><span class="line"><span class="comment">   * next element count value upon which to resize the table.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">transient</span> <span class="keyword">volatile</span> <span class="keyword">int</span> sizeCtl;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * The next table index (plus one) to split while resizing.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">transient</span> <span class="keyword">volatile</span> <span class="keyword">int</span> transferIndex;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Spinlock (locked via CAS) used when resizing and/or creating CounterCells.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">transient</span> <span class="keyword">volatile</span> <span class="keyword">int</span> cellsBusy;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Table of counter cells. When non-null, size is a power of 2.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">transient</span> <span class="keyword">volatile</span> CounterCell[] counterCells;</span><br></pre></td></tr></table></figure>
+<p>这里就发现，所有的变量都是volatile的，而volatile这个关键字的作用，就是首先保证可见性，然后禁止指令重排序，单次读写的原子性</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/JDK源码/" rel="tag"># JDK源码</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2019/08/19/Source code reading/JDK/Collection/TreeMap/" rel="next" title="TreeMap源码">
+                  <i class="fa fa-chevron-left"></i> TreeMap源码
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2019/10/19/Work Record/CAAS/StringLength/" rel="prev" title="中文数据中筛选出英文数据">
+                  中文数据中筛选出英文数据 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="温海林"
+    src="/uploads/images/fbb1.jpg">
+  <p class="site-author-name" itemprop="name">温海林</p>
+  <div class="site-description" itemprop="description">Fake it, make it!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">78</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/wenslo" title="GitHub &rarr; https://github.com/wenslo" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/564544234@qq.com" title="E-Mail &rarr; 564544234@qq.com"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">温海林</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.4.2
+  </div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.2',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="面试常见题 &amp;emsp;&amp;emsp;给定一个串，然后给其一个子串，获取子串在串中的下标，LeetCode也收录了这个问题。">
+<meta name="keywords" content="算法">
+<meta property="og:type" content="article">
+<meta property="og:title" content="串的模式匹配算法">
+<meta property="og:url" content="http://yoursite.com/2019/04/09/Data Struct/StringMatcher/index.html">
+<meta property="og:site_name" content="温海林的博客">
+<meta property="og:description" content="面试常见题 &amp;emsp;&amp;emsp;给定一个串，然后给其一个子串，获取子串在串中的下标，LeetCode也收录了这个问题。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/StringMatcher/01.jpg">
+<meta property="og:image" content="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/StringMatcher/02.png">
+<meta property="og:image" content="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/StringMatcher/03.png">
+<meta property="og:image" content="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/StringMatcher/04.png">
+<meta property="og:updated_time" content="2020-06-20T16:51:23.163Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="串的模式匹配算法">
+<meta name="twitter:description" content="面试常见题 &amp;emsp;&amp;emsp;给定一个串，然后给其一个子串，获取子串在串中的下标，LeetCode也收录了这个问题。">
+<meta name="twitter:image" content="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/StringMatcher/01.jpg">
+
+<link rel="canonical" href="http://yoursite.com/2019/04/09/Data Struct/StringMatcher/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>串的模式匹配算法 | 温海林的博客</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">温海林的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">技术，工作，生活，随笔</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/09/Data Struct/StringMatcher/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
+      <meta itemprop="name" content="温海林">
+      <meta itemprop="description" content="Fake it, make it!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温海林的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          串的模式匹配算法
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-04-09 00:00:00" itemprop="dateCreated datePublished" datetime="2019-04-09T00:00:00+08:00">2019-04-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-06-21 00:51:23" itemprop="dateModified" datetime="2020-06-21T00:51:23+08:00">2020-06-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据结构/" itemprop="url" rel="index">
+                    <span itemprop="name">数据结构</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>面试常见题</p>
+</blockquote><p>&emsp;&emsp;给定一个串，然后给其一个子串，获取<strong>子串在串中的下标</strong>，LeetCode也收录了这个问题。</p><a id="more"></a>
+
+<p>&emsp;&emsp;解法一：贪婪法</p>
+<p>&emsp;&emsp;假设有两个串，主串A，子串B。首先说循环A，然后循环B，判断子串中的值和主串中的是否完全一致，如果不一致的话，A开始下一次循环，继续这个过程。最欢情况的话，就是O(m*n)。这个是最容易想到的，也是最简单的一个，同时也是最慢的一个。</p>
+<p>&emsp;&emsp;解法二：KMP算法</p>
+<p>&emsp;&emsp;如下图所示，如果T[2] != P[2]，按照贪婪法，应该是T移动到1，P移动到0，然后重新开始匹配。而KMP算法的目的，就是说跳过无用的匹配，使其无用操作变少。</p>
+<p><img src="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/StringMatcher/01.jpg" alt="KMP示例"></p>
+<p>&emsp;&emsp;KMP算法的核心，就是next数组，需要通过next数组，来获取其移位的长度。<strong><em>next[i]，i从1开始计算，则表示，除去第i个数，在一个字符串里面从第一个数到第(i-1)字符串前缀和后缀最长重复的个数</em></strong>。而这个个数，就是子串移位的长度。</p>
+<p>&emsp;&emsp;公式(图片来源于网络)如下</p>
+<p><img src="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/StringMatcher/02.png" alt="next函数公式"></p>
+<p>&emsp;&emsp;举例说明前缀和后缀，在”abcd”中，前缀为”abc”，后缀为”bcd”。</p>
+<p>&emsp;&emsp;举例模式串为：<strong>ABAAAABC</strong>，用大写看起来舒服点。</p>
+<p>&emsp;&emsp;子串说明：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>各个子串</th>
+<th>前缀</th>
+<th>后缀</th>
+<th>最大公共元素长度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>无</td>
+<td>无</td>
+<td>0</td>
+</tr>
+<tr>
+<td>AB</td>
+<td>A</td>
+<td>B</td>
+<td>0</td>
+</tr>
+<tr>
+<td>ABA</td>
+<td><font color="red">A</font>；AB</td>
+<td><font color="red">A</font>；BA</td>
+<td>1</td>
+</tr>
+<tr>
+<td>ABAA</td>
+<td><font color="red">A</font>；AB；ABA</td>
+<td><font color="red">A</font>；AA；BAA</td>
+<td>1</td>
+</tr>
+<tr>
+<td>ABAAA</td>
+<td><font color="red">A</font>；AB；ABA；<br>ABAA</td>
+<td><font color="red">A</font>；AA；AAA；<br>BAAA</td>
+<td>1</td>
+</tr>
+<tr>
+<td>ABAAAA</td>
+<td><font color="red">A</font>；AB；ABA；<br>ABAA；ABAAA</td>
+<td><font color="red">A</font>；AA；AAA；<br>AAAA；BAAAA</td>
+<td>1</td>
+</tr>
+<tr>
+<td>ABAAAAB</td>
+<td>A；<font color="red">AB</font>；ABA；<br>ABAA；ABAAA；ABAAAA</td>
+<td>B；<font color="red">AB</font>；AAB；<br>AAAB；AAAAB；<br>BAAAAB</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>&emsp;&emsp;用一张图来表示next函数的执行过程：</p>
+<p><img src="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/StringMatcher/03.png" alt="next函数执行过程"></p>
+<p>接下来简述一下next函数的执行过程，我们用P来代表上面的子串。</p>
+<ol>
+<li><p>第一步，i=j=0，第一步没有可比较对象，所以<strong>next[0]=0，i++</strong>。</p>
+</li>
+<li><p>第二步，i=1，j=0。P[i]!=P[j]。next[1]=0，i++**。</p>
+</li>
+<li>第三步，i=2，j=0。P[i]==P[j]。next[2]=next[j]+1=1，i++，j++**。</li>
+<li><p>第四步，i=3，j=1。P[i]!=P[j]。j = next[j-1]，再次进行对比，P[i]==P[j-1]，j = j-1+1，i++。</p>
+</li>
+<li><p>第五步，同上</p>
+</li>
+<li>第六步，同上</li>
+<li>第七步，同上</li>
+<li>第八步，同上</li>
+</ol>
+<p>next函数的代码如下，写的并不严谨，只表示主要思路，仅供参考：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">  * 获取滑动位的算法，这个算法思路很简单。就是对比前缀和后缀，看其中重复的子串的长度，则就是next[]函数的值</span></span><br><span class="line"><span class="comment">  * 但是要注意的是，前缀必须从头开始算，后缀必须从最后一个数开始算</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">next</span><span class="params">(String expression, <span class="keyword">int</span>[] next)</span> </span>&#123;</span><br><span class="line">     <span class="keyword">int</span> i = <span class="number">0</span>, j = <span class="number">0</span>;</span><br><span class="line">     <span class="comment">//第一个已经固定死为0了。</span></span><br><span class="line">     <span class="keyword">while</span> (i &lt; expression.length()) &#123;</span><br><span class="line">         <span class="keyword">if</span> (i == <span class="number">0</span>) &#123;</span><br><span class="line">             next[i] = <span class="number">0</span>;</span><br><span class="line">             i++;</span><br><span class="line">             <span class="keyword">continue</span>;</span><br><span class="line">         &#125;</span><br><span class="line">         <span class="comment">//如果相等的话</span></span><br><span class="line">         <span class="keyword">if</span> (Objects.equals(expression.charAt(i), expression.charAt(j))) &#123;</span><br><span class="line">             System.out.println(<span class="string">"expression.charAt(i) is "</span> + expression.charAt(i) + <span class="string">"  expression.charAt(j) is "</span> + expression.charAt(j));</span><br><span class="line">             next[i] = j + <span class="number">1</span>;</span><br><span class="line">             j++;</span><br><span class="line">         &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">             <span class="keyword">while</span> (j != <span class="number">0</span>) &#123;</span><br><span class="line">                 j = next[j - <span class="number">1</span>];</span><br><span class="line">                 System.out.println(<span class="string">"expression.charAt(i) is "</span> + expression.charAt(i) + <span class="string">"  expression.charAt(j) is "</span> + expression.charAt(j));</span><br><span class="line">                 <span class="keyword">if</span> (Objects.equals(expression.charAt(i), expression.charAt(j))) &#123;</span><br><span class="line">                     next[i] = j + <span class="number">1</span>;</span><br><span class="line">                     j++;</span><br><span class="line">                     <span class="keyword">break</span>;</span><br><span class="line">                 &#125;</span><br><span class="line">             &#125;</span><br><span class="line">         &#125;</span><br><span class="line">         System.out.println(<span class="string">"i --------&gt; "</span> + i + <span class="string">" j-------------&gt;"</span> + j + <span class="string">"  next["</span> + i + <span class="string">"] = "</span> + next[i]);</span><br><span class="line">         i++;</span><br><span class="line">     &#125;</span><br><span class="line"></span><br><span class="line">     <span class="keyword">for</span> (<span class="keyword">int</span> k = <span class="number">0</span>; k &lt; next.length; k++) &#123;</span><br><span class="line">         System.out.print(next[k] + <span class="string">"  "</span>);</span><br><span class="line">     &#125;</span><br><span class="line">     System.out.println();</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;至此，next数组就已经全部获取到了。接下来就是，利用这个next数组，来查询子串是否存在并且返回下标。如下图所示：</p>
+<p><img src="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/StringMatcher/04.png" alt="next数组使用"></p>
+<p>执行过程描述：</p>
+<ol>
+<li><p>第一次执行，匹配到S[i] != P[j]的时候，从next数组中获取其前一位的值（next[j-1] = 0）</p>
+<p>于是能够知道，下一次对比，是从P[0]开始，OK。j=0，i++。</p>
+</li>
+<li><p>第二次执行，匹配到S[i] != P[j]的时候，从next数组中获取其前一位的值（next[j-1] = 2）</p>
+<p>于是能够知道，下一次对比，是从P[2]开始，OK。j=2，i=i+k。</p>
+</li>
+<li><p>第三次执行。全部匹配，OK，退出，返回下标。</p>
+</li>
+</ol>
+<p>示例代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">solution</span><span class="params">(String common, String expression)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">char</span>[] commonCharArray = common.toCharArray();</span><br><span class="line">        <span class="keyword">char</span>[] expressionCharArray = expression.toCharArray();</span><br><span class="line">        <span class="keyword">int</span>[] next = <span class="keyword">new</span> <span class="keyword">int</span>[expression.length()];</span><br><span class="line">        next(expression, next);</span><br><span class="line">        <span class="keyword">int</span> commonLength = common.length();</span><br><span class="line">        <span class="keyword">int</span> patternLength = expression.length();</span><br><span class="line">        <span class="keyword">int</span> i = <span class="number">0</span>, k = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">while</span> (i &lt; commonLength) &#123;</span><br><span class="line">            <span class="keyword">int</span> incrementValue = <span class="number">0</span>;</span><br><span class="line">            <span class="keyword">while</span> (k &lt; patternLength) &#123;</span><br><span class="line">                <span class="keyword">if</span> (Objects.equals(commonCharArray[i + incrementValue], expressionCharArray[k])) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (k == patternLength - <span class="number">1</span>) &#123;</span><br><span class="line">                        <span class="keyword">return</span> i - (k - incrementValue);</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        k++;</span><br><span class="line">                        incrementValue++;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    i = k + i;</span><br><span class="line">                    <span class="keyword">if</span> (k != <span class="number">0</span>) &#123;</span><br><span class="line">                        k = next[k - <span class="number">1</span>];</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        i++;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/算法/" rel="tag"># 算法</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2019/04/08/Data Struct/StackAlgorithm1/" rel="next" title="利用栈实现中缀转后缀">
+                  <i class="fa fa-chevron-left"></i> 利用栈实现中缀转后缀
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2019/04/11/Essay/2019/MyBatis VS Hibernate/" rel="prev" title="MyBatis VS Hibernate">
+                  MyBatis VS Hibernate <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="温海林"
+    src="/uploads/images/fbb1.jpg">
+  <p class="site-author-name" itemprop="name">温海林</p>
+  <div class="site-description" itemprop="description">Fake it, make it!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">78</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/wenslo" title="GitHub &rarr; https://github.com/wenslo" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/564544234@qq.com" title="E-Mail &rarr; 564544234@qq.com"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">温海林</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.4.2
+  </div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

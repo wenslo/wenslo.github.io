@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.2',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="项目有如下几个（后端）： jx yx yy 问题如下： 项目名称  如果有新项目，缩写也是yy，则会有冲突，就会变成yy1或者yy-sfdsf，无法见名知意，影响效率。  沟通之间难以顺畅交流。    数据字典  无法见名知意，影响开发，维护的效率，比如说：ZYYWZC006-TF003，谁能看得懂。 网络IO消耗较大，于jx,yx之前的旧代码中(前期代码风格来源于yx)，一个列表20个字段，其中">
+<meta name="keywords" content="问题记录">
+<meta property="og:type" content="article">
+<meta property="og:title" content="目前系统中的问题">
+<meta property="og:url" content="http://yoursite.com/2019/04/17/Essay/2019/Some Error in APlus System/index.html">
+<meta property="og:site_name" content="温海林的博客">
+<meta property="og:description" content="项目有如下几个（后端）： jx yx yy 问题如下： 项目名称  如果有新项目，缩写也是yy，则会有冲突，就会变成yy1或者yy-sfdsf，无法见名知意，影响效率。  沟通之间难以顺畅交流。    数据字典  无法见名知意，影响开发，维护的效率，比如说：ZYYWZC006-TF003，谁能看得懂。 网络IO消耗较大，于jx,yx之前的旧代码中(前期代码风格来源于yx)，一个列表20个字段，其中">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-06-20T16:51:23.164Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="目前系统中的问题">
+<meta name="twitter:description" content="项目有如下几个（后端）： jx yx yy 问题如下： 项目名称  如果有新项目，缩写也是yy，则会有冲突，就会变成yy1或者yy-sfdsf，无法见名知意，影响效率。  沟通之间难以顺畅交流。    数据字典  无法见名知意，影响开发，维护的效率，比如说：ZYYWZC006-TF003，谁能看得懂。 网络IO消耗较大，于jx,yx之前的旧代码中(前期代码风格来源于yx)，一个列表20个字段，其中">
+
+<link rel="canonical" href="http://yoursite.com/2019/04/17/Essay/2019/Some Error in APlus System/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>目前系统中的问题 | 温海林的博客</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">温海林的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">技术，工作，生活，随笔</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/17/Essay/2019/Some Error in APlus System/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
+      <meta itemprop="name" content="温海林">
+      <meta itemprop="description" content="Fake it, make it!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温海林的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          目前系统中的问题
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-04-17 00:00:00" itemprop="dateCreated datePublished" datetime="2019-04-17T00:00:00+08:00">2019-04-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-06-21 00:51:23" itemprop="dateModified" datetime="2020-06-21T00:51:23+08:00">2020-06-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/随笔/" itemprop="url" rel="index">
+                    <span itemprop="name">随笔</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>项目有如下几个（后端）：</p><ul>
+<li>jx</li>
+<li>yx</li>
+<li>yy</li>
+</ul><p>问题如下：</p><ol>
+<li><p>项目名称</p>
+<ul>
+<li><p>如果有新项目，缩写也是yy，则会有冲突，就会变成yy1或者yy-sfdsf，无法见名知意，影响效率。</p>
+</li>
+<li><p>沟通之间难以顺畅交流。</p>
+</li>
+</ul>
+</li>
+<li><p>数据字典</p>
+<ul>
+<li>无法见名知意，影响开发，维护的效率，比如说：ZYYWZC006-TF003，谁能看得懂。</li>
+<li>网络IO消耗较大，于jx,yx之前的旧代码中(前期代码风格来源于yx)，一个列表20个字段，其中5个是字典项，则一行数据会走5次数据字典的请求，一页20行，则会走20<em>5=100次请求。假设一次耗时100ms，100 </em> 100ms=10000ms=10s。后期代码，加了统一的JSON转译，编写复杂度有所下降，且一行数据只请求一次，网络IO耗时下降。</li>
+<li>一些代码(前端 or 后端)，直接将字典值写死与项目中，后期维护难度加大，效率降低。</li>
+<li>查看测试环境，107和108和yx三个库，每个都有数据字典的表，用的哪个，还是说全部都在用？若数据字典修改，产品可能只修改yx的，但是其他的没有修改，开发，维护，沟通都会受到阻碍。效率降低。</li>
+<li>省市区存在于数据字典中，且取的是ID，若想去国家统一区域代码，需要统一（前后端）进行二次处理。耗费性能耗费时间耗费精力。</li>
+</ul>
+</li>
+<li><p>服务划分边界</p>
+<ul>
+<li>服务划分是按照产品的模块进行划分，不合理，如A &amp; B，应该为一个服务才对，但是技术却按照产品原型划分，不考虑后期，不考虑前期，外包风格。由于A &amp; B不应分开，导致开发，维护，效率低下。</li>
+<li>服务边界随意制定，没有进行充分考虑。如，X 应属于A服务，但是产品将其放置于B服务，然后不进行考虑，随着产品原型放入B。后期产品意识到了这个问题，将其改回去A服务，技术由于相关原因，知道不合理，却无法迁移回去。</li>
+<li>目前虽然是所谓的微服务，但是由于设计原因，却是将服务当成service来用。代码之间耦合性极大，没有起到微服务高内聚低耦合的效果。服务界限非常模糊。</li>
+</ul>
+</li>
+<li><p>使用MyBatis存在的问题</p>
+<ul>
+<li>项目中很多都是like %%，索引无法应用，查询速度会降低非常多。</li>
+<li>sql全部手写，且大部分都是单表操作，开发效率极低</li>
+<li>产品经常修改，导致mapper,entity,resultmap,wiki,db，全都都需要修改，效率极低，BUG率极高</li>
+<li>微服务，但是MyBatis不进行多表查询，且没有DBA，无法发挥出MyBatis的优势</li>
+</ul>
+</li>
+<li><p>安全问题</p>
+<ul>
+<li>各个服务之间，目前仅仅能限制登录访问。更细粒度的访问控制，目前没有</li>
+<li>所谓的菜单权限，只是前端无法看见而已，如果浏览器地址栏直接输入，基本什么数据都能返回的回去，菜单安全只是假安全</li>
+<li>用户体系混乱，这个大部分是产品设计问题</li>
+<li>密码为MD5加密且无盐，基本等同于没有加密，且浏览器地址栏直接调用用户查询的话，所有用户用密码什么的全部都会返回回去</li>
+</ul>
+</li>
+<li><p>注释问题(也可以说复杂度的问题)</p>
+<ul>
+<li>实体的注释，wiki的注释，db的注释，swagger的注释，改一个，所有地方都要改，效率低下</li>
+<li>由于用的数据字典，entity用的String，根本不知道什么意思</li>
+</ul>
+</li>
+<li><p>项目测试问题</p>
+<ul>
+<li>无单元测试，导致，随便一个问题，比如说加了个字段，都需要整体回归测试一遍</li>
+<li>test环境无法使用，且uat环境构建极慢，测试及其困难，压力变相集中在测试人员身上。加大测试人员工作量，增加沟通成本。</li>
+</ul>
+</li>
+<li><p>产品存在的问题(重点问题)</p>
+<ul>
+<li>先说一下，说白了，开发人员都是搬砖的，只是其中有技术员，建造师，首席建造师，可能还有科学家等等。而产品是设计师，是艺术家，是乔布斯。设计的不好，考虑的不周，根源就很难改变。</li>
+<li>列表页<ul>
+<li>假设有A，其中有id,name,phone,address三个字段，有B，其中有,orderedTime,orderCode,content三个字段。</li>
+<li>A的列表页，只展示A的属性，B的列表页，除了B的属性之外，还展示了A的name,phone属性。但是另一个地方，又有一个C，这个地方不仅展示了A的name和phone，还展示了address。又有一个D，展示的更多。</li>
+<li>微服务架构（现在勉强算）下，都是单表操作，因此会冗余字段在表里，如果设计不统一，冗余字段越来越多，难以维护（这其中有MyBatis的锅）。如果不冗余，每次都查询其他表，封装DTO，则会导致工作量的加大。同时，参考对数据字典的描述，对性能影响也会很大。</li>
+</ul>
+</li>
+<li>详情页<ul>
+<li>详情页很多其他页面的列表页嵌套。</li>
+<li>列表页统计项很多，且统计项加入查询。</li>
+<li>有专门的统计页面可以干，何必每个地方都放一份</li>
+<li>权限不好弄，而且，界面模糊，用的人不知道从哪到底能看，只记得哪都能看，极大的可能就会每个详情都点进去看有没有。</li>
+</ul>
+</li>
+<li>固定条件项(数据字典)<ul>
+<li>比如说，准驾车型。众所周知，中国准驾车型包含有——A1,A2,A3,B1,B2,C1,C2,C3,C4,C5,D,E,F,M。这些应该只有一套在系统里，这些都是通用的，如果说，A页面只想用A1,A2，B页面只想用C1,C2，产品要求只显示这么几个，就会导致数据字典(或者说枚举)里存在多个字典项，一个为最全的，一个为A1,A2，一个为C1,C2。开发，维护复杂度激增。且代码无法复用，效率影响很大。不应该觉得说我这就只能C1或者C2，不现实。太原市电动车执行新国标，如果说，电动车速到了25KM每小时，视为机动车辆，这时候，如果没有增加E或者F驾照的话，视为违章处理，直接扣车。以至于，太原市驾校报考摩托车驾照的人数激增。</li>
+<li>能通用的条件应尽量通用，如：培训科目有四个：科目一，科目二，科目三，科目四。所有用到科目这个字段的地方，应当也是这四个科目，而不应该说，只有科目一或者科目二等等。</li>
+</ul>
+</li>
+<li>修改所导致的问题，事故的预判<ul>
+<li>比如，A服务修改，但是使用到A服务的，可能有B,C,D,E等等，极端情况下，这些地方都需要修改一次。产品应做好预判。同时，技术也应该做好预判。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol><a id="more"></a>
+
+
+
+<p>建议解决办法如下：</p>
+<ol>
+<li>项目名称用统一代表标识(比如说，eclipse前年的版本号为Oxygen，一看就知道是什么版本，什么时候发布的)，不推荐每个release过程都一个代号，但是每个项目应该有一个代号来代称。</li>
+<li>全面抛弃数据字典，统一使用枚举进行相关工作。随之而来的就是一堆问题：<ol>
+<li>MyBatis对枚举支持不友好。如果换成枚举，则ORM框架应当变更为Spring Data JPA。</li>
+<li>yx,jx所有列表页，详情页等等，后端代码需要重写，同时，前端代码，需要重新联调，耗时很长。有些地方，甚至需要产品层面进行相应变更。</li>
+<li>地区，应按照国标进行存储，数据库只存code，提供统一接口进行处理，而非code以及含义全部入库，如学员，现在更简单，全部存到address这个字段上，如有变化或者新的需求，效率太低。</li>
+<li>合库合表</li>
+</ol>
+</li>
+<li>抛弃微服务，业务不了解，技术不了解，边界区分不了，且目前微服务是当成service来用，发挥不出优势，应抛弃，整合，然后资源足够，业务成熟的情况，进行微服务拆分。</li>
+<li>需与产品进行沟通，按照产品的风格，选择MyBatis or Spring Data JPA。</li>
+<li>应当根据现在的情况，以后以后的可能性，重新设计Security系统，需要产品同时进行规划RBAC。</li>
+<li>面向对象，而不面向数据库，注释只存在一份即可，wiki能自动生成最好。</li>
+<li>单元测试添加，环境隔离。</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/问题记录/" rel="tag"># 问题记录</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2019/04/17/Essay/2019/清静经/" rel="next" title="清静经">
+                  <i class="fa fa-chevron-left"></i> 清静经
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2019/04/18/Data Struct/Sorting/" rel="prev" title="排序">
+                  排序 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="温海林"
+    src="/uploads/images/fbb1.jpg">
+  <p class="site-author-name" itemprop="name">温海林</p>
+  <div class="site-description" itemprop="description">Fake it, make it!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">78</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/wenslo" title="GitHub &rarr; https://github.com/wenslo" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/564544234@qq.com" title="E-Mail &rarr; 564544234@qq.com"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">温海林</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.4.2
+  </div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

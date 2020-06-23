@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.2',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="JVM相关面试题 基于《深入理解JVM》这本书，如果说可能问的话，会问什么样的问题，又该如何去解答，如果连环炮的形势问的话，又该怎么去解答。如果没有足够理解的话，估计很难面对连环炮的形势。JVM实际工作中主要定位排查问题，性能优化，节省资源，但是一些理论还是要知道的，不然的话就成了高级技工了。有人说月薪3W以下的都不叫程序员，还是有点道理的，不过每个 码畜，总归是有点理想的吧。">
+<meta name="keywords" content="面试">
+<meta property="og:type" content="article">
+<meta property="og:title" content="面试-JVM篇章">
+<meta property="og:url" content="http://yoursite.com/2019/10/22/Interview/JVM/index.html">
+<meta property="og:site_name" content="温海林的博客">
+<meta property="og:description" content="JVM相关面试题 基于《深入理解JVM》这本书，如果说可能问的话，会问什么样的问题，又该如何去解答，如果连环炮的形势问的话，又该怎么去解答。如果没有足够理解的话，估计很难面对连环炮的形势。JVM实际工作中主要定位排查问题，性能优化，节省资源，但是一些理论还是要知道的，不然的话就成了高级技工了。有人说月薪3W以下的都不叫程序员，还是有点道理的，不过每个 码畜，总归是有点理想的吧。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-06-20T16:51:23.166Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="面试-JVM篇章">
+<meta name="twitter:description" content="JVM相关面试题 基于《深入理解JVM》这本书，如果说可能问的话，会问什么样的问题，又该如何去解答，如果连环炮的形势问的话，又该怎么去解答。如果没有足够理解的话，估计很难面对连环炮的形势。JVM实际工作中主要定位排查问题，性能优化，节省资源，但是一些理论还是要知道的，不然的话就成了高级技工了。有人说月薪3W以下的都不叫程序员，还是有点道理的，不过每个 码畜，总归是有点理想的吧。">
+
+<link rel="canonical" href="http://yoursite.com/2019/10/22/Interview/JVM/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>面试-JVM篇章 | 温海林的博客</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">温海林的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">技术，工作，生活，随笔</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/10/22/Interview/JVM/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
+      <meta itemprop="name" content="温海林">
+      <meta itemprop="description" content="Fake it, make it!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温海林的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          面试-JVM篇章
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-10-22 23:30:03" itemprop="dateCreated datePublished" datetime="2019-10-22T23:30:03+08:00">2019-10-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-06-21 00:51:23" itemprop="dateModified" datetime="2020-06-21T00:51:23+08:00">2020-06-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/面试/" itemprop="url" rel="index">
+                    <span itemprop="name">面试</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>JVM相关面试题</p>
+<p>基于《深入理解JVM》这本书，如果说可能问的话，会问什么样的问题，又该如何去解答，如果连环炮的形势问的话，又该怎么去解答。如果没有足够理解的话，估计很难面对连环炮的形势。JVM实际工作中主要定位排查问题，性能优化，节省资源，但是一些理论还是要知道的，不然的话就成了高级技工了。有人说月薪3W以下的都不叫程序员，还是有点道理的，不过每个</p>
+<p>码畜，总归是有点理想的吧。</p>
+<a id="more"></a>
+<ol>
+<li><h4><span id="jvm运行时数据区分为哪几个部分分别是什么作用">JVM运行时数据区分为哪几个部分？分别是什么作用？</span></h4><p>分为程序计数器，<strong>Java虚拟机栈</strong>，本地方法栈，<strong>Java堆</strong>，方法区</p>
+<p>程序计数器：</p>
+<p>程序计数器的工作就是通过改变计数器的值来选取吓一跳需要执行的字节码指令，分支、循环、跳转、异常处理、县城回复等基础功能都依赖程序计数器来完成。Java虚拟机的多线程是<strong>通过线程轮流切换并分配处理器执行时间的方式来实现的</strong>，在任何一个确定的时刻，<strong>一个处理器（一个内核）都只会执行一条线程中的指令</strong>。因此为了线程切换后能恢复到正确的执行位置，每个线程都有一个独立的程序计数器，<strong>互不影响，独立存储，线程私有</strong>，而且是唯一一个没有<strong>OutOfMemoryError</strong>情况的区域。</p>
+<p>Java虚拟机栈：</p>
+<p>线程私有，生命周期与线程相同，描述的是Java方法执行的内存模型：<strong>每个方法在执行的同事都会创建一个栈帧（Stack Frame）用于存储局部变量表、操作数栈、动态链接、方法出口等信息。每个方法从调用到执行完成的过程，就对应着一个栈帧在虚拟机栈中入栈出栈的过程</strong>。局部变量表<strong>存放了编译期可知的各种基本数据类型（boolean,byte,char,short,int,float,long,double）、对象引用（reference类型，不是对象本身，可能是一个指向对象起始地址的引用指针，也可能是指向一个代表对象的句柄或其他与此对象相关的位置）和returnAddress类型（指向一条字节码指令的地址）</strong>。如果线程请求的栈深度大于虚拟机允许的深度，那么会StackOverflowError，如果扩展时无法申请到足够的内存，则会OutOfMemoryError。</p>
+<p>本地方法栈：</p>
+<p>为虚拟机使用的Native方法服务。</p>
+<p>Java堆：</p>
+<p>是Java虚拟机所管理的内存中最大的一块。被所有线程共享，存放对象实例，<strong>所有的对象实例以及数组都在堆上分配</strong>。是是垃圾收集器管理的主要区域，细分可分为<strong>新生代和老年代</strong>，再细分可以有：<strong>Eden空间、From Survivor空间、To Survivor空间。线程共享的Java堆中可能划分出多个线程私有的分配缓冲区（Thread Local Allocation Buffer）</strong>。可以用-Xmx和-Xms来控制大小。无法扩展的时候，会抛出OutOfMemotyError。</p>
+<p>方法区：</p>
+<p>各个线程共享，存储已经被虚拟机加载的类信息、常量、静态变量、即时编译器编译后的代码等数据。也叫做永久代。</p>
+<p>运行时常量池：</p>
+<p>是方法取得一部分，Class文件中除了有类的版本、字段、方法、接口等描述信息外，还有一项信息是常量池，用于存放编译器生成的各种字面量和符号引用，这部分内存在类加载后进入方法区的运行时常量池存放。</p>
+<p>直接内存：</p>
+<p>独立于Java堆和Native堆，收到本机总内存的影响。</p>
+<blockquote>
+<p>可能延伸出的问题</p>
+</blockquote>
+<ul>
+<li>既然说程序计数器是唯一一个没有OutOfMemory的区域，那么说说有哪些区域会有OutOfMemory？</li>
+</ul>
+<p>答：Java虚拟机栈，Java堆，本地方法栈，方法区。虚拟机栈的内存是可以动态扩展的，但是如果动态扩展时，申请不到足够的内存的话，那么会抛出OutOfMemory；Java堆如果达到了最大使用内存，那么再次开辟内存的时候，同样也会抛出OutOfMemory；本地方法栈如果调用Native方法没有足够内存或者没有释放的时候，那么也会抛出OutOfMemory；方法区中由于有运行时常量池的存在，这部分是最占内存的，如果没有足够内存的时候，同样会OutOfMemory。</p>
+<ul>
+<li><h5><span id="来说一下线程的生命周期">来说一下线程的生命周期</span></h5></li>
+<li><h5><span id="局部变量表里存放是有哪些">局部变量表里存放是有哪些？</span></h5></li>
+<li><h5><span id="说一下一个栈帧在虚拟机栈中入栈出栈的过程">说一下一个栈帧在虚拟机栈中入栈出栈的过程</span></h5></li>
+<li><h5><span id="什么情况下会stackoverflowerror栈深度怎么算栈和堆所占内存比是多少">什么情况下会StackOverflowError？栈深度怎么算？栈和堆所占内存比是多少？</span></h5></li>
+<li><h5><span id="eden空间-from-survivor空间-to-survivor空间内存占比怎么算">Eden空间、From Survivor空间、To Survivor空间内存占比怎么算？</span></h5></li>
+<li><h5><span id="虚拟机加载类的过程是什么样的">虚拟机加载类的过程是什么样的？</span></h5></li>
+<li><h5><span id="直接内存什么情况下会抛出outofmemoryerror">直接内存什么情况下会抛出<strong>OutOfMemoryError</strong>？</span></h5></li>
+</ul>
+</li>
+<li><h4><span id="当new一个对象的时候对象的创建是怎么样一个过程">当new一个对象的时候，对象的创建是怎么样一个过程？</span></h4><p>虚拟机遇到一条new执行时，首先将去检查这个指令的参数是否能在常量池中定位到一个类的符号引用，并且检查这个符号引用代表的类是否已经被加载、解析和初始化过。如果没有，那么必须先执行相应的类加载过程。</p>
+<p>类加载检查通过后，虚拟机就会为对象分配内存。对象所需内存的大小在类加载完成后便可完全确定。如果Java堆中的内存是绝对规整的，所有用过的内存都放在一边，空闲的放在一边，中间放着一个指针作为分界点的指示器，那分配内存就是仅仅把那个指针向空闲空间挪动一段与对象大小相等的距离，这种分配方式叫做指针碰撞（Bump the Pointer）。如果内存并不是规整的，已经使用内存和未使用的内存相互交错，这种情况下就没办法使用指针碰撞。那么Java虚拟机就必须维护一个列表，记录哪些内存块是可用的，在分配的时候从列表中找到一块足够大的空间划分给对象实例，并更新列表上的记录，这种分配方式叫做空闲列表（Free List）。选择哪种分配方式由Java堆是否规整决定，而Java堆是否规整又由所采用的的垃圾收集器是否带有压缩整理功能决定。因此，在使用Serial，ParNew等带Compact过程的收集器时，系统采用的分配算法是指针碰撞，而使用CMS这种基于Mark-Sweep算法的收集器时，通常采用空闲列表。</p>
+<p>但是在对象的创建是一个非常频繁的行为，并发情况下并不是线程安全的，有可能指针指向A，来没来得及修改，B就使用了原来的指针进行分配内存。为了避免这种情况，有两种处理方式，一种是对分配内存空间的操作进行同步处理，JVM采用CAS+失败重试的方式保证更新操作的原子性；另一种就是把内存分配的动作按照线程划分在不同的空间之中进行，即每个线程在Java堆中预先分配一小块内存，称为本地线程分配缓冲（Thread Local Allocation Buffer，TLAB）。哪个线程需要分配内存，就在哪个线程的TLAB上分配，只有TLAB用完并且分配新的TLAB时，才需要进行同步锁定。虚拟机是否使用TLAB，通过-XX:+/-UseTLAB。</p>
+<p>内存分配完毕后，虚拟机就需要将分配到的内存空间都初始化为零值（不包括对象头），如果使用TLAB，这一工作过程也可以提前至TLAB分配时进行。<strong>这一步保证了对象的实例字段在Java代码中可以不赋初始值就直接使用，程序能访问到这些字段的数据类型所对的零值</strong>。</p>
+<p>然后对对象进行必要设置，如这个对象是哪个类的实例、如何才能找到类的元数据信息、对象的哈希码、对象的GC分代年龄信息。<strong>这些信息存放在对象的对象头（Object Header）中</strong>。根据虚拟机当前的运行状态的不同，如是否启用偏向锁等，对象头会有不同的设置方式。</p>
+<p>然后对象就已经产生了，但是知道虚拟机执行了init方法之后，把对象按照意愿进行初始化，这才算完成产生。</p>
+<blockquote>
+<p>延伸问题</p>
+</blockquote>
+<ul>
+<li><h5><span id="来说一下类加载的过程是什么样">来说一下类加载的过程是什么样。</span></h5></li>
+<li><h5><span id="如何确定一个对象所需内存大小">如何确定一个对象所需内存大小？</span></h5></li>
+<li><h5><span id="内存是如何进行分配的">内存是如何进行分配的？</span></h5></li>
+<li><h5><span id="如何确定内存分配方式">如何确定内存分配方式？</span></h5></li>
+<li><h5><span id="哪种垃圾收集器带有压缩整理功能">哪种垃圾收集器带有压缩整理功能？</span></h5></li>
+<li><h5><span id="有哪几种垃圾收集器分别有哪些特点采用的垃圾回收算法有哪几种分别是什么">有哪几种垃圾收集器？分别有哪些特点？采用的垃圾回收算法有哪几种？分别是什么？</span></h5></li>
+<li><h5><span id="对象的创建过程是线程安全的么不是如何解决的">对象的创建过程是线程安全的么？不是？如何解决的？</span></h5></li>
+<li><h5><span id="开启tlab的参数是什么默认是否使用tlab">开启TLAB的参数是什么？默认是否使用TLAB？</span></h5></li>
+<li><h5><span id="对象头什么时候进行初始化包含哪些信息">对象头什么时候进行初始化？包含哪些信息</span></h5></li>
+<li><h5><span id="对象头有哪几种不同的设置方式">对象头有哪几种不同的设置方式？</span></h5></li>
+</ul>
+</li>
+</ol>
+<ol>
+<li><h4><span id="说一下对象的内存布局">说一下对象的内存布局</span></h4><p>在HotSpot虚拟机中，对象在内存中存储的的布局可以分为三个区域：<strong>对象头（Object Header），实例数据（Instance Data），对象填充（Padding）</strong>。</p>
+<p>对象头包括两部分信息，<strong>第一部分用于存储对象自身的运行时数据，如哈希码，GC分代年龄，锁状态标志，线程持有的锁，偏向线程ID，偏向时间戳等。另一部分是类型指针，既对象指向它的的类元数据的指针，虚拟机通过这个指针来确定这个对象是哪个类的实例</strong>。但是不是所有的虚拟机实现都必须在对象数据上保留类型指针。另外如果对象是一个Java数组，那在对象头中必须还有一块用于记录数组长度的数据，因为虚拟机可以通过普通Java对象的元数据信息确定Java对象的大小，但是从数组的元数据中无法确定数组的大小。</p>
+<p>实例数据存放的是对象真正存储的有效信息，也是在程序代码中所定义的各种类型的字段内容。无论是从父类继承下来的，还是在子类中定义的，都需要记录。这部分的存储顺序会受到虚拟机分配策略参数（FieldsAllocationStyle）和字段在Java源码中定义的顺序的影响。HotSpot虚拟机默认的分配策略为longs/doubles、ints、shorts/chars、bytes/booleans、oops（Ordinary Object Pointers），从分配策略中可以看出，相同宽度的字段总是被分配到一起。满足这个前提条件的情况下，在父类中定义的变量会出现在子类之前。如果CompactFields参数值为true（默认），那么子类中较窄的变量也可能会插入到父类变量的空隙之中。</p>
+<p>对齐填充不是必然存在，仅仅起到占位符的作用。因为HotSpot的自动内存管理系统要求对象起始地址必须是8字节的整数倍，也就是说，对象的大小必须是8字节的整数倍。而对象头正好是8字节的整数倍，也就是实例部分没有对齐时，就需要用对齐填充来补全。</p>
+<blockquote>
+<p>延伸问题</p>
+</blockquote>
+<ul>
+<li><h5><span id="哪个虚拟机实现不保留类型指针">哪个虚拟机实现不保留类型指针？</span></h5></li>
+<li><h5><span id="虚拟机分配策略参数有哪些分配策略有哪些">虚拟机分配策略参数有哪些？分配策略有哪些？</span></h5></li>
+<li><h5><span id="有没有可能子类的变量出现在父类变量之前">有没有可能子类的变量出现在父类变量之前？</span></h5></li>
+</ul>
+</li>
+<li><h4><span id="说一下对象访问的时候是如何进行定位的">说一下对象访问的时候是如何进行定位的？</span></h4><p>访问对象是通过栈上的reference数据来操作具体对象，两种办法，直接指针和句柄访问。</p>
+<p>句柄访问的话，会在Java堆中划分出一块内存作为句柄池，reference中存储的是对象的句柄地址，而句柄中包含了对象实例数据和类型数据各自的地址信息。</p>
+<p>直接指针的话，reference中存储的直接就是对象地址。</p>
+<p>使用句柄访问的好处是，reference中存储的是句柄地址，在对象被于东的时候只会改变句柄中的实例数据地址，而reference本身则不需要修改。</p>
+<p>直接指针的最好好处就是速度更快，节省了一次指针定位的时间开销。HotSpot主要使用直接指针。</p>
+<blockquote>
+<p>延伸问题</p>
+</blockquote>
+<ul>
+<li>直接指针和句柄访问各自有什么优缺点，哪个使用的比较多？</li>
+</ul>
+</li>
+<li><h4><span id="什么情况下回oom写个代码使其抛出outofmemoryerror">什么情况下回OOM？写个代码，使其抛出OutOfMemoryError</span></h4><p>堆的话，可能会有内存泄露和内存溢出两种情况。如果一直新建对象，但是GC无法回收，超过了GC所允许的最大内存，那么就会产生OOM。</p>
+<p>如果内存泄漏，那么就检查泄露对象到GC Roots的引用链是通过怎样的路径关联并导致垃圾收集器无法自动回收它们的。如果是内存溢出，那么就调大内存，然后检查代码中是否有某些对象生命周期过长，持有时间过长等情况。</p>
+<p>栈的话，如果说请求栈的深度超过了允许的深度，会抛出StackoverFlow异常，但是如果栈无法申请到足够的内存的话，则会抛出OOM异常。</p>
+<p>运行时常量池的话，一直添加字符串，将其固化到常量池填满，应该就会OOM。</p>
+<p>方法区，由于方法区存放的是类的信息，那么构造足够多的类，将其撑爆就会OOM。</p>
+<p>本机直接内存。直接或者间接使用NIO，总内存不够，则会抛出OOM。</p>
+<blockquote>
+<p>延伸问题</p>
+</blockquote>
+<ul>
+<li><h5><span id="什么是内存泄漏什么是内存溢出">什么是内存泄漏，什么是内存溢出？</span></h5></li>
+<li><h5><span id="控制内存大小的参数是什么">控制内存大小的参数是什么？</span></h5></li>
+</ul>
+</li>
+<li><h4><span id="判断对象是否存活的算法有哪几种各有什么特点">判断对象是否存活的算法有哪几种？各有什么特点？</span></h4><p>引用计数算法和可达性分析算法。</p>
+</li>
+</ol>
+<blockquote>
+<p>延伸问题</p>
+</blockquote>
+<ul>
+<li><h5><span id="可作为gc-roots的对象包括哪几种">可作为GC Roots的对象包括哪几种？</span></h5></li>
+</ul>
+<ol>
+<li><h4><span id="说一说java的引用">说一说Java的引用</span></h4></li>
+<li><h4><span id="如何判断一个常量是否为废弃常量如何判断一个类是无用的类">如何判断一个常量是否为废弃常量？如何判断一个类是无用的类？</span></h4></li>
+<li><h4><span id="说一下常用的垃圾收集算法">说一下常用的垃圾收集算法</span></h4></li>
+<li><h4><span id="说一下有哪些垃圾收集器分别有什么用途各自用的什么算法">说一下有哪些垃圾收集器，分别有什么用途，各自用的什么算法？</span></h4></li>
+<li><h4><span id="既然你说到了g1收集器那你说说g1收集器">既然你说到了G1收集器，那你说说G1收集器</span></h4></li>
+<li><h4><span id="g1和cms有哪些区别">G1和CMS有哪些区别？</span></h4><p>​    </p>
+<p>​</p>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/面试/" rel="tag"># 面试</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2019/10/21/Interview/Perface/" rel="next" title="面试题收集-前言">
+                  <i class="fa fa-chevron-left"></i> 面试题收集-前言
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2019/11/01/Work Record/CAAS/Nexus/" rel="prev" title="Nexus打包碰到的问题">
+                  Nexus打包碰到的问题 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">1.</span> <span class="nav-text">JVM运行时数据区分为哪几个部分？分别是什么作用？</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.1.</span> <span class="nav-text">来说一下线程的生命周期</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.2.</span> <span class="nav-text">局部变量表里存放是有哪些？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.3.</span> <span class="nav-text">说一下一个栈帧在虚拟机栈中入栈出栈的过程</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.4.</span> <span class="nav-text">什么情况下会StackOverflowError？栈深度怎么算？栈和堆所占内存比是多少？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.5.</span> <span class="nav-text">Eden空间、From Survivor空间、To Survivor空间内存占比怎么算？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.6.</span> <span class="nav-text">虚拟机加载类的过程是什么样的？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.7.</span> <span class="nav-text">直接内存什么情况下会抛出OutOfMemoryError？</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">2.</span> <span class="nav-text">当new一个对象的时候，对象的创建是怎么样一个过程？</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.1.</span> <span class="nav-text">来说一下类加载的过程是什么样。</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.2.</span> <span class="nav-text">如何确定一个对象所需内存大小？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.3.</span> <span class="nav-text">内存是如何进行分配的？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.4.</span> <span class="nav-text">如何确定内存分配方式？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.5.</span> <span class="nav-text">哪种垃圾收集器带有压缩整理功能？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.6.</span> <span class="nav-text">有哪几种垃圾收集器？分别有哪些特点？采用的垃圾回收算法有哪几种？分别是什么？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.7.</span> <span class="nav-text">对象的创建过程是线程安全的么？不是？如何解决的？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.8.</span> <span class="nav-text">开启TLAB的参数是什么？默认是否使用TLAB？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.9.</span> <span class="nav-text">对象头什么时候进行初始化？包含哪些信息</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.10.</span> <span class="nav-text">对象头有哪几种不同的设置方式？</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">3.</span> <span class="nav-text">说一下对象的内存布局</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">3.1.</span> <span class="nav-text">哪个虚拟机实现不保留类型指针？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">3.2.</span> <span class="nav-text">虚拟机分配策略参数有哪些？分配策略有哪些？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">3.3.</span> <span class="nav-text">有没有可能子类的变量出现在父类变量之前？</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">4.</span> <span class="nav-text">说一下对象访问的时候是如何进行定位的？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">5.</span> <span class="nav-text">什么情况下回OOM？写个代码，使其抛出OutOfMemoryError</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">5.1.</span> <span class="nav-text">什么是内存泄漏，什么是内存溢出？</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">5.2.</span> <span class="nav-text">控制内存大小的参数是什么？</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">6.</span> <span class="nav-text">判断对象是否存活的算法有哪几种？各有什么特点？</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">6.1.</span> <span class="nav-text">可作为GC Roots的对象包括哪几种？</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">7.</span> <span class="nav-text">说一说Java的引用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">8.</span> <span class="nav-text">如何判断一个常量是否为废弃常量？如何判断一个类是无用的类？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">9.</span> <span class="nav-text">说一下常用的垃圾收集算法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">10.</span> <span class="nav-text">说一下有哪些垃圾收集器，分别有什么用途，各自用的什么算法？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">11.</span> <span class="nav-text">既然你说到了G1收集器，那你说说G1收集器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">12.</span> <span class="nav-text">G1和CMS有哪些区别？</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="温海林"
+    src="/uploads/images/fbb1.jpg">
+  <p class="site-author-name" itemprop="name">温海林</p>
+  <div class="site-description" itemprop="description">Fake it, make it!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">78</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/wenslo" title="GitHub &rarr; https://github.com/wenslo" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/564544234@qq.com" title="E-Mail &rarr; 564544234@qq.com"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">温海林</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.4.2
+  </div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.2',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="图的概念 基本概念：图结构中，任意两个节点之间的关系是任意的，途中任意两个数据元素之间都可能相关。 ADT： 数据对象V：数据元素集合，顶点集； 数据关系R： R={VR} VR={| v,w \in V 且P(v,w)，表示从v到w的弧，P(v,w)定义了弧的意义或者信息}     顶点：图中的数据元素 弧：表示从v到w的一条弧;v是顶点的集合；vr是两个顶点之间关系的集合 有向图  \in">
+<meta name="keywords" content="图">
+<meta property="og:type" content="article">
+<meta property="og:title" content="图">
+<meta property="og:url" content="http://yoursite.com/2019/04/16/Data Struct/Graph/index.html">
+<meta property="og:site_name" content="温海林的博客">
+<meta property="og:description" content="图的概念 基本概念：图结构中，任意两个节点之间的关系是任意的，途中任意两个数据元素之间都可能相关。 ADT： 数据对象V：数据元素集合，顶点集； 数据关系R： R={VR} VR={| v,w \in V 且P(v,w)，表示从v到w的弧，P(v,w)定义了弧的意义或者信息}     顶点：图中的数据元素 弧：表示从v到w的一条弧;v是顶点的集合；vr是两个顶点之间关系的集合 有向图  \in">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/Graph/01.png">
+<meta property="og:updated_time" content="2020-06-20T16:51:23.162Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="图">
+<meta name="twitter:description" content="图的概念 基本概念：图结构中，任意两个节点之间的关系是任意的，途中任意两个数据元素之间都可能相关。 ADT： 数据对象V：数据元素集合，顶点集； 数据关系R： R={VR} VR={| v,w \in V 且P(v,w)，表示从v到w的弧，P(v,w)定义了弧的意义或者信息}     顶点：图中的数据元素 弧：表示从v到w的一条弧;v是顶点的集合；vr是两个顶点之间关系的集合 有向图  \in">
+<meta name="twitter:image" content="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/Graph/01.png">
+
+<link rel="canonical" href="http://yoursite.com/2019/04/16/Data Struct/Graph/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>图 | 温海林的博客</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">温海林的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">技术，工作，生活，随笔</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/16/Data Struct/Graph/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
+      <meta itemprop="name" content="温海林">
+      <meta itemprop="description" content="Fake it, make it!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温海林的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          图
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-04-16 00:00:00" itemprop="dateCreated datePublished" datetime="2019-04-16T00:00:00+08:00">2019-04-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-06-21 00:51:23" itemprop="dateModified" datetime="2020-06-21T00:51:23+08:00">2020-06-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据结构/" itemprop="url" rel="index">
+                    <span itemprop="name">数据结构</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <ol>
+<li>图的概念<ul>
+<li>基本概念：图结构中，任意两个节点之间的关系是任意的，途中任意两个数据元素之间都可能相关。</li>
+<li>ADT：<ul>
+<li>数据对象V：数据元素集合，顶点集；</li>
+<li>数据关系R：<ul>
+<li>R={VR}</li>
+<li>VR={<v,w>| <script type="math/tex">v,w \in V</script> 且P(v,w)，<v,w>表示从v到w的弧，P(v,w)定义了弧<v,w>的意义或者信息}</v,w></v,w></v,w></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>顶点：图中的数据元素</li>
+<li>弧：<v,w>表示从v到w的一条弧;v是顶点的集合；vr是两个顶点之间关系的集合<ul>
+<li>有向图<ul>
+<li><script type="math/tex"><v,w> \in VR</script>，v为弧尾，w为弧头</li>
+</ul>
+</li>
+<li>无向图<ul>
+<li>若<script type="math/tex"><v,w> \in VR</script>，必有<script type="math/tex"><w,v> \in VR</script>，用(v,w)表示一条边</li>
+</ul>
+</li>
+<li><img src="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/Graph/01.png" alt="有向图和无向图图例"></li>
+</ul>
+</v,w></li>
+<li>定点数n和弧的数目e：<ul>
+<li>无向图：<script type="math/tex">0 \le e \le {\frac 1 2} n(n-1)</script></li>
+<li>有向图：<script type="math/tex">0 \le e \le  n(n-1)</script></li>
+</ul>
+</li>
+<li>完全图：有n(n-1)/2条边的无向图</li>
+<li>有向完全图：有n(n-1)条弧的有向图</li>
+<li>稀疏图：边或弧很少的图</li>
+<li>稠密图：边或弧较多的图</li>
+<li>子图：<script type="math/tex">G=(V,{E})，G1=(V1,{E1})</script>，若<script type="math/tex">V1 \subseteq V</script>，且<script type="math/tex">E1 \subseteq E</script>，则称G1为G的子图</li>
+<li>邻接点：无向图中，<script type="math/tex">(V,V1) \in E</script>，则v,v1互为邻接点</li>
+<li>顶点v的度：与v相关联的边的数目，TD(v)</li>
+<li>有向图中，若<v,v1> \in A，则顶点v邻接到顶点v1，而顶点v1邻接自v<ul>
+<li>出度：以v为尾的弧的数目，OD(v)</li>
+<li>入度：以v为头的弧的数目，ID(v)</li>
+<li>TD(v) = OD(v) + ID(v)</li>
+</ul>
+</v,v1></li>
+<li>路径<ul>
+<li>无向图中顶点v到v1的路径：一个顶点序列</li>
+<li>有向图中，路径也是有向的</li>
+<li>回路</li>
+<li>简单路径：顶点序列中顶点不重复的路径</li>
+</ul>
+</li>
+<li>连通图、连通分量、强连通图、强连通分量<ul>
+<li>无向图中：顶点v到顶点v1有路径，则v和v1是连通的</li>
+<li>如果图G中任意两个点都是连通的，则图G就是连通图</li>
+<li>连通分量：无向图中的极大连通子图</li>
+<li>有向图中：若任意的顶点vi到vj都有路径，则为强连通图</li>
+<li>强连通分量：有向图中的极大连通子图</li>
+</ul>
+</li>
+<li>一个连通图的生成树：一个极小连通子图，含有途中全部节点，但只有足以构成一棵树的n-1条边。<ul>
+<li>一棵有n个顶点的生成树有且仅有n-1条边</li>
+<li>但有n-1条变得图不一定是生成树</li>
+</ul>
+</li>
+<li>有向图<ul>
+<li>如果有一个顶点的入度为0，其余顶点的入度都为1，则是一个有向树。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>图的存储结构<ul>
+<li>数组表示：两个数组分别存放顶点信息和弧信息<ul>
+<li>代码地址：<a href="https://github.com/wenslo/data_struct_java/blob/master/src/main/java/com/github/wenslo/ds/graph/ArrayGraph.java" target="_blank" rel="noopener">https://github.com/wenslo/data_struct_java/blob/master/src/main/java/com/github/wenslo/ds/graph/ArrayGraph.java</a></li>
+</ul>
+</li>
+<li>链式结构：为途中没一个顶点创建一个单链表，其中的节点表示与依附于顶点的边<ul>
+<li>链表存储</li>
+<li>十字链表——有向图</li>
+<li>邻接多重表——无向图</li>
+</ul>
+</li>
+<li>遍历方式<ul>
+<li>深度优先</li>
+<li>广度优先</li>
+<li>比较简单，类似于树的先序遍历和中序遍历</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/图/" rel="tag"># 图</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2019/04/12/Data Struct/Tree/" rel="next" title="树">
+                  <i class="fa fa-chevron-left"></i> 树
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2019/04/17/Essay/2019/清静经/" rel="prev" title="清静经">
+                  清静经 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="温海林"
+    src="/uploads/images/fbb1.jpg">
+  <p class="site-author-name" itemprop="name">温海林</p>
+  <div class="site-description" itemprop="description">Fake it, make it!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">78</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/wenslo" title="GitHub &rarr; https://github.com/wenslo" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/564544234@qq.com" title="E-Mail &rarr; 564544234@qq.com"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">温海林</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.4.2
+  </div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.2',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="HashMap相关问题放这里，带着问题看，自己的思路解答也会放这里">
+<meta name="keywords" content="JDK源码">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HashMap源码问题解读">
+<meta property="og:url" content="http://yoursite.com/2019/06/30/Source code reading/JDK/Collection/HashMap_Question/index.html">
+<meta property="og:site_name" content="温海林的博客">
+<meta property="og:description" content="HashMap相关问题放这里，带着问题看，自己的思路解答也会放这里">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-06-20T16:51:23.176Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="HashMap源码问题解读">
+<meta name="twitter:description" content="HashMap相关问题放这里，带着问题看，自己的思路解答也会放这里">
+
+<link rel="canonical" href="http://yoursite.com/2019/06/30/Source code reading/JDK/Collection/HashMap_Question/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>HashMap源码问题解读 | 温海林的博客</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">温海林的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">技术，工作，生活，随笔</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/30/Source code reading/JDK/Collection/HashMap_Question/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
+      <meta itemprop="name" content="温海林">
+      <meta itemprop="description" content="Fake it, make it!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温海林的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          HashMap源码问题解读
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-06-30 00:00:00" itemprop="dateCreated datePublished" datetime="2019-06-30T00:00:00+08:00">2019-06-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-06-21 00:51:23" itemprop="dateModified" datetime="2020-06-21T00:51:23+08:00">2020-06-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/源码阅读/" itemprop="url" rel="index">
+                    <span itemprop="name">源码阅读</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>HashMap相关问题放这里，带着问题看，自己的思路解答也会放这里</p>
+</blockquote>
+<a id="more"></a>
+<p>问题记录：</p>
+<ol>
+<li><p>DEFAULT_INITIAL_CAPACITY为啥默认是16，为什么必须是2的倍数？</p>
+<p>解答：</p>
+<p>16可能是一个折中的选项，来避免说设置太小，稍微放一点数据，就进行扩容了，产生不必要的空间浪费。至于说2的倍数，因为底层计算的时候，都是通过cpu移位来进行计算，而2的倍数的话，只需要进行左移一位即可，不然的话，如果是什么加减乘除取模，全部都是cpu进行的加法运算，浪费效率。</p>
+</li>
+<li><p>最大容量能否进行更改？达到最大容量的时候会浪费多少的容量？</p>
+<p>解答：</p>
+<p>不能通过构造方法更改，如果手动将其更改为比1&lt;&lt;30（1&lt;&lt;31的话，会超出整型的最大值，也就是Integer.MAX_VALUE）更大的数字的话，tableSizeFor()这个方法会重新将值设置为16。如果经过resize()方法扩容了很多次，那么，它的最大容量，实际上汇编成为Integer.MAX_VALUE。如果达到了最大容量，由于说hashmap的阈值范围是threshold * loadFactor，所以首先说，会有1/4的容量，是完全被浪费掉了的。</p>
+</li>
+<li><p>默认加载因子是0.75，如果是其他的值会有什么影响？为什么是0.75？</p>
+<p>解答：</p>
+<p>threshold = capacity * 0.75，初始默认情况下，这个值为12，也就是说，刚开始map的capacity是16，threshold为12，而当容量达到12的时候就会进行扩容。如果loadFactor为0.5的话，那么容量到了8的时候就会扩容，如果等于1的话，那map里的用完之后才会进行扩容。</p>
+<p>由API注释可知，桶的分布满足于泊松分布，参数在在默认阈值0.75的条件下，平均数为0.5，会产生比较良好的分布。再问泊松分布的话，就不会了。。。。MLGJ</p>
+</li>
+<li><p>树化的阈值为什么是8？树退化为链表的阈值为什么是6？达到阈值6和8的时候分别会产生什么效果？</p>
+<p>解答：</p>
+<p>因为hashmap是数组+链表，达到阈值后，会变成数组+红黑树。链表的复杂度为O(n)，红黑树的复杂度为O(logn)。假设长度为8的话，那么，红黑树的复杂度就是O(log8) = 3，链表的复杂度是O(8)，红黑树&gt;链表。假设长度为6的话，那么，红黑树的复杂度就是O(log6) = 2.585，链表的复杂度是O(6)，但是红黑树对应的需要有平衡的操作，相对来说，这些操作没有链表来的复杂性小点，没有必要使用红黑树。所以说，树化阈值为8的时候，是最合适的一个值。</p>
+</li>
+<li><p>最小树化容量不是64么，为什么源码注释里写的是4*8=32？如果是32会怎么样？</p>
+<p>解答：</p>
+<p>不知道</p>
+</li>
+<li><p>hashcode的集合仅仅在当前掩码变化的时候将会一直碰撞冲突？如果不异或呢。会怎么个冲突法？这个需要自己实现来验证。</p>
+</li>
+<li><p>(key == null) ? 0 : (h = key.hashCode()) ^ (h &gt;&gt;&gt; 16)，为什么要这么做？hashcode为何要与code无符号右移16位后的数字做异或？</p>
+<p>解答：</p>
+<p>先不关注hashCode的实现方式，这个东西，后面再说吧。先看看为什么要这么做，好处在哪。</p>
+<p>hashcode右移16位，然后进行和原值进行异或。然后，由于是整型(int)，int的取值范围为0x00000000-0xFFFFFFFF，也就是说，是32位的二进制数据，如果这时候hashcode进行右移16位，那就是说，hashCode的高16位和低16位进行异或。至于为什么这么做，hashCode的值，用到高16位的情况，太少了，可能是为了减少hash碰撞吧，因为如果hashcode值比较小的话，那么产生相同的hashcode的可能性相对来说是比较高的一个情况，所以用高位和低位来异或，加快速度，减少hash碰撞。</p>
+</li>
+<li><p>tableSizeFor方法的作用是什么，为什么要这么写？</p>
+<p>解答：</p>
+<p>Returns a power of two size for the given target capacity。</p>
+<p>意思为：返回给定目标容量的2次方幂的数字。实际上，是返回一个比指定整数大，且是接近2次方幂的一个整数。</p>
+<p>因为移位的速度是最快的，能够以很高的效率来获取。看到是看明白了，这个是怎么推出来的？百思不得其解啊。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">tableSizeFor</span><span class="params">(<span class="keyword">int</span> cap)</span> </span>&#123;</span><br><span class="line">  	<span class="comment">//capacity默认值为16，以默认情况来看</span></span><br><span class="line">    <span class="keyword">int</span> n = -<span class="number">1</span> &gt;&gt;&gt; Integer.numberOfLeadingZeros(cap - <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">return</span> (n &lt; <span class="number">0</span>) ? <span class="number">1</span> : (n &gt;= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">numberOfLeadingZeros</span><span class="params">(<span class="keyword">int</span> i)</span> </span>&#123;</span><br><span class="line">  <span class="comment">//默认情况，i==2^4-1;</span></span><br><span class="line">  <span class="comment">// HD, Count leading 0's    HD是啥意思？应该是计算前导数的0有多少了吧</span></span><br><span class="line">  <span class="comment">//由此可见，i的最小值为0。</span></span><br><span class="line">  <span class="keyword">if</span> (i &lt;= <span class="number">0</span>)</span><br><span class="line">    <span class="keyword">return</span> i == <span class="number">0</span> ? <span class="number">32</span> : <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">int</span> n = <span class="number">31</span>;</span><br><span class="line">  <span class="comment">//i &gt;= 2^16</span></span><br><span class="line">  <span class="keyword">if</span> (i &gt;= <span class="number">1</span> &lt;&lt; <span class="number">16</span>) &#123; n -= <span class="number">16</span>; i &gt;&gt;&gt;= <span class="number">16</span>; &#125;</span><br><span class="line">  <span class="comment">//i &gt;= 2^8</span></span><br><span class="line">  <span class="keyword">if</span> (i &gt;= <span class="number">1</span> &lt;&lt;  <span class="number">8</span>) &#123; n -=  <span class="number">8</span>; i &gt;&gt;&gt;=  <span class="number">8</span>; &#125;</span><br><span class="line">  <span class="comment">//i &gt;= 2^4</span></span><br><span class="line">  <span class="keyword">if</span> (i &gt;= <span class="number">1</span> &lt;&lt;  <span class="number">4</span>) &#123; n -=  <span class="number">4</span>; i &gt;&gt;&gt;=  <span class="number">4</span>; &#125;</span><br><span class="line">  <span class="comment">//i &gt;= 2^2</span></span><br><span class="line">  <span class="keyword">if</span> (i &gt;= <span class="number">1</span> &lt;&lt;  <span class="number">2</span>) &#123; n -=  <span class="number">2</span>; i &gt;&gt;&gt;=  <span class="number">2</span>; &#125;</span><br><span class="line">  <span class="keyword">return</span> n - (i &gt;&gt;&gt; <span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>默认情况（initial_capacity = 16）会进入下面的判断(i == 2^4 - 1)，此时，n=29，而i无符号右移两位之后，会从15(1111)-&gt;3(0011)，在return语句中，i再次进行无符号右移，变为(0001)，这时，n-i的值就为28。然后再看tableSizeFor，使用-1无符号右移28位。而-1的二进制表示为11111111111111111111111111111111(因为负数的二进制表示为：1的二进制表示，取反码，然后补码)，移位之后结果就变成了00000000000000000000000000001111，如果没有大于MAXIMUM_CAPACITY，则+1，变为了16，2^4</li>
+<li>换种情况，68983，当它进入numberOfLeadingZeros的时候，便成为68982。首先会进入i &gt;= 1&lt;<16，此时n-=16=15。i>&gt;&gt;16之后，会变为(0001)，下面三个判断都进不去，这时候return语句再次右移，就成0了，然后，n=15-0=15，最后，-1无符号右移15位，过程不进行叙述，最后结果为2^17，而68983是大于2^16的。</16，此时n-=16=15。i></li>
+</ul>
+</li>
+<li><p>初始容量和负载因子如果在构造方法中改变的话，会有什么影响？</p>
+<ul>
+<li>和上面的tableSizeFor方法相关，上面已经说了一部分了，如果修改了initial_capacity的话，会将这个值赋值给threshold，因为hashmap的扩容方法是触发threshold才会进行，也就是达到了capacity<em>loadFactor。如果赋值的是20，根据tableSizeFor方法，容量会变成为2^5(32)，当容量到了32之后，才会进行扩容，而不是说32\</em>0.75之后才扩容。</li>
+<li>如果loadFactor修改为1，那么，首先来说，当所有容量用完了，才会进行扩容；如果修改的太小了，那么数据刚扩容相对来说就会非常快（假设为0.1，到了十分之一就扩容和到了四分之三扩容，这个不言而喻）；还有个问题，hashmap是基于hash分布，如果说loadFactor设置太高的话，那么所有bucket都会被利用，不利于良好的hash分布，hash冲突就会增大，hashmap查询性能就会降低，如果太小，bucket空间又浪费太多。0.75是比较合适的一个值。结合上面的一起。</li>
+</ul>
+</li>
+<li><p>Float.isNaN = return v != v ，为什么这么写？</p>
+<p>isNaN接收的参数是一个float，而该方法判断这个值是否是一个数字，NaN(Not a Number)，而查看float的源码，里面有个常量，float NaN = 0.0f/0.0f。而hashmap源码里，会先进行判断，loadFactor&lt;=0，如果这里满足的话，因该是不会进行后面的操作的，可能是因为hashmap不是线程安全的，虽然刚开始loadFactor是正确的值，然后被其他线程修改之后，就变成了0.0f/0.0f，就会变成一个not a number的数。</p>
+</li>
+<li><p>tab[(n - 1) &amp; hash]，这个操作是什么意思？</p>
+<p>是用来定位数组位置的，上面说了这个hash值是自身的hashcode的高16位与低16位进行异或产生的结果，而n-1是当前hashmap的长度，通过(length-1) &amp; hash的话，就能够得到所需要查找的下标，然后就可以通过index来获取到需要get或者说需要put的数据。</p>
+<p>hash算法最主要的就是说让元素均匀分布，而很多hash算法都是使用的取模运算，但是hashmap用的是(n-1) &amp; hash，首先，&amp;的运算速度是大于%的，然后length是2的倍数，x%length == (length-1) &amp; x，求x。</p>
+<ul>
+<li>假设length=8,x=5，(8-1) &amp; 5 == 0111 &amp; 0101 ==5，结果正确</li>
+<li>假设length=4,x=21，(4-1) &amp; 21 == 0011 &amp; 10101 == 1，结果正确</li>
+<li>假设length=3,x=20，(3-1) &amp; 20 == 1000 &amp; 10100 == 0，结果错误</li>
+</ul>
+<p>由此可知，x%length == (length-1) &amp; x这个公式是正确的，然后看下这个公式怎么推出来。</p>
+<p>一个十进制数用二进制方法表示：$X<em>nX</em>{n-1}X<em>{n-2}…X_1X_0$ == $X_n*2^n + X</em>{n-1}<em>2^{n-1} + X_{n-2}</em>2^{n-2} … +X_1<em>2^1 + X_0</em>2^0 $</p>
+<p>由于分配率的规定，由上面的公式可知，length为2的倍数，$X/2^k$的余数就为取模的值，那就看怎么取这个余数：$X/2^k ==  X<em>n*2^n/2^k + X</em>{n-1}<em>2^{n-1}/2^k + X_{n-2}/2^k</em>2^{n-2}/2^k … +X_1<em>2^1/2^k + X_0</em>2^0/2^k  $</p>
+<ul>
+<li>如果k&gt;n的话，余数就是整个十进制数</li>
+<li>如果0&lt;=k&lt;=n，因为比k大的，都能被k整除，所以说，余数就为$X<em>k*2^k + X</em>{k-1} <em> 2^{k-1} + … X_k </em> 2^1 + X_k * 2^0 $</li>
+<li>特么的，这个公式《数据结构与算法》这本书上有</li>
+</ul>
+<p>一个十进制数对$2^n$的数进行取余，就是说，十进制数转换为二进制数后，向右进行移位，移掉的这n位数，就为余数，比如说，10 % 8  ==  2。1000 向右移位2位的话是 0010 == 2，结果正确。然后是怎么获取这个n位数：$2^0…2^n$ 用二进制表示为0001,0010,0100,1000…如果我们将$2^n-1$的话，就会变成为0000，0001，0011，0111，1111…然后用十进制数和该数字进行&amp;操作，得到的数字，就是需要移位的数字。</p>
+<p>嗯。就是这些。</p>
+</li>
+<li><p>resize()这个方法初次执行的时候大小是多少？后续执行的时候，大小会如何变化？</p>
+<p>resize初次执行的时候大小为默认值1 &lt;&lt; 4，后续执行的时候，大小会翻倍。</p>
+</li>
+<li><p>hashmap扩容的话，会怎么进行变化？</p>
+<p>扩容的话，桶里的链表或者红黑树没什么变化，但是说，数组里的元素的位置会发生改变，会重新计算元素在数组中的位置。</p>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/JDK源码/" rel="tag"># JDK源码</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2019/05/23/Essay/2019/Thinking of change job/" rel="next" title="换工作的一些思考">
+                  <i class="fa fa-chevron-left"></i> 换工作的一些思考
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2019/07/14/Data Struct/RBT/" rel="prev" title="红黑树">
+                  红黑树 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="温海林"
+    src="/uploads/images/fbb1.jpg">
+  <p class="site-author-name" itemprop="name">温海林</p>
+  <div class="site-description" itemprop="description">Fake it, make it!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">78</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/wenslo" title="GitHub &rarr; https://github.com/wenslo" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/564544234@qq.com" title="E-Mail &rarr; 564544234@qq.com"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">温海林</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.4.2
+  </div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

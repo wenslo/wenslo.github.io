@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.2',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="树的定义： 一棵树是一些节点的集合。这个集合可以是空集；若的不是空集，则树由称作根（root）的节点r以及0个或者多个非空的(子)树T_0，T_1…..，T_k组成，这些子树中每一棵的根都被来自根r的一条有向的边（edge）所连结。 一棵树是N个结点和N-1条边的集合，其中的一个节点叫做根。 没有儿子的结点成为树叶（leaf），叶节点。 具有相同父亲的节点为兄弟（siblings）节点 从节点n_">
+<meta name="keywords" content="树">
+<meta property="og:type" content="article">
+<meta property="og:title" content="树">
+<meta property="og:url" content="http://yoursite.com/2019/04/12/Data Struct/Tree/index.html">
+<meta property="og:site_name" content="温海林的博客">
+<meta property="og:description" content="树的定义： 一棵树是一些节点的集合。这个集合可以是空集；若的不是空集，则树由称作根（root）的节点r以及0个或者多个非空的(子)树T_0，T_1…..，T_k组成，这些子树中每一棵的根都被来自根r的一条有向的边（edge）所连结。 一棵树是N个结点和N-1条边的集合，其中的一个节点叫做根。 没有儿子的结点成为树叶（leaf），叶节点。 具有相同父亲的节点为兄弟（siblings）节点 从节点n_">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/Tree/01.png">
+<meta property="og:image" content="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/Tree/02.png">
+<meta property="og:image" content="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/Tree/03.png">
+<meta property="og:image" content="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/Tree/04.png">
+<meta property="og:updated_time" content="2020-06-20T16:51:23.163Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="树">
+<meta name="twitter:description" content="树的定义： 一棵树是一些节点的集合。这个集合可以是空集；若的不是空集，则树由称作根（root）的节点r以及0个或者多个非空的(子)树T_0，T_1…..，T_k组成，这些子树中每一棵的根都被来自根r的一条有向的边（edge）所连结。 一棵树是N个结点和N-1条边的集合，其中的一个节点叫做根。 没有儿子的结点成为树叶（leaf），叶节点。 具有相同父亲的节点为兄弟（siblings）节点 从节点n_">
+<meta name="twitter:image" content="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/Tree/01.png">
+
+<link rel="canonical" href="http://yoursite.com/2019/04/12/Data Struct/Tree/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>树 | 温海林的博客</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">温海林的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">技术，工作，生活，随笔</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/12/Data Struct/Tree/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
+      <meta itemprop="name" content="温海林">
+      <meta itemprop="description" content="Fake it, make it!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温海林的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          树
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-04-12 00:00:00" itemprop="dateCreated datePublished" datetime="2019-04-12T00:00:00+08:00">2019-04-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-06-21 00:51:23" itemprop="dateModified" datetime="2020-06-21T00:51:23+08:00">2020-06-21</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据结构/" itemprop="url" rel="index">
+                    <span itemprop="name">数据结构</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><strong>树的定义</strong>：</p><ul>
+<li>一棵树是一些节点的集合。这个集合可以是空集；若的不是空集，则树由称作<strong>根（root）</strong>的节点<script type="math/tex">r</script>以及0个或者多个非空的(子)树<script type="math/tex">T_0，T_1…..，T_k</script>组成，这些子树中每一棵的根都被来自根<script type="math/tex">r</script>的一条有向的<strong>边（edge）</strong>所连结。</li>
+<li>一棵树是<script type="math/tex">N</script>个结点和<script type="math/tex">N-1</script>条边的集合，其中的一个节点叫做根。</li>
+<li>没有儿子的结点成为<strong>树叶（leaf）</strong>，叶节点。</li>
+<li>具有相同父亲的节点为<strong>兄弟（siblings）</strong>节点</li>
+<li>从节点<script type="math/tex">n_1</script>到<script type="math/tex">n_k</script>的<strong>路径（path）</strong>定义为节点<script type="math/tex">n_1，n_2，……，n_k</script>的一个序列，使得对于<script type="math/tex">1\le i \lt k</script>的节点<script type="math/tex">n_i</script>是<script type="math/tex">n_i+1</script>的父亲。这条路径的<strong>长（length）</strong>是位该路径上的边的条数，即<script type="math/tex">k-1</script>。从每一个节点到它自己都有一条边长为0的路径。注意，在一棵树中从根到每个节点恰好存在一条路径。</li>
+<li>对任一节点<script type="math/tex">n_i，n_i</script>的<strong>深度（depth）</strong>为从根到<script type="math/tex">n_i</script>的唯一的路径的长。因此，根的深度为0。<script type="math/tex">n_i</script>的<strong>高（height）</strong>是从<script type="math/tex">n_i</script>到一片树叶的最长路径的长。因此所有的树叶的高都是0。一棵树的高等于它的根的高。一棵树的深度等于它的最深的树叶的深度；该深度总是等于这棵树的高。</li>
+<li>如果存在从<script type="math/tex">n_1</script>到<script type="math/tex">n_2</script>的一条路径，那么<script type="math/tex">n_1</script>是<script type="math/tex">n_2</script>的一位<strong>祖先（ancestor）</strong>而<script type="math/tex">n_2</script>是<script type="math/tex">n_1</script>的一个<strong>后裔（descendant）</strong>。如果<script type="math/tex">n_1 \neq n_2</script>，那么<script type="math/tex">n_1</script>是<script type="math/tex">n_2</script>的<strong>真祖先（proper ancestor）</strong>而<script type="math/tex">n_2</script>是<script type="math/tex">n_1</script>的<strong>真后裔（proper descendant）</strong>。</li>
+</ul><a id="more"></a>
+
+<p><strong>满二叉树</strong>：一棵深度为k且有2^k-1个节点的二叉树</p>
+<p><strong>完全二叉树</strong>：深度为k有n个节点的二叉树，并且仅当其每一个节点都与深度为k的满二叉树中编号从1至n的节点一一对应时，成为完全二叉树。</p>
+<p><img src="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/Tree/01.png" alt="树图"></p>
+<p><strong>二叉树的性质</strong>：</p>
+<ul>
+<li>在二叉树的第i层上至多有<script type="math/tex">2^i+1 个</script>结点(<script type="math/tex">i>=1</script>)</li>
+<li>深度为k的二叉树至多有<script type="math/tex">2^k -1</script>个结点(<script type="math/tex">k>=1</script>)</li>
+<li>对任何一棵二叉树T，如果其终端节点数为<script type="math/tex">n_0</script>，度为2的结点数为<script type="math/tex">n_2</script>，则<script type="math/tex">n_0=n_2+1</script></li>
+<li>具有n个结点的完全二叉树的深度为<script type="math/tex">(log_2n) + 1</script></li>
+<li>如果有一棵有n个结点的完全二叉树(其深度为<script type="math/tex">(log_2n)+1</script>层，每层从左到右)，则对任一结点i(<script type="math/tex">1 \le i \le n</script>)，有：<ul>
+<li>如果i=1，则节点i是二叉树的根，无双亲；若i&gt;1，则其parent(i)是节点 i/2</li>
+<li>如果2i&gt;n，则节点i无左孩子(节点i为叶子节点)；否则其做孩子leftChild(i)是节点2i</li>
+<li>如果2i+1&gt;n，则节点i无右孩子；否则其有孩子rightChild(i)是节点2i+1</li>
+</ul>
+</li>
+</ul>
+<p>二叉树的<strong>顺序存储</strong>：</p>
+<ul>
+<li>就是将完全二叉树上编号为i的节点元素存储在数组对应的下标中。</li>
+<li>利用二叉树的最后一条性质，可以快速定位到二叉树的左右子节点和父节点。</li>
+<li>示例代码地址：<a href="https://github.com/wenslo/data_struct_java/blob/master/src/main/java/com/github/wenslo/ds/tree/ArrayBinTree.java" target="_blank" rel="noopener">https://github.com/wenslo/data_struct_java/blob/master/src/main/java/com/github/wenslo/ds/tree/ArrayBinTree.java</a></li>
+</ul>
+<p>树的<strong>遍历方式</strong>（模板为上图的完全二叉树）：</p>
+<ul>
+<li>先序（根）遍历<ul>
+<li>对节点的处理工作是在它的诸儿子节点被处理之前进行的</li>
+<li>遍历结果为 1   2   4   8   9   2   10   11   3   6   12   13   7   14   15 </li>
+</ul>
+</li>
+<li>中序（根）遍历<ul>
+<li>中序遍历左子树，然后访问根节点，然后中序遍历右子树</li>
+<li>遍历结果为 8   4   9   2   10   2   11   1   12   6   13   3   14   7   15</li>
+</ul>
+</li>
+<li>后序（根）遍历<ul>
+<li>一个结点初的工作是在它的诸儿子节点被计算后进行的</li>
+<li>遍历结果为  8   9   4   10   11   2   2   12   13   6   14   15   7   3   1 </li>
+</ul>
+</li>
+<li>示例代码地址：<a href="https://github.com/wenslo/data_struct_java/blob/master/src/main/java/com/github/wenslo/ds/tree/LinkedBinTree.java" target="_blank" rel="noopener">https://github.com/wenslo/data_struct_java/blob/master/src/main/java/com/github/wenslo/ds/tree/LinkedBinTree.java</a></li>
+</ul>
+<p><strong>线索二叉树</strong>：</p>
+<ul>
+<li><p>对二叉树进行中序排序，将所有的节点右子节点为空的指针指向它的后继节点，将所有的节点左子节点为空的指针指向它的前驱节点。如下图所示</p>
+</li>
+<li><p><img src="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/Tree/02.png" alt="线索二叉树"></p>
+</li>
+</ul>
+<p>树的<strong>存储结构</strong>：</p>
+<ul>
+<li>双亲表示法：除了根节点之外，每个节点都会指向其双亲</li>
+<li>孩子表示法：每个节点，如果有子节点，则都会指向其子节点</li>
+<li><strong>孩子兄弟表示法：两个链域，左链域指向其第一个子节点，右链域指向其第一个兄弟节点</strong></li>
+<li><img src="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/Tree/03.png" alt="树表示法图例"></li>
+</ul>
+<p>森林：就是好多棵树</p>
+<p>森林/树与二叉树的互相转换：</p>
+<ul>
+<li><p>森林转换为二叉树</p>
+<ul>
+<li><script type="math/tex; mode=display">F={T_1,T_2……T_m}$$是森林，转为二叉树$$B=(root,LB,RB)</script></li>
+<li>若<script type="math/tex">F</script>为空，则m=0，B为空</li>
+<li>若<script type="math/tex">F</script>非空，则B的根root是森林中的第一棵树的根<script type="math/tex">ROOT(T_1)</script>；B的左子树LB是从<script type="math/tex">T_1</script>中根节点的子树森林<script type="math/tex">F1={T_1,T_2……T_m}</script>转换而成的二叉树；B的右子树RB是从森林<script type="math/tex">F2={T_1,T_2……T_m}</script>转换而成的二叉树 </li>
+</ul>
+</li>
+<li><p><img src="https://wenslo-blog.oss-cn-beijing.aliyuncs.com/Data%20Structures%20and%20Algorithms/Tree/04.png" alt="森林，树，二叉树相互转换图"></p>
+</li>
+</ul>
+<p>最优二叉树(哈弗曼树)：</p>
+<ul>
+<li><strong>概念：带权路径长度最短的树</strong></li>
+<li><strong>路径长度：结点之间的树枝的总数</strong></li>
+<li><strong>树的路径长度：从根到每一结点的路径长度之和</strong></li>
+<li><strong>树的带权路径长度：叶子结点的带权路径长度之和。设有</strong> <strong>n</strong> <strong>片叶子，它们的权值分别为<script type="math/tex">w_1,w_2,…w_n</script>相应的路径长度分别为<script type="math/tex">l_1,l_2,…,l_n</script></strong>，则树的带权路径长度（Weight Path Length）可记为：<script type="math/tex">WPL=\sum_{k-1}^n w_k l_k</script></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/树/" rel="tag"># 树</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2019/04/11/Essay/2019/MyBatis VS Hibernate/" rel="next" title="MyBatis VS Hibernate">
+                  <i class="fa fa-chevron-left"></i> MyBatis VS Hibernate
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2019/04/16/Data Struct/Graph/" rel="prev" title="图">
+                  图 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="温海林"
+    src="/uploads/images/fbb1.jpg">
+  <p class="site-author-name" itemprop="name">温海林</p>
+  <div class="site-description" itemprop="description">Fake it, make it!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">78</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/wenslo" title="GitHub &rarr; https://github.com/wenslo" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/564544234@qq.com" title="E-Mail &rarr; 564544234@qq.com"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">温海林</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.4.2
+  </div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>
