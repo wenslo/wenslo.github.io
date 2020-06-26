@@ -131,3 +131,36 @@ date: 2020-06-26 23:22:28
       4. come upstairs
       5. go downstairs
 
+> 单词句型
+
+1. **名词的复数**
+   1. **+s**
+      1. **a book - book**
+      2. **a cat - cats**
+      3. **a bottle - bottles**
+   2. **辅音 + y + ies**
+      1. **a lady - ladies**
+      2. **a baby - a babies**
+   3. **s / sh / ch / x + es**
+      1. **a watch - watches**
+      2. **a bus - buses**
+      3. **a dish - dished**
+   4. **o + es**
+      1. **a potato - potatoes**
+      2. **a hero - heroes**
+2. **动词的第三人称单数**
+   1. **+s**
+      1. **come - comes**
+      2. **dust - dusts**
+      3. **make - makes**
+   2. **辅音+ y + ies**
+      1. **study - studies**
+      2. **try - tries**
+   3. **s / sh / ch / x + es**
+      1. **watch - watches**
+      2. **pass - passes**
+      3. **wish - wishes**
+   4. **o + es**
+      1. **go - goes**
+      2. **do - does**
+
