@@ -34,4 +34,8 @@ date: 2020-06-30 13:24:00
    1. keep healthy
 4. spend v. 度过
    1. **spend + 时间 + 地点**
-   2. 
+      1. He spends two days in Beijing.
+      2. He stays in Beijing for two days.
+   2. **spend + 时间 + with sb.**
+      1. He spends two weeks with his girlfriend.
+5. weekend
