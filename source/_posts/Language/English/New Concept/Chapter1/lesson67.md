@@ -38,4 +38,21 @@ date: 2020-06-30 13:24:00
       2. He stays in Beijing for two days.
    2. **spend + 时间 + with sb.**
       1. He spends two weeks with his girlfriend.
-5. weekend
+5. weekend 周末
+6. country 乡村
+   1. in the country 在乡下
+   2. in the city  在城里
+   3. in the village 在村里
+   4. 国家，in my country
+7. lucky  adj. 幸运的
+   1. You are so lucky!
+   2. You are a lucky dog.
+8. Sunday（SUN） 周日  
+9. Monday（MON） 周一  
+10. Tuesday（TUE） 周二 
+11. Wednesday（WED） 周三 
+12. Thursday（THUR） 周四 
+13. Friday（FRI） 周五 
+14. Saturay（SAT） 周六 
+15. **首字母大写**
+16. **on + 天**
