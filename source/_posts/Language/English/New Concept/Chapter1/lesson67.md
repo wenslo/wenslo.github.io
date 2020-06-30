@@ -56,3 +56,61 @@ date: 2020-06-30 13:24:00
 14. Saturay（SAT） 周六 
 15. **首字母大写**
 16. **on + 天**
+
+> 课文
+
+1. at **the** butcher**'s**  在肉店
+   1. Were you at the butcher's？ 你刚刚在肉店么？
+   2. Were 过去式
+   3. Are you at the butcher's
+2. How**'s** Jimmy today?
+   1. How is ...?
+   2. How was ...?
+   3. How has ...?
+3. Was he absent from school last week?
+   1. be absent from ...
+4. How are you (all keeping)?
+5. We're going to spend three days in the country.
+   1. **spend + 时间 +地点**
+6. at my mother's 在我妈妈家
+   1. at the butcher's
+7. Aren't you lucky! 你们可真幸运啊
+
+> 语法
+
+##### 一般现在时态
+
+1. 经常的状态
+   1. 主语 + is / am /are 
+2. 习惯的动作
+   1. 主语 + v.
+3. 真理
+   1. 主语 + is / am /are
+   2. 主语 + v
+
+##### 一般过去时态
+
+1. **过去**的状态：
+   1. 主语 + was / were
+2. **过去的**动作：
+   1. 主语 + v.（动词过去式）
+
+My boyfriend is 27, he is a little fat. He is a clerk. He is in Beijing too.
+
+My boyfriend was 27  last year, he was a little fat. He wes a clerk. He was in Beijing too two years ago.
+
+> 单词句型
+
+1. church 教堂
+   1. at church
+2. dairy 乳品店
+   1. at the dairy
+3. baker 面包师傅
+   1. at the baker's
+4. grocer 食品杂货商
+   1. at the grocer's 
+5. Where were you on Sunday, Jan. 1st?
+6. I was at church.
+7. When were you at the bucher's?
+8. I was at the butcher's on Wed, Apr, 4th.
+
