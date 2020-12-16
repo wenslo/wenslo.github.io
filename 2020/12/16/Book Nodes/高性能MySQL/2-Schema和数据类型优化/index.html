@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.2',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="| 1. 选择数据类型时候的基本原则 更小的通常更好，占用更少的磁盘，内存和CPU缓存，处理时需要的CPU时钟周期也少，但是不建议项目初期就弄，不然改起来也太费劲了，超级痛苦。 简单的更好，比如能使用整形就不适用字符，能用date就不用字符串，因为字符集和排序规则使得字符串相比整形复杂。 避免为null，滴滴的数据表，全都是not null的，因为有null的列更难优化，耗费的成本更高，索引，统计">
+<meta name="keywords" content="MySQL">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL的Schema和数据类型优化">
+<meta property="og:url" content="http://yoursite.com/2020/12/16/Book Nodes/高性能MySQL/2-Schema和数据类型优化/index.html">
+<meta property="og:site_name" content="温海林的博客">
+<meta property="og:description" content="| 1. 选择数据类型时候的基本原则 更小的通常更好，占用更少的磁盘，内存和CPU缓存，处理时需要的CPU时钟周期也少，但是不建议项目初期就弄，不然改起来也太费劲了，超级痛苦。 简单的更好，比如能使用整形就不适用字符，能用date就不用字符串，因为字符集和排序规则使得字符串相比整形复杂。 避免为null，滴滴的数据表，全都是not null的，因为有null的列更难优化，耗费的成本更高，索引，统计">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-12-16T15:21:03.568Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL的Schema和数据类型优化">
+<meta name="twitter:description" content="| 1. 选择数据类型时候的基本原则 更小的通常更好，占用更少的磁盘，内存和CPU缓存，处理时需要的CPU时钟周期也少，但是不建议项目初期就弄，不然改起来也太费劲了，超级痛苦。 简单的更好，比如能使用整形就不适用字符，能用date就不用字符串，因为字符集和排序规则使得字符串相比整形复杂。 避免为null，滴滴的数据表，全都是not null的，因为有null的列更难优化，耗费的成本更高，索引，统计">
+
+<link rel="canonical" href="http://yoursite.com/2020/12/16/Book Nodes/高性能MySQL/2-Schema和数据类型优化/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>MySQL的Schema和数据类型优化 | 温海林的博客</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">温海林的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">技术，工作，生活，随笔</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/12/16/Book Nodes/高性能MySQL/2-Schema和数据类型优化/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
+      <meta itemprop="name" content="温海林">
+      <meta itemprop="description" content="Fake it, make it!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温海林的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL的Schema和数据类型优化
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-12-16 17:30:57" itemprop="dateCreated datePublished" datetime="2020-12-16T17:30:57+08:00">2020-12-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-12-16 23:21:03" itemprop="dateModified" datetime="2020-12-16T23:21:03+08:00">2020-12-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index">
+                    <span itemprop="name">MySQL</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>| 1. 选择数据类型时候的基本原则</p><ol>
+<li><strong>更小的通常更好</strong>，占用更少的磁盘，内存和CPU缓存，处理时需要的CPU时钟周期也少，但是不建议项目初期就弄，不然改起来也太费劲了，超级痛苦。</li>
+<li><strong>简单的更好</strong>，比如能使用整形就不适用字符，能用date就不用字符串，因为字符集和排序规则使得字符串相比整形复杂。</li>
+<li><strong>避免为null</strong>，滴滴的数据表，全都是not null的，因为有null的列更难优化，耗费的成本更高，索引，统计更麻烦，浪费更多的存储空间，</li>
+</ol><a id="more"></a>
+
+<p>| 1.1 整数类型</p>
+<p>分为两种，整数（real number）和实数（real number），整数有这么几种：<strong>TINYINT, SMALLINT, MEDIUMINT, INT, BIGINT</strong>，分别使用8，16，24，32，64位存储空间，存储的值为 -2^n-1 到 2^(n-1)-1，同时有可选的<strong>UNSIGNED</strong>属性，不允许负值，可以将正数上限提高一倍。<strong>INT(11)</strong>不会限制值的合法范围，只是规定了一些交互工具显示字符的个数。</p>
+<p>| 1.2 实数类型</p>
+<p>DECIMAL可以存比BIGINT更大的整数，也可以存储精确的小数，<strong>CPU原生支持浮点运算，但是DECIMAL需要MySQL实现，因此浮点比DECIMAL运算更快。decimal计算中，会转换为double，因此，虽然DECIAML支持65个数字，但是实际上并不支持</strong>。同时，建议选择数据类型，不建议选择decimal的精度。可以使用BIGINT取代decimal，避免运算代价过高。</p>
+<p>| 1.3 varchar和char类型</p>
+<p>varchar比定长更节省空间，因为它只使用必要的空间，除非使用row_format=fixed，但是varchar需要1-2个字节记录字符串长度。虽然varchar对于性能有好处，但是，由于行是变长的，因此update操作可能使得行比原先变的更长，这时候，innodb就会进行分裂页，是数据能够放入页内。</p>
+<p>下面这几种情况使用varchar更合适：<strong>字符串列的最大长度比平均长度长很多；列的更新很少，碎片不是问题；使用了复杂字符集，比如utf-8，每个字符都是用不同的字节数进行存储</strong>。</p>
+<p>char会删除末尾空格，由于定长，也不容易产生碎片，而且在存储空间上也更有效率，没有存储长度的多余字节。</p>
+<p>| 1.3.1 Blob和Text类型</p>
+<p>分别属于两组：<strong>TINYTEXT, SMALLTEXT, TEXT, MEDIUMTEXT, LONGTEXT  和 TINYBLOB, SMALLBLOB, BLOB, MEDIUMBLOB, LONGBLOB</strong>。区别是，blob存储的是二进制数据，没有排序规则和字符集，而text有排序规则和字符集。如果数据过大的话，MySQL会在外部存储区域进行存储实际的值，每个值在行内用1-4个字节存储一个指针。</p>
+<p>| 1.4 时间和日期类型</p>
+<p>MySQL能存储的最小时间单位粒度为秒，datetime可以存储1001-9999的数据，<strong>使用8个字节的存储空间</strong>。而timestamp，<strong>保存的是标准时间，只能从1970-2038，使用4个字节进行存储，依赖于时区，默认为NOT NULL，效率也比datetime更高</strong>。</p>
+<p>如果想存储微秒级别的时间戳，可以使用bigint，或者使用MariaDB。</p>
+<p>| 1.5 位数据类型</p>
+<p>bit列的最大长度是64个位，MySQL把bit当成字符串类型使用，同时和上下文环境有关系，比如直接查询，可能是显示的这个二进制对应的ASCII码表的内容，但是如果与数字一起运算，得到的就是数字结果，谨慎使用。</p>
+<p>如果需要很多true/false值，可以使用set，在MySQL内部是以一系列打包的位的集合表示的，能够有效利用存储空间，但是该变列的话，需要alter table.</p>
+<p>总的来说不太推荐这种方式，并不如redis的位图来的直观好用。</p>
+<p>| 1.6 选择标识符（identifier）</p>
+<p>要确保所有关联表中都使用同样的类型，要精确匹配。<strong>最好使用整数，快，而且可以使用AUTO_INCREMENT，要避免使用uuid，会有6倍左右的性能下降，会导致insert和select语句很慢</strong>。</p>
+<p><strong><em>因为插入的时候，会随机写到索引的不同位置，使得insert语句很慢，会导致页分裂，磁盘随机访问，以及聚簇索引碎片；select语句也会很慢，因为逻辑上相邻的行会分布在磁盘和内存的不同地方；随机值导致缓存对所有类型的查询语句效果都很差，会使得缓存赖以工作的访问局部性原理失效，如果数据都是热数据，那么缓存哪一部分到内存都没好处，如果工作集比内存大，缓存将会有很多刷新和不命中</em></strong></p>
+<p>如果使用UUID，应当移除“-”符号，更好的做法应该是使用unhex函数转换uuid为16字节的数字，并且存在binary(16)的列中。检索时，通过hex()函数来格式化为十六进制。UUID虽然分布也不均匀，但还是有一点顺序，但是还是不如递增的整数好用。</p>
+<p>| 2. schema设计中的陷阱（应当避免）</p>
+<ol>
+<li><p>太多的列</p>
+<p> MySQL的存储引擎API工作时需要在服务器层和存储引擎层之间通过行缓冲格式拷贝数据，单然后在服务器层将缓冲内容解码成各个列。从行缓冲中将编码过的列转换成行数据结构的操作代价是非常高的。</p>
+</li>
+<li><p>太多的关联</p>
+<p> MySQL限制了每个关联操作最多只能有61张表，同时，最好在12个表以内做关联。</p>
+</li>
+<li><p>全能的枚举</p>
+</li>
+<li>变相的枚举</li>
+<li>用魔法数字代替null</li>
+</ol>
+<p>| 3. 数据库范式和反范式</p>
+<p>三范式如下：</p>
+<p>1．第一范式(确保每列保持原子性)</p>
+<p>2．第二范式(确保表中的每列都和主键相关)</p>
+<p>3．第三范式(确保每列都和主键列直接相关,而不是间接相关)</p>
+<p>范式化的优点很明显：</p>
+<ol>
+<li>范式化的更新操作通常比反范式化更快</li>
+<li>很少或者没有重复数据，只需要修改更少的数据</li>
+<li>表更小，能更好的放内存里，执行起来会更快</li>
+<li>更好的distinct和group by语句</li>
+</ol>
+<p>缺点也很明显：</p>
+<ol>
+<li>干个啥都得关联查询</li>
+<li>稍微复杂一点的语句在schema上都可能至少需要一次关联</li>
+</ol>
+<p>反范式化的优点</p>
+<ol>
+<li>避免关联，对查询来说是极大的优化</li>
+<li>能使用更有效的缓存策略</li>
+</ol>
+<p>| 缓存表和汇总表</p>
+<p>| 物化视图</p>
+<p>| 计数器表</p>
+<p>更新的时候核能会碰到并发问题，记录会有一个全局的互斥锁，使得一些事务只能穿行执行，可以将数据保存为多行，随机选择一行进行更新，获得更高的并发更新性能。</p>
+<p>| 5. 加快 alter table 操作的速度</p>
+<p>使用alter column改变列，防止表重建，会直接修改.frm文件</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2020/12/16/Book Nodes/高性能MySQL/1-MySQL查询剖析/" rel="next" title="MySQL查询性能剖析">
+                  <i class="fa fa-chevron-left"></i> MySQL查询性能剖析
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="温海林"
+    src="/uploads/images/fbb1.jpg">
+  <p class="site-author-name" itemprop="name">温海林</p>
+  <div class="site-description" itemprop="description">Fake it, make it!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">96</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/wenslo" title="GitHub &rarr; https://github.com/wenslo" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/564544234@qq.com" title="E-Mail &rarr; 564544234@qq.com"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">温海林</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.4.2
+  </div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

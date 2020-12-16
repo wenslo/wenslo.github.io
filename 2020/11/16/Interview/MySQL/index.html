@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.2',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="想提升，还是得连环炮方式的提问 你们对线上的数据有没有做一些优化？怎么优化的？  如果回答的是索引  来说一说什么是索引？有哪几种索引？索引有什么优点？ 用于存储引擎快速找到记录的一种数据结构，存储引擎会先在索引中找到对应值，然后根据匹配的索引记录找到对应的记录行，索引可以包含一个或者多个列的值 B-Tree索引，（准确的说是B+Tree，B-Tree和B+Tree有什么区别？）哈希索引，空间数据">
+<meta name="keywords" content="面试">
+<meta property="og:type" content="article">
+<meta property="og:title" content="面试-MySQL篇">
+<meta property="og:url" content="http://yoursite.com/2020/11/16/Interview/MySQL/index.html">
+<meta property="og:site_name" content="温海林的博客">
+<meta property="og:description" content="想提升，还是得连环炮方式的提问 你们对线上的数据有没有做一些优化？怎么优化的？  如果回答的是索引  来说一说什么是索引？有哪几种索引？索引有什么优点？ 用于存储引擎快速找到记录的一种数据结构，存储引擎会先在索引中找到对应值，然后根据匹配的索引记录找到对应的记录行，索引可以包含一个或者多个列的值 B-Tree索引，（准确的说是B+Tree，B-Tree和B+Tree有什么区别？）哈希索引，空间数据">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-12-16T14:22:11.995Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="面试-MySQL篇">
+<meta name="twitter:description" content="想提升，还是得连环炮方式的提问 你们对线上的数据有没有做一些优化？怎么优化的？  如果回答的是索引  来说一说什么是索引？有哪几种索引？索引有什么优点？ 用于存储引擎快速找到记录的一种数据结构，存储引擎会先在索引中找到对应值，然后根据匹配的索引记录找到对应的记录行，索引可以包含一个或者多个列的值 B-Tree索引，（准确的说是B+Tree，B-Tree和B+Tree有什么区别？）哈希索引，空间数据">
+
+<link rel="canonical" href="http://yoursite.com/2020/11/16/Interview/MySQL/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>面试-MySQL篇 | 温海林的博客</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">温海林的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">技术，工作，生活，随笔</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/16/Interview/MySQL/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
+      <meta itemprop="name" content="温海林">
+      <meta itemprop="description" content="Fake it, make it!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温海林的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          面试-MySQL篇
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-16 22:53:54" itemprop="dateCreated datePublished" datetime="2020-11-16T22:53:54+08:00">2020-11-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-12-16 22:22:11" itemprop="dateModified" datetime="2020-12-16T22:22:11+08:00">2020-12-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/面试/" itemprop="url" rel="index">
+                    <span itemprop="name">面试</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3><span id="想提升还是得连环炮方式的提问">想提升，还是得连环炮方式的提问</span></h3><ol>
+<li><p>你们对线上的数据有没有做一些优化？怎么优化的？</p>
+<ol>
+<li><p>如果回答的是索引</p>
+<ol>
+<li><p>来说一说什么是索引？有哪几种索引？索引有什么优点？</p>
+<p>用于存储引擎快速找到记录的一种数据结构，存储引擎会先在索引中找到对应值，然后根据匹配的索引记录找到对应的记录行，索引可以包含一个或者多个列的值</p>
+<p>B-Tree索引，（准确的说是B+Tree，B-Tree和B+Tree有什么区别？）哈希索引，空间数据索引，全文索引，分行树索引</p>
+<p>优点：1.大大减少服务器需要扫描的数据量，2.可以帮助服务器避免排序和临时变，3.索引可以将随机IO变为顺序IO。</p>
+</li>
+<li><p>这些索引采取的是哪种数据结构？</p>
+<p>B-Tree索引用的B+Tree，哈希索引用的哈希表</p>
+</li>
+<li><p>为什么采取B+Tree？这种数据结构有什么好处么？</p>
+<p>B+Tree对索引列是按照顺序组织存储的，适用于<strong>全值匹配，匹配最左前缀，匹配列前缀，匹配范围值，精确匹配某一列并范围匹配另外一列，只访问索引的查询</strong>。因为节点有序，还可用于查询中的order by操作。</p>
+<p>但是，如果<strong>不是按照索引的最左列开始查找，则无法使用索引；不能跳过索引中的列；如果查询中有某个列的范围查询，则其右边所有列都无法使用索引优化查找</strong>。</p>
+</li>
+<li><p>和哈希表相比，有什么优点或者有什么不同？</p>
+<p>Hash索引基于哈希表，会在哈希表中保存指向每个数据行的指针，<strong>只有精确匹配索引所有列的查询才有效</strong>。但是Hash并不是就一定会很快，因为hash值重复的话，会以链表的方式存放多个记录指针到一个条目中，所以说，极端情况下，会变成为链表。</p>
+<p>B+ Tree索引和Hash索引区别 哈希索引适合等值查询，但是无法进行范围查询 哈希索引没办法利用索引完成排序 哈希索引不支持多列联合索引的最左匹配规则 如果有大量重复键值得情况下，哈希索引的效率会很低，因为存在哈希碰撞问题。</p>
+</li>
+<li><p>MySQL中B+Tree的叶子节点能存什么东西？</p>
+<p>首先，叶子节点会有索引列的数据，其次，B+Tree的叶子节点会保存数据行，MySQL中会保存数据库表的聚簇索引，主键（如果没有，首先会选择一个唯一的非空索引来代替，如果还没有，会隐式定义一个主键作为聚簇索引），然后会根据主键，进行回表，获取所需数据。</p>
+</li>
+<li><p>什么是聚簇索引和非聚簇索引？</p>
+<p>聚簇索引将<strong>索引和数据放在同一行</strong>，非聚簇索引将<strong>索引和数据分开存放</strong>。</p>
+<p>一个表仅有一个聚簇索引</p>
+<p>聚簇索引的插入速度依赖于插入顺序，如果使用UUID，可能导致插入页分裂降低速度。</p>
+<p>更新主键（聚簇索引）的时候，会导致被更新的行移动</p>
+<p><strong>采用聚簇索引插入新值比采用非聚簇索引插入新值的速度要慢很多</strong>，因为插入要保证主键不能重复，判断主键不能重复，采用的方式在不同的索引下面会有很大的性能差距，聚簇索引遍历所有的叶子节点，非聚簇索引也判断所有的叶子节点，但是聚簇索引的叶子节点除了带有主键还有记录值，记录的大小往往比主键要大的多。这样就会导致聚簇索引在判定新记录携带的主键是否重复时进行昂贵的I/O代价。</p>
+</li>
+<li><p>查询的时候有什么区别？</p>
+<p>当取一定范围内的数据时，聚簇索引相比较非聚簇索引也会更快</p>
+<p>使用覆盖索引扫描的查询可以直接使用页节点中的主键值。</p>
+<p>因为非聚簇索引查询时，会先扫描一遍B+Tree，获取到叶子节点的主键ID，然后根据ID进行回表，而聚簇索引，会包含整行数据，每次会把共同一个页的数据都加载到内存里，读取同一页的数据，避免了磁盘查找，速度会更快。同时，使用ID获取数据时，会更快。少了一次根据ID回表的过程。但是，比如有一个code，普通索引，查询这个code的时候，应为不需要获取其他数据，少了回表的过程，应该也算是聚簇索引。</p>
+<blockquote>
+<p>覆盖索引 覆盖索引（covering index）指一个查询语句的执行只用从索引中就能够取得，不必从数据表中读取。也可以称之为实现了索引覆盖。 当一条查询语句符合覆盖索引条件时，MySQL只需要通过索引就可以返回查询所需要的数据，这样避免了查到索引后再返回表操作，减少I/O提高效率。 如，表covering_index_sample中有一个普通索引 idx_key1_key2(key1,key2)。当我们通过SQL语句：select key2 from covering_index_sample where key1 = ‘keytest’;的时候，就可以通过覆盖索引查询，无需回表。</p>
+</blockquote>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol><a id="more"></a>
+<pre><code>  8. 联合索引是怎么使用的？为什么使用联合索引？说一说最左前缀匹配
+
+     给需要查询的列，或者是需要排序的列，添加联合索引，比如说(k1,k2,k3)这么一个联合索引，会相当于(k1),(k1,k2),(k1,k2,k3)三个索引，这就是最左前缀匹配。
+
+  9. 各个MySQL版本中，对索引有哪些方面的优化？
+
+     5.6版本的MySQL做了索引下推。
+
+     people表中（zipcode，lastname，firstname）构成一个索引
+
+     SELECT * FROM people WHERE zipcode=&#39;95054&#39; AND lastname LIKE &#39;%etrunia%&#39; AND address LIKE &#39;%Main Street%&#39;;
+
+     如果没有使用索引下推技术，则MySQL会通过zipcode=&#39;95054&#39;从存储引擎中查询对应的数据，返回到MySQL服务端，然后MySQL服务端基于lastname LIKE &#39;%etrunia%&#39;和address LIKE &#39;%Main Street%&#39;来判断数据是否符合条件。 如果使用了索引下推技术，则MYSQL首先会返回符合zipcode=&#39;95054&#39;的索引，然后根据lastname LIKE &#39;%etrunia%&#39;和address LIKE &#39;%Main Street%&#39;来判断索引是否符合条件。如果符合条件，则根据该索引来定位对应的数据，如果不符合，则直接reject掉。 有了索引下推优化，可以在有like条件查询的情况下，减少回表次数。
+
+  10. 通过什么情况，能知道是否走了索引？
+
+     使用explain语句进行分析
+
+  11. 什么情况下会发生创建了索引，但是没有走索引的情况？
+
+      查询发生隐式转换，比如数据库定义的是string，但是查询的时候使用的是int
+
+      对索引列进行运算，导致索引失效
+
+      使用&lt;&gt;，not in , not exist 等会导致索引失效
+
+      如果变量为空，使用 = null ，会导致索引失效
+
+      查询优化器 一条SQL语句的查询，可以有不同的执行方案，至于最终选择哪种方案，需要通过优化器进行选择，选择执行成本最低的方案。 在一条单表查询语句真正执行之前，MySQL的查询优化器会找出执行该语句所有可能使用的方案，对比之后找出成本最低的方案。这个成本最低的方案就是所谓的执行计划。 优化过程大致如下： 1、根据搜索条件，找出所有可能使用的索引 2、计算全表扫描的代价 3、计算使用不同索引执行查询的代价 4、对比各种执行方案的代价，找出成本最低的那一个，可能会优化器认为全表扫描的代价小于使用索引
+
+  12. 不同类型的值，比如说varchar，int，等，使用索引会有什么变化？
+
+      如果column定义的为是varchar，但是查询使用的是int，会走索引
+
+      如果column定义的是int，查询用的是string，存在隐式转换，不会走索引
+</code></pre><ol>
+<li><p>加缓存，memcache，redis等</p>
+<p>memcache，redis等问题放到其他章节</p>
+</li>
+<li><p>主从复制，或者主主复制，读写分离</p>
+<ol>
+<li>MySQL复制的方法有哪几种？分别有什么优缺点？</li>
+<li>主从的延迟问题你们怎么解决？</li>
+<li>解释一下半同步复制和并行复制</li>
+<li>MySQL能否一主多从？或者多主多从？</li>
+</ol>
+</li>
+<li><p>分区表</p>
+<ol>
+<li>解释一下分区表，有哪几种类型？</li>
+<li>分区表的优缺点？</li>
+</ol>
+</li>
+<li><p>分库分表</p>
+<ol>
+<li>分库分表有哪几种类型？你们平时都是怎么处理的？</li>
+<li>水平分表和垂直分表的优缺点？</li>
+</ol>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/面试/" rel="tag"># 面试</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2020/11/09/Frontend/React/01/" rel="next" title="React中碰到的生命周期问题">
+                  <i class="fa fa-chevron-left"></i> React中碰到的生命周期问题
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2020/12/06/Interview/Redis/" rel="prev" title="面试-Redis篇章">
+                  面试-Redis篇章 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">1.</span> <span class="nav-text">想提升，还是得连环炮方式的提问</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="温海林"
+    src="/uploads/images/fbb1.jpg">
+  <p class="site-author-name" itemprop="name">温海林</p>
+  <div class="site-description" itemprop="description">Fake it, make it!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">96</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/wenslo" title="GitHub &rarr; https://github.com/wenslo" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/564544234@qq.com" title="E-Mail &rarr; 564544234@qq.com"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">温海林</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.4.2
+  </div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

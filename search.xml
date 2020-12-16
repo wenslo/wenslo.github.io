@@ -1,6 +1,333 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>MySQL的Schema和数据类型优化</title>
+    <url>/2020/12/16/Book%20Nodes/%E9%AB%98%E6%80%A7%E8%83%BDMySQL/2-Schema%E5%92%8C%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E4%BC%98%E5%8C%96/</url>
+    <content><![CDATA[<p>| 1. 选择数据类型时候的基本原则</p><ol>
+<li><strong>更小的通常更好</strong>，占用更少的磁盘，内存和CPU缓存，处理时需要的CPU时钟周期也少，但是不建议项目初期就弄，不然改起来也太费劲了，超级痛苦。</li>
+<li><strong>简单的更好</strong>，比如能使用整形就不适用字符，能用date就不用字符串，因为字符集和排序规则使得字符串相比整形复杂。</li>
+<li><strong>避免为null</strong>，滴滴的数据表，全都是not null的，因为有null的列更难优化，耗费的成本更高，索引，统计更麻烦，浪费更多的存储空间，</li>
+</ol><a id="more"></a>
+
+<p>| 1.1 整数类型</p>
+<p>分为两种，整数（real number）和实数（real number），整数有这么几种：<strong>TINYINT, SMALLINT, MEDIUMINT, INT, BIGINT</strong>，分别使用8，16，24，32，64位存储空间，存储的值为 -2^n-1 到 2^(n-1)-1，同时有可选的<strong>UNSIGNED</strong>属性，不允许负值，可以将正数上限提高一倍。<strong>INT(11)</strong>不会限制值的合法范围，只是规定了一些交互工具显示字符的个数。</p>
+<p>| 1.2 实数类型</p>
+<p>DECIMAL可以存比BIGINT更大的整数，也可以存储精确的小数，<strong>CPU原生支持浮点运算，但是DECIMAL需要MySQL实现，因此浮点比DECIMAL运算更快。decimal计算中，会转换为double，因此，虽然DECIAML支持65个数字，但是实际上并不支持</strong>。同时，建议选择数据类型，不建议选择decimal的精度。可以使用BIGINT取代decimal，避免运算代价过高。</p>
+<p>| 1.3 varchar和char类型</p>
+<p>varchar比定长更节省空间，因为它只使用必要的空间，除非使用row_format=fixed，但是varchar需要1-2个字节记录字符串长度。虽然varchar对于性能有好处，但是，由于行是变长的，因此update操作可能使得行比原先变的更长，这时候，innodb就会进行分裂页，是数据能够放入页内。</p>
+<p>下面这几种情况使用varchar更合适：<strong>字符串列的最大长度比平均长度长很多；列的更新很少，碎片不是问题；使用了复杂字符集，比如utf-8，每个字符都是用不同的字节数进行存储</strong>。</p>
+<p>char会删除末尾空格，由于定长，也不容易产生碎片，而且在存储空间上也更有效率，没有存储长度的多余字节。</p>
+<p>| 1.3.1 Blob和Text类型</p>
+<p>分别属于两组：<strong>TINYTEXT, SMALLTEXT, TEXT, MEDIUMTEXT, LONGTEXT  和 TINYBLOB, SMALLBLOB, BLOB, MEDIUMBLOB, LONGBLOB</strong>。区别是，blob存储的是二进制数据，没有排序规则和字符集，而text有排序规则和字符集。如果数据过大的话，MySQL会在外部存储区域进行存储实际的值，每个值在行内用1-4个字节存储一个指针。</p>
+<p>| 1.4 时间和日期类型</p>
+<p>MySQL能存储的最小时间单位粒度为秒，datetime可以存储1001-9999的数据，<strong>使用8个字节的存储空间</strong>。而timestamp，<strong>保存的是标准时间，只能从1970-2038，使用4个字节进行存储，依赖于时区，默认为NOT NULL，效率也比datetime更高</strong>。</p>
+<p>如果想存储微秒级别的时间戳，可以使用bigint，或者使用MariaDB。</p>
+<p>| 1.5 位数据类型</p>
+<p>bit列的最大长度是64个位，MySQL把bit当成字符串类型使用，同时和上下文环境有关系，比如直接查询，可能是显示的这个二进制对应的ASCII码表的内容，但是如果与数字一起运算，得到的就是数字结果，谨慎使用。</p>
+<p>如果需要很多true/false值，可以使用set，在MySQL内部是以一系列打包的位的集合表示的，能够有效利用存储空间，但是该变列的话，需要alter table.</p>
+<p>总的来说不太推荐这种方式，并不如redis的位图来的直观好用。</p>
+<p>| 1.6 选择标识符（identifier）</p>
+<p>要确保所有关联表中都使用同样的类型，要精确匹配。<strong>最好使用整数，快，而且可以使用AUTO_INCREMENT，要避免使用uuid，会有6倍左右的性能下降，会导致insert和select语句很慢</strong>。</p>
+<p><strong><em>因为插入的时候，会随机写到索引的不同位置，使得insert语句很慢，会导致页分裂，磁盘随机访问，以及聚簇索引碎片；select语句也会很慢，因为逻辑上相邻的行会分布在磁盘和内存的不同地方；随机值导致缓存对所有类型的查询语句效果都很差，会使得缓存赖以工作的访问局部性原理失效，如果数据都是热数据，那么缓存哪一部分到内存都没好处，如果工作集比内存大，缓存将会有很多刷新和不命中</em></strong></p>
+<p>如果使用UUID，应当移除“-”符号，更好的做法应该是使用unhex函数转换uuid为16字节的数字，并且存在binary(16)的列中。检索时，通过hex()函数来格式化为十六进制。UUID虽然分布也不均匀，但还是有一点顺序，但是还是不如递增的整数好用。</p>
+<p>| 2. schema设计中的陷阱（应当避免）</p>
+<ol>
+<li><p>太多的列</p>
+<p> MySQL的存储引擎API工作时需要在服务器层和存储引擎层之间通过行缓冲格式拷贝数据，单然后在服务器层将缓冲内容解码成各个列。从行缓冲中将编码过的列转换成行数据结构的操作代价是非常高的。</p>
+</li>
+<li><p>太多的关联</p>
+<p> MySQL限制了每个关联操作最多只能有61张表，同时，最好在12个表以内做关联。</p>
+</li>
+<li><p>全能的枚举</p>
+</li>
+<li>变相的枚举</li>
+<li>用魔法数字代替null</li>
+</ol>
+<p>| 3. 数据库范式和反范式</p>
+<p>三范式如下：</p>
+<p>1．第一范式(确保每列保持原子性)</p>
+<p>2．第二范式(确保表中的每列都和主键相关)</p>
+<p>3．第三范式(确保每列都和主键列直接相关,而不是间接相关)</p>
+<p>范式化的优点很明显：</p>
+<ol>
+<li>范式化的更新操作通常比反范式化更快</li>
+<li>很少或者没有重复数据，只需要修改更少的数据</li>
+<li>表更小，能更好的放内存里，执行起来会更快</li>
+<li>更好的distinct和group by语句</li>
+</ol>
+<p>缺点也很明显：</p>
+<ol>
+<li>干个啥都得关联查询</li>
+<li>稍微复杂一点的语句在schema上都可能至少需要一次关联</li>
+</ol>
+<p>反范式化的优点</p>
+<ol>
+<li>避免关联，对查询来说是极大的优化</li>
+<li>能使用更有效的缓存策略</li>
+</ol>
+<p>| 缓存表和汇总表</p>
+<p>| 物化视图</p>
+<p>| 计数器表</p>
+<p>更新的时候核能会碰到并发问题，记录会有一个全局的互斥锁，使得一些事务只能穿行执行，可以将数据保存为多行，随机选择一行进行更新，获得更高的并发更新性能。</p>
+<p>| 5. 加快 alter table 操作的速度</p>
+<p>使用alter column改变列，防止表重建，会直接修改.frm文件</p>
+]]></content>
+      <categories>
+        <category>MySQL</category>
+      </categories>
+      <tags>
+        <tag>MySQL</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>MySQL查询性能剖析</title>
+    <url>/2020/12/16/Book%20Nodes/%E9%AB%98%E6%80%A7%E8%83%BDMySQL/1-MySQL%E6%9F%A5%E8%AF%A2%E5%89%96%E6%9E%90/</url>
+    <content><![CDATA[<p>首先，也是最重要的一点，需要记录慢查询日志，然后针对日志，进行分析。假设已经定位到问题是查询语句的问题，如果不是，需要自顶而下进行考虑，外部接口慢？文件解析慢？正则滥用？还是暴力搜索算法等。</p><a id="more"></a>
+<p>剖析工具</p>
+<p>| Profile分析</p>
+<p>profile分析最重要的还是在语句执行期间剖析服务器的具体操作，当一条查询到了数据库后，会记录信息到一张临时表，并且给一个整数的id作为标识符，方便查询。</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">set</span> profiling = <span class="number">1</span>;</span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> nicer_but_slower_film_list;</span><br><span class="line"></span><br><span class="line"><span class="keyword">show</span> <span class="keyword">profiles</span> ;</span><br><span class="line"><span class="comment"># show prifiles 会显示出刚刚那条查询语句的查询id，获取到后</span></span><br><span class="line"><span class="keyword">show</span> profile <span class="keyword">for</span> <span class="keyword">query</span> <span class="keyword">id</span>;</span><br><span class="line"><span class="comment"># 会打印出这条查询的详细信息，由于打印出来的信息不太直观，可以优化一下，如下</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">set</span> @query_id = <span class="number">1</span>;</span><br><span class="line"><span class="keyword">select</span> state,</span><br><span class="line">       <span class="keyword">sum</span>(<span class="keyword">duration</span>)            <span class="keyword">as</span> total_r,</span><br><span class="line">       <span class="keyword">round</span>(<span class="number">100</span> * <span class="keyword">sum</span>(<span class="keyword">duration</span>) /</span><br><span class="line">             (<span class="keyword">select</span> <span class="keyword">sum</span>(<span class="keyword">duration</span>) <span class="keyword">from</span> information_schema.PROFILING <span class="keyword">where</span> QUERY_ID = @query_id), <span class="number">2</span></span><br><span class="line">           )                    <span class="keyword">as</span> pct_r,</span><br><span class="line">       <span class="keyword">count</span>(*)                 <span class="keyword">as</span> calls,</span><br><span class="line">       <span class="keyword">sum</span>(<span class="keyword">duration</span>) / <span class="keyword">count</span>(*) <span class="keyword">as</span> <span class="string">"r/call"</span></span><br><span class="line"><span class="keyword">from</span> information_schema.PROFILING</span><br><span class="line"><span class="keyword">where</span> QUERY_ID = @query_id</span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> state</span><br><span class="line"><span class="keyword">order</span> <span class="keyword">by</span> total_r <span class="keyword">desc</span>;</span><br></pre></td></tr></table></figure>
+<p>这个工具能告诉我们哪些活动花费了很长时间，但是并不会告诉我们为什么，还是需要我们具体情况具体分析。</p>
+<p>| show status  || show global status</p>
+<p>这个工具只是一个计数器，但是并不是剖析工具，用来显示一些活动的频繁程度，但是无法给出消耗了多少时间。只有一条信息显示的是操作时间(Innodb_row_lock_time)，而且是全局的，无法测量会话级别。</p>
+<p>虽然无法知道哪些操作耗时最长，但是可以猜测。最有用的句柄计数器(handle counter)，临时文件和表计数器。示例如下：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">flush</span> <span class="keyword">status</span> ;</span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> nicer_but_slower_film_list;</span><br><span class="line"><span class="keyword">show</span> <span class="keyword">status</span> <span class="keyword">where</span> Variable_name <span class="keyword">like</span> <span class="string">'Handler%'</span> <span class="keyword">or</span> Variable_name <span class="keyword">like</span> <span class="string">'Created%'</span>;</span><br></pre></td></tr></table></figure>
+<p>从执行结果中可以看到，使用了三张临时表，其中两个磁盘临时表，而且有很多没有用到索引的读操作(Handler_read_rnd_next)，这个查询有可能是使用了join多表关联查询，但是没有合适的索引，或者是一个子查询创建了临时表，并且和其他表做联合查询，而用于保存子查询结果的临时表没有索引等。</p>
+<p>show status 可以类比为explain，它们两者可以得到相似的结果，但是explain是预估的结果，而show status是精确测量的结果，比如explain无法告诉你临时表是否是磁盘表还是内存临时表。</p>
+<p>| performance_schema</p>
+<p>performance_schema无法提供查询阶段的细节和计时信息，但是，能够知道其他很多有意思的信息，比如：user_variables_by_thread, global status,global_variables,session_variables等，可以用排错或者定位问题使用</p>
+]]></content>
+      <categories>
+        <category>MySQL</category>
+      </categories>
+      <tags>
+        <tag>MySQL</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>面试-RabbitMQ</title>
+    <url>/2020/12/16/Interview/RabbitMQ/</url>
+    <content><![CDATA[<ol>
+<li><p>知道MQ么，MQ是什么，MQ的作用是什么？</p>
+<p> Message Queue，顾名思义，消息队列，基于生产者-消费者模式。作用可分为下面几点，但是MQ在单机环境下并不适用，更加适用于多系统，多服务的环境。</p>
+<ul>
+<li>异步处理，提高系统吞吐量</li>
+<li>应用解耦，不用关系其他系统怎么处理</li>
+<li>流量削峰，缓解短时间内的高并发请求，可通过控制mq长度来处理</li>
+<li>消息通讯，聊天室，点对点传输等</li>
+<li>日志处理，解决大量日志传输 </li>
+<li>详细回答……</li>
+</ul>
+</li>
+<li><p>MQ的缺点是什么？</p>
+<ul>
+<li>增加系统复杂性</li>
+<li>降低系统可用性</li>
+<li>数据一致性</li>
+<li>详细回答</li>
+</ul>
+</li>
+<li><p>RabbitMQ 和 其他MQ之间的区别有哪些？为什么选择RabbitMQ？</p>
+<ul>
+<li>虽然是Erlang开发，但是有很高的社区活跃度，可以保证可用性以及bug修复的及时性，国内外已经有很多公司使用rabbitMQ，并且有了很好的工程实践</li>
+<li>有良好的的web管理界面</li>
+<li>对于MQ没有特别强烈的定制需求，已有功能足以满足业务需求</li>
+</ul>
+</li>
+<li><p>RabbitMQ有哪些常见问题？如何避免这些问题？</p>
+<ul>
+<li>消息的乱序问题</li>
+<li>消息的重复发送问题</li>
+</ul>
+</li>
+<li><p>Rabbit的工作模式</p>
+<ol>
+<li>simple模式，最简单的收发模式</li>
+<li>消费者监听模式（customer）</li>
+<li>work工作模式，信息被消费者竞争</li>
+<li>publish/subscribe 发布/订阅模式，每个消费者监听自己的队列</li>
+<li>routing 路由模式</li>
+<li>topic 模式</li>
+</ol>
+</li>
+<li><p>如何保证信息消费时的幂等性？</p>
+</li>
+<li><p>如何保证消息的可靠传输？</p>
+</li>
+<li><p>消息队列满了怎么处理？过期失效怎么办？有消息积压怎么办？</p>
+</li>
+</ol>]]></content>
+      <categories>
+        <category>面试</category>
+      </categories>
+      <tags>
+        <tag>面试</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>SpringSecurity 负载均衡</title>
+    <url>/2020/12/15/Spring%20Security/%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1/</url>
+    <content><![CDATA[<p>想弄一下SpringSecurity的负载均衡是怎么实现的，就找了找资料，在此记录一下。</p><p>首先，需要两个依赖：</p><a id="more"></a>
+
+<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">implementation(<span class="keyword">group</span> = <span class="string">"org.springframework.boot"</span>, name = <span class="string">"spring-boot-starter-data-redis"</span>)</span><br><span class="line">implementation(<span class="keyword">group</span> = <span class="string">"org.springframework.session"</span>, name = <span class="string">"spring-session-data-redis"</span>, version = <span class="string">"2.4.1"</span>)</span><br></pre></td></tr></table></figure>
+<p>引入这两个依赖之后，需要在properties或者yaml里配置一下redis的路径和端口，默认为127.0.0.1和6379，但是由<code>RedisAutoConfiguration</code>可知，需要配置spring.redis的相关属性后，才会生效，因此虽然有默认值，还是写一下吧。。。</p>
+<p>然后配置nginx的upstream：</p>
+<figure class="highlight nginx"><table><tr><td class="code"><pre><span class="line"><span class="attribute">upstream</span> tomcat &#123;</span><br><span class="line">		<span class="attribute">server</span> localhost:<span class="number">8080</span>;</span><br><span class="line">		<span class="attribute">server</span> localhost:<span class="number">8081</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">server</span> &#123;</span><br><span class="line">        <span class="attribute">listen</span>       <span class="number">80</span>;</span><br><span class="line">        <span class="attribute">server_name</span>  localhost;</span><br><span class="line"></span><br><span class="line">        <span class="attribute">location</span> / &#123;</span><br><span class="line">            <span class="attribute">root</span>   html;</span><br><span class="line">            <span class="attribute">index</span>  index.html index.htm;</span><br><span class="line">            <span class="attribute">proxy_redirect</span> <span class="literal">off</span>;</span><br><span class="line">            <span class="attribute">proxy_pass</span> http://tomcat;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>好了之后，先生成个jar包，然后使用<code>--server.port=8080</code>的方法，启动两个实例。这时，我们请求接口的话，就能看到打印的sessionId是一致的，且两个实例轮流打印日志，说明负载均衡配置成功。同时查看redis，session信息已经保存了进去。</p>
+<p>图在这里。</p>
+<p>| tips</p>
+<p>还是有点地方需要注意</p>
+<ol>
+<li>如果项目中有缓存，不要使用直接基于内存的，比如静态的hashmap等，最好使用第三方的分布式缓存工具，比如memcached，redis等，否则，原有的缓存会失效，一致性也会无法得到保证</li>
+<li><p>有个地方很坑，如果想获取所有在线用户的话，注册<code>sessionRegistry</code>获取，<code>spring-sessoin</code>的实现类是<code>SpringSessionBackedSessionRegistry</code>，然后点进去源码一看</p>
+ <figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> List&lt;Object&gt; <span class="title">getAllPrincipals</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException(<span class="string">"SpringSessionBackedSessionRegistry does not support retrieving all principals, "</span> +</span><br><span class="line">            <span class="string">"since Spring Session provides no way to obtain that information"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p> 大爷的，咋就不能用了，从redis查一下不就好了，如果有使用在线用户方法的，需要避免这个问题。。。同样，使用第三方来管理session吧，或者重写它的方法，手动从redis中查询也可以。</p>
+</li>
+<li>获取当前登录用户是没问题的</li>
+<li>登录的时候，会把当前实现了UserDetais的实体序列化到redis中，一定要实现Serializable接口，不然会报错，或者可以手动修改序列化的方式，改为json，但是如果是json的话，需要避免循环依赖导致OOM的问题.</li>
+</ol>
+]]></content>
+      <categories>
+        <category>SpringSecurity</category>
+      </categories>
+      <tags>
+        <tag>SpringSecurity</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>面试-Redis篇章</title>
+    <url>/2020/12/06/Interview/Redis/</url>
+    <content><![CDATA[<ol>
+<li><p>Redis常见的数据类型有哪些？</p>
+<p>String,List,hash,set,zset</p>
+</li>
+<li><p>解释一下redis的二进制安全</p>
+<p>需要客户端给它字节数组</p>
+</li>
+</ol>]]></content>
+      <categories>
+        <category>面试</category>
+      </categories>
+      <tags>
+        <tag>面试</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>面试-MySQL篇</title>
+    <url>/2020/11/16/Interview/MySQL/</url>
+    <content><![CDATA[<h3><span id="想提升还是得连环炮方式的提问">想提升，还是得连环炮方式的提问</span></h3><ol>
+<li><p>你们对线上的数据有没有做一些优化？怎么优化的？</p>
+<ol>
+<li><p>如果回答的是索引</p>
+<ol>
+<li><p>来说一说什么是索引？有哪几种索引？索引有什么优点？</p>
+<p>用于存储引擎快速找到记录的一种数据结构，存储引擎会先在索引中找到对应值，然后根据匹配的索引记录找到对应的记录行，索引可以包含一个或者多个列的值</p>
+<p>B-Tree索引，（准确的说是B+Tree，B-Tree和B+Tree有什么区别？）哈希索引，空间数据索引，全文索引，分行树索引</p>
+<p>优点：1.大大减少服务器需要扫描的数据量，2.可以帮助服务器避免排序和临时变，3.索引可以将随机IO变为顺序IO。</p>
+</li>
+<li><p>这些索引采取的是哪种数据结构？</p>
+<p>B-Tree索引用的B+Tree，哈希索引用的哈希表</p>
+</li>
+<li><p>为什么采取B+Tree？这种数据结构有什么好处么？</p>
+<p>B+Tree对索引列是按照顺序组织存储的，适用于<strong>全值匹配，匹配最左前缀，匹配列前缀，匹配范围值，精确匹配某一列并范围匹配另外一列，只访问索引的查询</strong>。因为节点有序，还可用于查询中的order by操作。</p>
+<p>但是，如果<strong>不是按照索引的最左列开始查找，则无法使用索引；不能跳过索引中的列；如果查询中有某个列的范围查询，则其右边所有列都无法使用索引优化查找</strong>。</p>
+</li>
+<li><p>和哈希表相比，有什么优点或者有什么不同？</p>
+<p>Hash索引基于哈希表，会在哈希表中保存指向每个数据行的指针，<strong>只有精确匹配索引所有列的查询才有效</strong>。但是Hash并不是就一定会很快，因为hash值重复的话，会以链表的方式存放多个记录指针到一个条目中，所以说，极端情况下，会变成为链表。</p>
+<p>B+ Tree索引和Hash索引区别 哈希索引适合等值查询，但是无法进行范围查询 哈希索引没办法利用索引完成排序 哈希索引不支持多列联合索引的最左匹配规则 如果有大量重复键值得情况下，哈希索引的效率会很低，因为存在哈希碰撞问题。</p>
+</li>
+<li><p>MySQL中B+Tree的叶子节点能存什么东西？</p>
+<p>首先，叶子节点会有索引列的数据，其次，B+Tree的叶子节点会保存数据行，MySQL中会保存数据库表的聚簇索引，主键（如果没有，首先会选择一个唯一的非空索引来代替，如果还没有，会隐式定义一个主键作为聚簇索引），然后会根据主键，进行回表，获取所需数据。</p>
+</li>
+<li><p>什么是聚簇索引和非聚簇索引？</p>
+<p>聚簇索引将<strong>索引和数据放在同一行</strong>，非聚簇索引将<strong>索引和数据分开存放</strong>。</p>
+<p>一个表仅有一个聚簇索引</p>
+<p>聚簇索引的插入速度依赖于插入顺序，如果使用UUID，可能导致插入页分裂降低速度。</p>
+<p>更新主键（聚簇索引）的时候，会导致被更新的行移动</p>
+<p><strong>采用聚簇索引插入新值比采用非聚簇索引插入新值的速度要慢很多</strong>，因为插入要保证主键不能重复，判断主键不能重复，采用的方式在不同的索引下面会有很大的性能差距，聚簇索引遍历所有的叶子节点，非聚簇索引也判断所有的叶子节点，但是聚簇索引的叶子节点除了带有主键还有记录值，记录的大小往往比主键要大的多。这样就会导致聚簇索引在判定新记录携带的主键是否重复时进行昂贵的I/O代价。</p>
+</li>
+<li><p>查询的时候有什么区别？</p>
+<p>当取一定范围内的数据时，聚簇索引相比较非聚簇索引也会更快</p>
+<p>使用覆盖索引扫描的查询可以直接使用页节点中的主键值。</p>
+<p>因为非聚簇索引查询时，会先扫描一遍B+Tree，获取到叶子节点的主键ID，然后根据ID进行回表，而聚簇索引，会包含整行数据，每次会把共同一个页的数据都加载到内存里，读取同一页的数据，避免了磁盘查找，速度会更快。同时，使用ID获取数据时，会更快。少了一次根据ID回表的过程。但是，比如有一个code，普通索引，查询这个code的时候，应为不需要获取其他数据，少了回表的过程，应该也算是聚簇索引。</p>
+<blockquote>
+<p>覆盖索引 覆盖索引（covering index）指一个查询语句的执行只用从索引中就能够取得，不必从数据表中读取。也可以称之为实现了索引覆盖。 当一条查询语句符合覆盖索引条件时，MySQL只需要通过索引就可以返回查询所需要的数据，这样避免了查到索引后再返回表操作，减少I/O提高效率。 如，表covering_index_sample中有一个普通索引 idx_key1_key2(key1,key2)。当我们通过SQL语句：select key2 from covering_index_sample where key1 = ‘keytest’;的时候，就可以通过覆盖索引查询，无需回表。</p>
+</blockquote>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol><a id="more"></a>
+<pre><code>  8. 联合索引是怎么使用的？为什么使用联合索引？说一说最左前缀匹配
+
+     给需要查询的列，或者是需要排序的列，添加联合索引，比如说(k1,k2,k3)这么一个联合索引，会相当于(k1),(k1,k2),(k1,k2,k3)三个索引，这就是最左前缀匹配。
+
+  9. 各个MySQL版本中，对索引有哪些方面的优化？
+
+     5.6版本的MySQL做了索引下推。
+
+     people表中（zipcode，lastname，firstname）构成一个索引
+
+     SELECT * FROM people WHERE zipcode=&#39;95054&#39; AND lastname LIKE &#39;%etrunia%&#39; AND address LIKE &#39;%Main Street%&#39;;
+
+     如果没有使用索引下推技术，则MySQL会通过zipcode=&#39;95054&#39;从存储引擎中查询对应的数据，返回到MySQL服务端，然后MySQL服务端基于lastname LIKE &#39;%etrunia%&#39;和address LIKE &#39;%Main Street%&#39;来判断数据是否符合条件。 如果使用了索引下推技术，则MYSQL首先会返回符合zipcode=&#39;95054&#39;的索引，然后根据lastname LIKE &#39;%etrunia%&#39;和address LIKE &#39;%Main Street%&#39;来判断索引是否符合条件。如果符合条件，则根据该索引来定位对应的数据，如果不符合，则直接reject掉。 有了索引下推优化，可以在有like条件查询的情况下，减少回表次数。
+
+  10. 通过什么情况，能知道是否走了索引？
+
+     使用explain语句进行分析
+
+  11. 什么情况下会发生创建了索引，但是没有走索引的情况？
+
+      查询发生隐式转换，比如数据库定义的是string，但是查询的时候使用的是int
+
+      对索引列进行运算，导致索引失效
+
+      使用&lt;&gt;，not in , not exist 等会导致索引失效
+
+      如果变量为空，使用 = null ，会导致索引失效
+
+      查询优化器 一条SQL语句的查询，可以有不同的执行方案，至于最终选择哪种方案，需要通过优化器进行选择，选择执行成本最低的方案。 在一条单表查询语句真正执行之前，MySQL的查询优化器会找出执行该语句所有可能使用的方案，对比之后找出成本最低的方案。这个成本最低的方案就是所谓的执行计划。 优化过程大致如下： 1、根据搜索条件，找出所有可能使用的索引 2、计算全表扫描的代价 3、计算使用不同索引执行查询的代价 4、对比各种执行方案的代价，找出成本最低的那一个，可能会优化器认为全表扫描的代价小于使用索引
+
+  12. 不同类型的值，比如说varchar，int，等，使用索引会有什么变化？
+
+      如果column定义的为是varchar，但是查询使用的是int，会走索引
+
+      如果column定义的是int，查询用的是string，存在隐式转换，不会走索引
+</code></pre><ol>
+<li><p>加缓存，memcache，redis等</p>
+<p>memcache，redis等问题放到其他章节</p>
+</li>
+<li><p>主从复制，或者主主复制，读写分离</p>
+<ol>
+<li>MySQL复制的方法有哪几种？分别有什么优缺点？</li>
+<li>主从的延迟问题你们怎么解决？</li>
+<li>解释一下半同步复制和并行复制</li>
+<li>MySQL能否一主多从？或者多主多从？</li>
+</ol>
+</li>
+<li><p>分区表</p>
+<ol>
+<li>解释一下分区表，有哪几种类型？</li>
+<li>分区表的优缺点？</li>
+</ol>
+</li>
+<li><p>分库分表</p>
+<ol>
+<li>分库分表有哪几种类型？你们平时都是怎么处理的？</li>
+<li>水平分表和垂直分表的优缺点？</li>
+</ol>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>面试</category>
+      </categories>
+      <tags>
+        <tag>面试</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>React中碰到的生命周期问题</title>
     <url>/2020/11/09/Frontend/React/01/</url>
     <content><![CDATA[<p>先上代码</p><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">  componentWillMount() &#123;</span><br><span class="line">    const &#123; params &#125; = this.props.location;</span><br><span class="line">    const &#123; dispatch &#125; = this.props;</span><br><span class="line">    if (params?.id) &#123;</span><br><span class="line">      roleDetail(params.id).then((role) =&gt; &#123;</span><br><span class="line">        if (dispatch) &#123;</span><br><span class="line">          dispatch(&#123;</span><br><span class="line">            type: &apos;roleForm/saveRoleBasic&apos;,</span><br><span class="line">            payload: role,</span><br><span class="line">          &#125;);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; </span><br><span class="line">getCurrentStepAndComponent = (current?: string) =&gt; &#123;</span><br><span class="line">    switch (current) &#123;</span><br><span class="line">      case &apos;permission&apos;:</span><br><span class="line">        return &#123; step: 1, component: &lt;RolePermission/&gt; &#125;;</span><br><span class="line">      case &apos;complete&apos;:</span><br><span class="line">        return &#123; step: 2, component: &lt;RoleComplete/&gt; &#125;;</span><br><span class="line">      case &apos;basic&apos;:</span><br><span class="line">        return &#123; step: 0, component: &lt;RoleBasic/&gt; &#125;;</span><br><span class="line">      default:</span><br><span class="line">        return &#123; step: 3, component: &lt;RoleBasic/&gt; &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">  render() &#123;</span><br><span class="line">    const &#123; step, component &#125; = this.getCurrentStepAndComponent(this.props.current);</span><br><span class="line">    return &lt;&gt;</span><br><span class="line">      &lt;Card bordered=&#123;false&#125; bodyStyle=&#123;&#123; padding: 73 &#125;&#125;&gt;</span><br><span class="line">        &lt;Steps current=&#123;step&#125; style=&#123;&#123; marginBottom: 60 &#125;&#125;&gt;</span><br><span class="line">          &lt;Step title=&quot;角色基本信息&quot;/&gt;</span><br><span class="line">          &lt;Step title=&quot;角色权限信息&quot;/&gt;</span><br><span class="line">          &lt;Step title=&quot;完成&quot;/&gt;</span><br><span class="line">        &lt;/Steps&gt;</span><br><span class="line">        &#123;component&#125;</span><br><span class="line">      &lt;/Card&gt;</span><br><span class="line">    &lt;/&gt;;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure><a id="more"></a>
@@ -33,7 +360,7 @@
 </li>
 <li><p>数据隔离，数据权限（完成）</p>
 </li>
-<li><p>前端必须得手写一个list页面</p>
+<li><p>前端必须得手写一个list页面（完成）</p>
 </li>
 <li><p>子账户进行分配权限，只能分配自己所拥有的权限（完成）</p>
 </li>

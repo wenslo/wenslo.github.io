@@ -219,6 +219,591 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/12/16/Book Nodes/高性能MySQL/2-Schema和数据类型优化/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
+      <meta itemprop="name" content="温海林">
+      <meta itemprop="description" content="Fake it, make it!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温海林的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/12/16/Book Nodes/高性能MySQL/2-Schema和数据类型优化/" class="post-title-link" itemprop="url">MySQL的Schema和数据类型优化</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-12-16 17:30:57" itemprop="dateCreated datePublished" datetime="2020-12-16T17:30:57+08:00">2020-12-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-12-16 23:21:03" itemprop="dateModified" datetime="2020-12-16T23:21:03+08:00">2020-12-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index">
+                    <span itemprop="name">MySQL</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>| 1. 选择数据类型时候的基本原则</p><ol>
+<li><strong>更小的通常更好</strong>，占用更少的磁盘，内存和CPU缓存，处理时需要的CPU时钟周期也少，但是不建议项目初期就弄，不然改起来也太费劲了，超级痛苦。</li>
+<li><strong>简单的更好</strong>，比如能使用整形就不适用字符，能用date就不用字符串，因为字符集和排序规则使得字符串相比整形复杂。</li>
+<li><strong>避免为null</strong>，滴滴的数据表，全都是not null的，因为有null的列更难优化，耗费的成本更高，索引，统计更麻烦，浪费更多的存储空间，</li>
+</ol>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/12/16/Book Nodes/高性能MySQL/2-Schema和数据类型优化/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/12/16/Book Nodes/高性能MySQL/1-MySQL查询剖析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
+      <meta itemprop="name" content="温海林">
+      <meta itemprop="description" content="Fake it, make it!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温海林的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/12/16/Book Nodes/高性能MySQL/1-MySQL查询剖析/" class="post-title-link" itemprop="url">MySQL查询性能剖析</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-12-16 16:41:31" itemprop="dateCreated datePublished" datetime="2020-12-16T16:41:31+08:00">2020-12-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-12-16 22:22:11" itemprop="dateModified" datetime="2020-12-16T22:22:11+08:00">2020-12-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index">
+                    <span itemprop="name">MySQL</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>首先，也是最重要的一点，需要记录慢查询日志，然后针对日志，进行分析。假设已经定位到问题是查询语句的问题，如果不是，需要自顶而下进行考虑，外部接口慢？文件解析慢？正则滥用？还是暴力搜索算法等。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/12/16/Book Nodes/高性能MySQL/1-MySQL查询剖析/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/12/16/Interview/RabbitMQ/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
+      <meta itemprop="name" content="温海林">
+      <meta itemprop="description" content="Fake it, make it!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温海林的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/12/16/Interview/RabbitMQ/" class="post-title-link" itemprop="url">面试-RabbitMQ</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-12-16 14:55:25" itemprop="dateCreated datePublished" datetime="2020-12-16T14:55:25+08:00">2020-12-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-12-16 22:22:11" itemprop="dateModified" datetime="2020-12-16T22:22:11+08:00">2020-12-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/面试/" itemprop="url" rel="index">
+                    <span itemprop="name">面试</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <ol>
+<li><p>知道MQ么，MQ是什么，MQ的作用是什么？</p>
+<p> Message Queue，顾名思义，消息队列，基于生产者-消费者模式。作用可分为下面几点，但是MQ在单机环境下并不适用，更加适用于多系统，多服务的环境。</p>
+<ul>
+<li>异步处理，提高系统吞吐量</li>
+<li>应用解耦，不用关系其他系统怎么处理</li>
+<li>流量削峰，缓解短时间内的高并发请求，可通过控制mq长度来处理</li>
+<li>消息通讯，聊天室，点对点传输等</li>
+<li>日志处理，解决大量日志传输 </li>
+<li>详细回答……</li>
+</ul>
+</li>
+<li><p>MQ的缺点是什么？</p>
+<ul>
+<li>增加系统复杂性</li>
+<li>降低系统可用性</li>
+<li>数据一致性</li>
+<li>详细回答</li>
+</ul>
+</li>
+<li><p>RabbitMQ 和 其他MQ之间的区别有哪些？为什么选择RabbitMQ？</p>
+<ul>
+<li>虽然是Erlang开发，但是有很高的社区活跃度，可以保证可用性以及bug修复的及时性，国内外已经有很多公司使用rabbitMQ，并且有了很好的工程实践</li>
+<li>有良好的的web管理界面</li>
+<li>对于MQ没有特别强烈的定制需求，已有功能足以满足业务需求</li>
+</ul>
+</li>
+<li><p>RabbitMQ有哪些常见问题？如何避免这些问题？</p>
+<ul>
+<li>消息的乱序问题</li>
+<li>消息的重复发送问题</li>
+</ul>
+</li>
+<li><p>Rabbit的工作模式</p>
+<ol>
+<li>simple模式，最简单的收发模式</li>
+<li>消费者监听模式（customer）</li>
+<li>work工作模式，信息被消费者竞争</li>
+<li>publish/subscribe 发布/订阅模式，每个消费者监听自己的队列</li>
+<li>routing 路由模式</li>
+<li>topic 模式</li>
+</ol>
+</li>
+<li><p>如何保证信息消费时的幂等性？</p>
+</li>
+<li><p>如何保证消息的可靠传输？</p>
+</li>
+<li><p>消息队列满了怎么处理？过期失效怎么办？有消息积压怎么办？</p>
+</li>
+</ol>
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/12/15/Spring Security/负载均衡/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
+      <meta itemprop="name" content="温海林">
+      <meta itemprop="description" content="Fake it, make it!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温海林的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/12/15/Spring Security/负载均衡/" class="post-title-link" itemprop="url">SpringSecurity 负载均衡</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-12-15 18:27:35" itemprop="dateCreated datePublished" datetime="2020-12-15T18:27:35+08:00">2020-12-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-12-16 22:22:11" itemprop="dateModified" datetime="2020-12-16T22:22:11+08:00">2020-12-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/SpringSecurity/" itemprop="url" rel="index">
+                    <span itemprop="name">SpringSecurity</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>想弄一下SpringSecurity的负载均衡是怎么实现的，就找了找资料，在此记录一下。</p><p>首先，需要两个依赖：</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/12/15/Spring Security/负载均衡/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/12/06/Interview/Redis/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
+      <meta itemprop="name" content="温海林">
+      <meta itemprop="description" content="Fake it, make it!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温海林的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/12/06/Interview/Redis/" class="post-title-link" itemprop="url">面试-Redis篇章</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-12-06 19:57:30" itemprop="dateCreated datePublished" datetime="2020-12-06T19:57:30+08:00">2020-12-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-12-06 20:08:54" itemprop="dateModified" datetime="2020-12-06T20:08:54+08:00">2020-12-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/面试/" itemprop="url" rel="index">
+                    <span itemprop="name">面试</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <ol>
+<li><p>Redis常见的数据类型有哪些？</p>
+<p>String,List,hash,set,zset</p>
+</li>
+<li><p>解释一下redis的二进制安全</p>
+<p>需要客户端给它字节数组</p>
+</li>
+</ol>
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/16/Interview/MySQL/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
+      <meta itemprop="name" content="温海林">
+      <meta itemprop="description" content="Fake it, make it!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温海林的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/11/16/Interview/MySQL/" class="post-title-link" itemprop="url">面试-MySQL篇</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-16 22:53:54" itemprop="dateCreated datePublished" datetime="2020-11-16T22:53:54+08:00">2020-11-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-12-16 22:22:11" itemprop="dateModified" datetime="2020-12-16T22:22:11+08:00">2020-12-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/面试/" itemprop="url" rel="index">
+                    <span itemprop="name">面试</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3><span id="想提升还是得连环炮方式的提问">想提升，还是得连环炮方式的提问</span></h3><ol>
+<li><p>你们对线上的数据有没有做一些优化？怎么优化的？</p>
+<ol>
+<li><p>如果回答的是索引</p>
+<ol>
+<li><p>来说一说什么是索引？有哪几种索引？索引有什么优点？</p>
+<p>用于存储引擎快速找到记录的一种数据结构，存储引擎会先在索引中找到对应值，然后根据匹配的索引记录找到对应的记录行，索引可以包含一个或者多个列的值</p>
+<p>B-Tree索引，（准确的说是B+Tree，B-Tree和B+Tree有什么区别？）哈希索引，空间数据索引，全文索引，分行树索引</p>
+<p>优点：1.大大减少服务器需要扫描的数据量，2.可以帮助服务器避免排序和临时变，3.索引可以将随机IO变为顺序IO。</p>
+</li>
+<li><p>这些索引采取的是哪种数据结构？</p>
+<p>B-Tree索引用的B+Tree，哈希索引用的哈希表</p>
+</li>
+<li><p>为什么采取B+Tree？这种数据结构有什么好处么？</p>
+<p>B+Tree对索引列是按照顺序组织存储的，适用于<strong>全值匹配，匹配最左前缀，匹配列前缀，匹配范围值，精确匹配某一列并范围匹配另外一列，只访问索引的查询</strong>。因为节点有序，还可用于查询中的order by操作。</p>
+<p>但是，如果<strong>不是按照索引的最左列开始查找，则无法使用索引；不能跳过索引中的列；如果查询中有某个列的范围查询，则其右边所有列都无法使用索引优化查找</strong>。</p>
+</li>
+<li><p>和哈希表相比，有什么优点或者有什么不同？</p>
+<p>Hash索引基于哈希表，会在哈希表中保存指向每个数据行的指针，<strong>只有精确匹配索引所有列的查询才有效</strong>。但是Hash并不是就一定会很快，因为hash值重复的话，会以链表的方式存放多个记录指针到一个条目中，所以说，极端情况下，会变成为链表。</p>
+<p>B+ Tree索引和Hash索引区别 哈希索引适合等值查询，但是无法进行范围查询 哈希索引没办法利用索引完成排序 哈希索引不支持多列联合索引的最左匹配规则 如果有大量重复键值得情况下，哈希索引的效率会很低，因为存在哈希碰撞问题。</p>
+</li>
+<li><p>MySQL中B+Tree的叶子节点能存什么东西？</p>
+<p>首先，叶子节点会有索引列的数据，其次，B+Tree的叶子节点会保存数据行，MySQL中会保存数据库表的聚簇索引，主键（如果没有，首先会选择一个唯一的非空索引来代替，如果还没有，会隐式定义一个主键作为聚簇索引），然后会根据主键，进行回表，获取所需数据。</p>
+</li>
+<li><p>什么是聚簇索引和非聚簇索引？</p>
+<p>聚簇索引将<strong>索引和数据放在同一行</strong>，非聚簇索引将<strong>索引和数据分开存放</strong>。</p>
+<p>一个表仅有一个聚簇索引</p>
+<p>聚簇索引的插入速度依赖于插入顺序，如果使用UUID，可能导致插入页分裂降低速度。</p>
+<p>更新主键（聚簇索引）的时候，会导致被更新的行移动</p>
+<p><strong>采用聚簇索引插入新值比采用非聚簇索引插入新值的速度要慢很多</strong>，因为插入要保证主键不能重复，判断主键不能重复，采用的方式在不同的索引下面会有很大的性能差距，聚簇索引遍历所有的叶子节点，非聚簇索引也判断所有的叶子节点，但是聚簇索引的叶子节点除了带有主键还有记录值，记录的大小往往比主键要大的多。这样就会导致聚簇索引在判定新记录携带的主键是否重复时进行昂贵的I/O代价。</p>
+</li>
+<li><p>查询的时候有什么区别？</p>
+<p>当取一定范围内的数据时，聚簇索引相比较非聚簇索引也会更快</p>
+<p>使用覆盖索引扫描的查询可以直接使用页节点中的主键值。</p>
+<p>因为非聚簇索引查询时，会先扫描一遍B+Tree，获取到叶子节点的主键ID，然后根据ID进行回表，而聚簇索引，会包含整行数据，每次会把共同一个页的数据都加载到内存里，读取同一页的数据，避免了磁盘查找，速度会更快。同时，使用ID获取数据时，会更快。少了一次根据ID回表的过程。但是，比如有一个code，普通索引，查询这个code的时候，应为不需要获取其他数据，少了回表的过程，应该也算是聚簇索引。</p>
+<blockquote>
+<p>覆盖索引 覆盖索引（covering index）指一个查询语句的执行只用从索引中就能够取得，不必从数据表中读取。也可以称之为实现了索引覆盖。 当一条查询语句符合覆盖索引条件时，MySQL只需要通过索引就可以返回查询所需要的数据，这样避免了查到索引后再返回表操作，减少I/O提高效率。 如，表covering_index_sample中有一个普通索引 idx_key1_key2(key1,key2)。当我们通过SQL语句：select key2 from covering_index_sample where key1 = ‘keytest’;的时候，就可以通过覆盖索引查询，无需回表。</p>
+</blockquote>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/11/16/Interview/MySQL/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/11/09/Frontend/React/01/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -333,7 +918,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-10-21 22:02:00" itemprop="dateModified" datetime="2020-10-21T22:02:00+08:00">2020-10-21</time>
+                <time title="修改时间：2020-12-06 19:56:39" itemprop="dateModified" datetime="2020-12-06T19:56:39+08:00">2020-12-06</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -369,7 +954,7 @@
 </li>
 <li><p>数据隔离，数据权限（完成）</p>
 </li>
-<li><p>前端必须得手写一个list页面</p>
+<li><p>前端必须得手写一个list页面（完成）</p>
 </li>
 <li><p>子账户进行分配权限，只能分配自己所拥有的权限（完成）</p>
 </li>
@@ -646,772 +1231,11 @@
   
   
 
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/06/29/Language/English/New Concept/Chapter1/lesson63/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
-      <meta itemprop="name" content="温海林">
-      <meta itemprop="description" content="Fake it, make it!">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="温海林的博客">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/06/29/Language/English/New Concept/Chapter1/lesson63/" class="post-title-link" itemprop="url">新概念1 63</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-06-29 20:37:18" itemprop="dateCreated datePublished" datetime="2020-06-29T20:37:18+08:00">2020-06-29</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-06-29 21:20:55" itemprop="dateModified" datetime="2020-06-29T21:20:55+08:00">2020-06-29</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/英语学习/" itemprop="url" rel="index">
-                    <span itemprop="name">英语学习</span>
-                  </a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <a id="more"></a><blockquote>
-<p>单词</p>
-</blockquote><ol>
-<li>better adj. 形容词well的比较级<ol>
-<li>good-better-well</li>
-<li>I’m well.   I’m better.</li>
-</ol>
-</li>
-<li>certainly  adv.当然</li>
-<li>get up 起床<ol>
-<li>go to bed /  go to sleep</li>
-<li>三单形式：</li>
-<li><strong>gets up / goes to bed / goes to sleep</strong></li>
-</ol>
-</li>
-<li>yet adv. 还，仍<ol>
-<li>否定，疑问句末</li>
-<li>你还不能去上班呢</li>
-<li>You can’t go to work yet.</li>
-<li>He can’t drive yet.</li>
-</ol>
-</li>
-<li>rich adj. 油腻的<ol>
-<li>rich food 油腻的食物</li>
-<li>a rich man  一个富有的人</li>
-<li>rich silk  华丽的丝绸</li>
-<li>rich land 肥沃的</li>
-</ol>
-</li>
-<li>food 食物<ol>
-<li>rich food. 油腻的食物</li>
-<li>mild food.  清淡的食物</li>
-<li>spicy food. 辛辣的食物</li>
-<li>green food 绿色食品</li>
-<li>fast food 快餐</li>
-<li>sea food 海鲜</li>
-</ol>
-</li>
-<li>remain v. 保持，继续<ol>
-<li>remain in bed.</li>
-</ol>
-</li>
-</ol>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/06/29/Language/English/New Concept/Chapter1/lesson63/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/06/28/Language/English/New Concept/Chapter1/lesson61/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
-      <meta itemprop="name" content="温海林">
-      <meta itemprop="description" content="Fake it, make it!">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="温海林的博客">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/06/28/Language/English/New Concept/Chapter1/lesson61/" class="post-title-link" itemprop="url">新概念1 61</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-06-28 22:58:13" itemprop="dateCreated datePublished" datetime="2020-06-28T22:58:13+08:00">2020-06-28</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-06-28 23:33:21" itemprop="dateModified" datetime="2020-06-28T23:33:21+08:00">2020-06-28</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/英语学习/" itemprop="url" rel="index">
-                    <span itemprop="name">英语学习</span>
-                  </a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <a id="more"></a><blockquote>
-<p>单词</p>
-</blockquote><ol>
-<li>feel 感觉</li>
-<li>look 看起来</li>
-<li>must 必须</li>
-<li>call 叫、请</li>
-<li>doctor  医生</li>
-<li>telephone 电话<ol>
-<li>call sb.</li>
-<li>phone sb.</li>
-<li>give sb. a call</li>
-<li>give sb. a phone</li>
-</ol>
-</li>
-<li>remember 记得，记住，想起来了<ol>
-<li>Do you remember?</li>
-<li>oh, yeah, I remember.</li>
-</ol>
-</li>
-<li>mouth 嘴巴</li>
-<li>tongue 舌头<ol>
-<li>Tongue twister 绕口令</li>
-</ol>
-</li>
-<li>bad 严重的<ol>
-<li>a bad cold：严重的感冒</li>
-</ol>
-</li>
-<li>cold 感冒<ol>
-<li>a cold day  寒冷的一天</li>
-<li>a cold handshake 冷淡的，不热情</li>
-<li>the cold color 冷色调</li>
-</ol>
-</li>
-<li>news 消息<ol>
-<li>a piece of news</li>
-</ol>
-</li>
-</ol>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/06/28/Language/English/New Concept/Chapter1/lesson61/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/06/28/Language/English/New Concept/Chapter1/lesson59/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
-      <meta itemprop="name" content="温海林">
-      <meta itemprop="description" content="Fake it, make it!">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="温海林的博客">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/06/28/Language/English/New Concept/Chapter1/lesson59/" class="post-title-link" itemprop="url">新概念1 59</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-06-28 21:58:05" itemprop="dateCreated datePublished" datetime="2020-06-28T21:58:05+08:00">2020-06-28</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-06-28 22:54:28" itemprop="dateModified" datetime="2020-06-28T22:54:28+08:00">2020-06-28</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/英语学习/" itemprop="url" rel="index">
-                    <span itemprop="name">英语学习</span>
-                  </a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <a id="more"></a><blockquote>
-<p>单词</p>
-</blockquote><ol>
-<li>envolope 信封</li>
-<li>writing paper 信纸<ol>
-<li>a piece of writing paper</li>
-<li>two pieces of writing paper</li>
-</ol>
-</li>
-<li>shop assistant 售货员</li>
-<li>size  尺寸，尺码，大小<ol>
-<li>S/M/L</li>
-<li>S - small</li>
-<li>M - medium </li>
-<li>L - large</li>
-<li>XS - extra small</li>
-<li>XL - extra large</li>
-<li>small / medium / large size</li>
-<li>size 6 / 7…</li>
-</ol>
-</li>
-<li>Pad  信笺薄</li>
-<li>glue 胶水<ol>
-<li>a bottle of ~</li>
-</ol>
-</li>
-<li>chalk 粉笔</li>
-<li>change 零钱，找给的钱<ol>
-<li>small change,   keep the change </li>
-</ol>
-</li>
-</ol>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/06/28/Language/English/New Concept/Chapter1/lesson59/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/06/27/Language/English/New Concept/Chapter1/lesson57/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
-      <meta itemprop="name" content="温海林">
-      <meta itemprop="description" content="Fake it, make it!">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="温海林的博客">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/06/27/Language/English/New Concept/Chapter1/lesson57/" class="post-title-link" itemprop="url">新概念1 57</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-06-27 23:23:04" itemprop="dateCreated datePublished" datetime="2020-06-27T23:23:04+08:00">2020-06-27</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-06-27 23:36:05" itemprop="dateModified" datetime="2020-06-27T23:36:05+08:00">2020-06-27</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/英语学习/" itemprop="url" rel="index">
-                    <span itemprop="name">英语学习</span>
-                  </a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <a id="more"></a><blockquote>
-<p>单词</p>
-</blockquote><ol>
-<li>o’clock 点钟，整点<ol>
-<li>8点整 eight o’clock</li>
-</ol>
-</li>
-<li>shop 商店（规模较小，出售同一类商品）<ol>
-<li>department store （美） store （英） 百货商店</li>
-</ol>
-</li>
-<li>moment 片刻，瞬间<ol>
-<li>at the moment 此刻</li>
-<li>She is learning English at the moment.</li>
-<li>Wait a moment = Wait a minute.</li>
-</ol>
-</li>
-</ol>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/06/27/Language/English/New Concept/Chapter1/lesson57/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/06/26/Language/English/New Concept/Chapter1/lesson55/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
-      <meta itemprop="name" content="温海林">
-      <meta itemprop="description" content="Fake it, make it!">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="温海林的博客">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/06/26/Language/English/New Concept/Chapter1/lesson55/" class="post-title-link" itemprop="url">新概念1 55</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-06-26 23:22:28" itemprop="dateCreated datePublished" datetime="2020-06-26T23:22:28+08:00">2020-06-26</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-06-27 00:12:31" itemprop="dateModified" datetime="2020-06-27T00:12:31+08:00">2020-06-27</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/英语学习/" itemprop="url" rel="index">
-                    <span itemprop="name">英语学习</span>
-                  </a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <a id="more"></a><blockquote>
-<p>单词</p>
-</blockquote><ol>
-<li>live v. 住，生活<ol>
-<li>长期居住</li>
-<li>live + at   小</li>
-<li>live + in   大</li>
-<li>She lives at 23 Haidian Street.</li>
-<li>I live in Beijing.</li>
-<li>live - evil adj.  邪恶的</li>
-</ol>
-</li>
-<li>stay v. 待在，停留<ol>
-<li>短暂停留</li>
-<li>stay + at 小</li>
-<li>stay + in 大</li>
-<li>stay at home</li>
-<li>stay at the hotel</li>
-<li>stay in New York</li>
-</ol>
-</li>
-<li>arrive 到达<ol>
-<li>arrive + at 小</li>
-<li>arrive + in  大</li>
-<li>He arrives at the classroom early.</li>
-<li>I arrive in Shanghai late.</li>
-</ol>
-</li>
-<li>home <ol>
-<li>n. 家</li>
-<li>adv. 在家，到家</li>
-</ol>
-</li>
-<li>housework 家务<ol>
-<li>homework 家庭作业</li>
-<li>不可数</li>
-<li>do some housework / homework</li>
-<li>She never does the housework.</li>
-</ol>
-</li>
-<li>lunch n. 午饭<ol>
-<li>breakfast 早饭</li>
-<li>dinner / supper 晚饭</li>
-<li>eat / have breakfast / lunch / dinner / supper</li>
-</ol>
-</li>
-<li>afternoon 下午<ol>
-<li>after 之后</li>
-<li>noon 正午</li>
-<li>morning 早晨</li>
-<li>evening 傍晚</li>
-<li>night 夜晚</li>
-<li>in the morning  / afternoon / evening</li>
-<li>at night</li>
-<li>an evening dress 晚礼服</li>
-</ol>
-</li>
-<li>usually  adv. 通常<ol>
-<li>usual adj. 平常的</li>
-</ol>
-</li>
-<li>together adv. 一起<ol>
-<li>他们通常一起喝咖啡。</li>
-<li>They usually drink coffee together.</li>
-<li>咱一块干吧！</li>
-<li>Let’s do it together.</li>
-</ol>
-</li>
-</ol>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/06/26/Language/English/New Concept/Chapter1/lesson55/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/06/26/Language/English/New Concept/Chapter1/lesson53/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
-      <meta itemprop="name" content="温海林">
-      <meta itemprop="description" content="Fake it, make it!">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="温海林的博客">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/06/26/Language/English/New Concept/Chapter1/lesson53/" class="post-title-link" itemprop="url">新概念1 53</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-06-26 11:15:55" itemprop="dateCreated datePublished" datetime="2020-06-26T11:15:55+08:00">2020-06-26</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-06-26 22:35:37" itemprop="dateModified" datetime="2020-06-26T22:35:37+08:00">2020-06-26</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/英语学习/" itemprop="url" rel="index">
-                    <span itemprop="name">英语学习</span>
-                  </a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <a id="more"></a><blockquote>
-<p>单词</p>
-</blockquote><ol>
-<li>mild 温和的，温暖的<ol>
-<li>It is mild in fall. 秋天天气很温和。</li>
-<li>mild food 清淡的食物</li>
-<li>spicy food 辛辣的食物</li>
-<li>hot food 辣的食物</li>
-</ol>
-</li>
-<li>always 总是，一直，永远</li>
-<li>north 北方</li>
-<li>east 东方</li>
-<li>west 西方</li>
-<li>south 南方<ol>
-<li>in the north …</li>
-<li>in the north of …</li>
-</ol>
-</li>
-<li>news  新闻、消息<ol>
-<li>East, west, home is best.</li>
-</ol>
-</li>
-<li>wet 潮湿的<ol>
-<li>water - wash - wine - wave - well - weep - woman</li>
-</ol>
-</li>
-<li>season 季节<ol>
-<li>There are four seasons in a year.</li>
-<li>There are spring, summer, autumn / fall and winter.</li>
-</ol>
-</li>
-<li>best 最  adv. 最好的 adj.<ol>
-<li>Green is my favorite color.</li>
-<li>I like green best.（行前动后）</li>
-<li>Beijing is my favorite city.</li>
-<li>I like Beijing best.</li>
-<li>Spring is his favorite seasion.</li>
-<li>He likes spring best.</li>
-<li>Chinese is her favorite langue.</li>
-<li>She likes Chinese best.</li>
-</ol>
-</li>
-<li>night 夜晚，深夜<ol>
-<li>evening 傍晚</li>
-</ol>
-</li>
-<li>rise 升起</li>
-<li>set 落下<ol>
-<li>太阳每天6点升起，7点落下</li>
-<li>The sun rises at 6:00 in the morning and sets at 7:00 in the evennig.</li>
-</ol>
-</li>
-<li>early 早的 adj.  adv.</li>
-<li>late 晚的 adj. adv.<ol>
-<li>I am late today.  adj.</li>
-<li>I come late today.</li>
-</ol>
-</li>
-<li>interesting 有趣的</li>
-<li>subject 话题、科目<ol>
-<li>What’s the subject we are going to talk about today?</li>
-<li>We have nine subjects this term.</li>
-</ol>
-</li>
-<li>conversation 谈话</li>
-</ol>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/06/26/Language/English/New Concept/Chapter1/lesson53/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
   </div>
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/9/">9</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/10/">10</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1457,20 +1281,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">90</span>
+          <span class="site-state-item-count">96</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-count">14</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">24</span>
+        <span class="site-state-item-count">26</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
