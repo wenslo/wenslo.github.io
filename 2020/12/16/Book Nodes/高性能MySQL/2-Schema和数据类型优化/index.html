@@ -22,7 +22,7 @@
   var NexT = window.NexT || {};
   var CONFIG = {
     root: '/',
-    scheme: 'Muse',
+    scheme: 'Pisces',
     version: '7.4.2',
     exturl: false,
     sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
@@ -56,7 +56,7 @@
 <meta name="keywords" content="MySQL">
 <meta property="og:type" content="article">
 <meta property="og:title" content="MySQL的Schema和数据类型优化">
-<meta property="og:url" content="http://yoursite.com/2020/12/16/Book Nodes/高性能MySQL/2-Schema和数据类型优化/index.html">
+<meta property="og:url" content="https://wenslo.github.io/2020/12/16/Book Nodes/高性能MySQL/2-Schema和数据类型优化/index.html">
 <meta property="og:site_name" content="温海林的博客">
 <meta property="og:description" content="| 1. 选择数据类型时候的基本原则 更小的通常更好，占用更少的磁盘，内存和CPU缓存，处理时需要的CPU时钟周期也少，但是不建议项目初期就弄，不然改起来也太费劲了，超级痛苦。 简单的更好，比如能使用整形就不适用字符，能用date就不用字符串，因为字符集和排序规则使得字符串相比整形复杂。 避免为null，滴滴的数据表，全都是not null的，因为有null的列更难优化，耗费的成本更高，索引，统计">
 <meta property="og:locale" content="zh-CN">
@@ -65,7 +65,7 @@
 <meta name="twitter:title" content="MySQL的Schema和数据类型优化">
 <meta name="twitter:description" content="| 1. 选择数据类型时候的基本原则 更小的通常更好，占用更少的磁盘，内存和CPU缓存，处理时需要的CPU时钟周期也少，但是不建议项目初期就弄，不然改起来也太费劲了，超级痛苦。 简单的更好，比如能使用整形就不适用字符，能用date就不用字符串，因为字符集和排序规则使得字符串相比整形复杂。 避免为null，滴滴的数据表，全都是not null的，因为有null的列更难优化，耗费的成本更高，索引，统计">
 
-<link rel="canonical" href="http://yoursite.com/2020/12/16/Book Nodes/高性能MySQL/2-Schema和数据类型优化/">
+<link rel="canonical" href="https://wenslo.github.io/2020/12/16/Book Nodes/高性能MySQL/2-Schema和数据类型优化/">
 
 
 <script id="page-configurations">
@@ -221,7 +221,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/12/16/Book Nodes/高性能MySQL/2-Schema和数据类型优化/">
+    <link itemprop="mainEntityOfPage" href="https://wenslo.github.io/2020/12/16/Book Nodes/高性能MySQL/2-Schema和数据类型优化/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/uploads/images/fbb1.jpg">
@@ -368,6 +368,9 @@
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
+                <a href="/2020/12/17/Book Nodes/高性能MySQL/3-创建高性能的索引/" rel="prev" title="MySQL创建高性能索引">
+                  MySQL创建高性能索引 <i class="fa fa-chevron-right"></i>
+                </a>
             </div>
           </div>
       </footer>
@@ -421,7 +424,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">96</span>
+          <span class="site-state-item-count">98</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -446,6 +449,9 @@
       <span class="links-of-author-item">
         <a href="/564544234@qq.com" title="E-Mail &rarr; 564544234@qq.com"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
       </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
   </div>
 
 
@@ -473,10 +479,7 @@
   </span>
   <span class="author" itemprop="copyrightHolder">温海林</span>
 </div>
-  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0
-  </div>
-  <span class="post-meta-divider">|</span>
-  <div class="theme-info">主题 – <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.4.2
+  <div class="theme-info">主题 – <a href="https://pisces.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.4.2
   </div>
 
         
@@ -502,7 +505,7 @@
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
 <script src="/js/utils.js"></script><script src="/js/motion.js"></script>
-<script src="/js/schemes/muse.js"></script>
+<script src="/js/schemes/pisces.js"></script>
 <script src="/js/next-boot.js"></script>
 
 

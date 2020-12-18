@@ -1,6 +1,166 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>MySQL查询性能的优化</title>
+    <url>/2020/12/18/Book%20Nodes/%E9%AB%98%E6%80%A7%E8%83%BDMySQL/4-%E6%9F%A5%E8%AF%A2%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/</url>
+    <content><![CDATA[<p>查询的生命周期大致可以按照顺序来看：<strong>客户端，服务器，在服务器上进行解析，生成执行计划，执行，返回结果给客户端，执行可以认为是整个生性周期中最重要的阶段，这其中包括了大量为了检索数据到存储引擎的调用以及调用后的数据处理，包括排序、分组</strong>。在完成这些任务的时候，查询需要在不同的地方花费时间，包括网络，CPU计算，生成统计信息和执行计划、锁等待（互斥等待）等操作，尤其是向底层存储引擎检索数据的调用操作，这些调用需要在内存操作、CPU操作和内存不足时导致的IO操作上消耗时间，根据存储引擎不同，可能还会产生大量的上下文切换以及系统调用。</p><a id="more"></a>
+<p>| 慢查询基础：优化数据访问</p>
+<p>查询性能低下最根本的原因是访问的数据太多。大部分性能低下的查询都可以通过减少访问的数据量的方式进行优化。两个步骤：<strong>1.确认应用程序是否在检索大量超过需要的数据。这通常意味着访问了太多的航，但有时候也可能是访问了太多的列。2.确认MySQL服务器层是否在分析大量超过需要的数据行。</strong></p>
+]]></content>
+      <categories>
+        <category>MySQL</category>
+      </categories>
+      <tags>
+        <tag>MySQL</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>MySQL创建高性能索引</title>
+    <url>/2020/12/17/Book%20Nodes/%E9%AB%98%E6%80%A7%E8%83%BDMySQL/3-%E5%88%9B%E5%BB%BA%E9%AB%98%E6%80%A7%E8%83%BD%E7%9A%84%E7%B4%A2%E5%BC%95/</url>
+    <content><![CDATA[<p>| 1.1 索引的类型</p><p>索引是在存储引擎层实现，非服务器层实现，所以，不同的存储引擎之间，索引的工作方式不一样，也不是所有的存储引擎都实现了某一个索引，即使实现了，工作方式也很有可能不一样。</p><a id="more"></a>
+
+<p>一般常说的索引指的是<strong>B-Tree索引</strong>，但是实际上一般是B+tree，因为B+tree每一个叶子节点都指向下一个叶子节点，有助于范围区间的查询遍历。</p>
+<p>示例图如下</p>
+<p>B-tree能提高数据访问速度，不再需要全表扫描，而是通过索引，从root节点开始搜索，树的深度和表的大小直接相关，因为b-tree是顺序存储，因此很适合范围查找数据，比如，整数的顺序，字母的顺序，非常高效。</p>
+<p>B-tree适合于<strong>全值匹配，匹配最左前缀，匹配列前缀，匹配范围值，精确匹配某一列并范围匹配另外一列，只访问索引</strong>等查询。而且，索引树种的节点是有序的，因此，能用于查询，也就能用于order by 排序。</p>
+<p>B-tree索引的限制（最左匹配原则）：</p>
+<ol>
+<li>如果不是按照索引的最左列开始查找，则无法使用索引</li>
+<li>不能跳过索引中的列</li>
+<li>如果查询中有某个列的范围查询，那么右边的所有列都无法使用索引优化查找</li>
+</ol>
+<p><strong>Hash索引</strong>的话，必须是精确匹配所有的查询列才会生效，只有Memery引擎显示支持hash索引。hash找数据非常快，但是也有其自身的一些限制</p>
+<ol>
+<li>hash索引只包含hash值和指针，无法避免回表</li>
+<li>hash索引并不是按照索引值顺序排列的，也就无法用于排序</li>
+<li>不支持部分匹配查找</li>
+<li>只支持等值匹配查找</li>
+<li>hash碰撞（冲突）很多的话，极端情况，会变化为链表</li>
+</ol>
+<p>同时，InnoDB有一个功能叫”自适应hash索引“，当某些索引值使用的非常频繁的时候，会在内存中，基于B-Tree索引之上再创建一个hash索引，用户无法控制，但是这个功能可以关闭。</p>
+<p>同时，如果想在InnoDB中使用hash索引的话，可以手动实现一个，其实就是插入前使用hash函数，但是需要注意，使用CRC32()函数比较合适，推荐使用整数，并不推荐使用SHA1和MD5，这种函数是为了最大化避免hash冲突，实际过程中，并不是那么的有必要。同时，由于生日悖论，hash冲突的出现会比想象中快很多，最好手动维护一个64位的hash函数使用。</p>
+<p><strong>R-Tree 空间索引</strong></p>
+<p>用作地理数据存储，但是必须使用GIS相关函数来维护数据</p>
+<p><strong>全文索引</strong></p>
+<p>MySQL不常用，更适合用搜索引擎来做</p>
+<p>| 1.2 索引的优点</p>
+<ol>
+<li>大大减少了服务器需要扫描的数据量</li>
+<li>可以帮助服务器避免排序和临时表</li>
+<li>可以将随机I/O变为顺序IO</li>
+</ol>
+<p>| 1.3 高性能索引策略</p>
+<ol>
+<li><p>独立的列</p>
+<p> 如果查询的列不是独立的，那么无法使用索引，也就是说，索引列不能是表达式的一部分，也不能是函数的参数，比如：</p>
+ <figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> actor <span class="keyword">where</span> actor_id = <span class="number">4</span>+<span class="number">1</span>;</span><br><span class="line"><span class="comment"># 或者</span></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> xxx <span class="keyword">where</span> to_day(<span class="keyword">current_date</span>) - to_day(<span class="keyword">current_date</span>) &gt; <span class="number">10</span>;</span><br></pre></td></tr></table></figure>
+<p> But，与MySQL8 测试，这个查询正常走了索引，估计是优化器进行了优化吧</p>
+</li>
+<li><p>前缀所以和索引的选择性</p>
+<p> 先说很重要的一点：<strong>MySQL无法使用前缀索引进行order by和group by，也无法使用前缀索引做覆盖扫描</strong>。</p>
+<p> 有时候需要索引很长的字符列，这样的话，索引会变的又大又慢，一个策略是使用伪hash索引，但是通常情况下，可以索引开始的部分字符，这样可以大大节省索引空间，提升索引效率。但是同时也会降低索引的选择性。索引的选择性是指：<strong>不重复的索引值和数据表的记录总数的比值，范围从1/T - 1 之间</strong>，索引的选择性越高，则查询效率越高，因为选择性越高的索引在查询时能过滤掉更多的行，唯一索引的选择性为1，是性能最好的索引选择性。</p>
+<p> 对于很长的text，varchar，blob，必须使用前缀索引，因为MySQL不允许索引这些列的完整长度。</p>
+<p> 诀窍在于选择足够长的前缀以保证较高的选择性，同时不能太长（节约空间），前缀应该足够长，使得选择性接近与索引整个列。  </p>
+ <figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 计算完成列的选择性</span></span><br><span class="line"><span class="keyword">select</span> <span class="keyword">count</span>(<span class="keyword">distinct</span> city)/<span class="keyword">count</span>(*) <span class="keyword">from</span> city_demo;</span><br><span class="line"><span class="comment"># 如何在一个查询中计算不同前缀长度的选择性</span></span><br><span class="line"><span class="keyword">select</span> <span class="keyword">count</span>(<span class="keyword">distinct</span> <span class="keyword">left</span>(city, <span class="number">3</span>)) / <span class="keyword">count</span>(*) <span class="keyword">as</span> sel3,</span><br><span class="line">   <span class="keyword">count</span>(<span class="keyword">distinct</span> <span class="keyword">left</span>(city, <span class="number">4</span>)) / <span class="keyword">count</span>(*) <span class="keyword">as</span> sel4,</span><br><span class="line">   <span class="keyword">count</span>(<span class="keyword">distinct</span> <span class="keyword">left</span>(city, <span class="number">5</span>)) / <span class="keyword">count</span>(*) <span class="keyword">as</span> sel5,</span><br><span class="line">   <span class="keyword">count</span>(<span class="keyword">distinct</span> <span class="keyword">left</span>(city, <span class="number">6</span>)) / <span class="keyword">count</span>(*) <span class="keyword">as</span> sel6,</span><br><span class="line">   <span class="keyword">count</span>(<span class="keyword">distinct</span> <span class="keyword">left</span>(city, <span class="number">7</span>)) / <span class="keyword">count</span>(*) <span class="keyword">as</span> sel7</span><br><span class="line"><span class="keyword">from</span> city_demo</span><br></pre></td></tr></table></figure>
+<p> 这样的话，有助于帮助找到最合适的前缀索引长度。然后开始创建前缀索引。</p>
+ <figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> city_demo <span class="keyword">add</span> <span class="keyword">key</span>(city(<span class="number">7</span>));</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>多列索引</p>
+<p> 一个常见错误就是，为每个列创建独立的索引，或者按照错误的顺序创建多列索引。</p>
+<p> MySQL引入了一种叫<strong>索引合并（index merge）</strong>的策略，一定程度上可以利用表上的多个单列索引来定位指定的行。比如下面代码所示</p>
+ <figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> film_id,actor_id <span class="keyword">from</span> film_actor <span class="keyword">where</span> actor_id = <span class="number">1</span> <span class="keyword">or</span> film_id =<span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+<p> 在某些语句的extra列中，还能看到嵌套操作。索引合并是一种优化的结果，但是也说明，索引实际上建的非常糟糕。</p>
+<ul>
+<li>当服务器对多个索引做相交操作时（多个AND条件），通常意味着需要一个包含相关列的多列索引，而不是多个独立的单列索引。</li>
+<li>当服务器需要对多个索引做联合操作时（多个OR条件），通常需要消耗大量的CPU和内存资源在算法的缓存，排序和合并操作上，特别是其中有些索引的选择性不高，需要合并扫描返回的大量数据的时候。</li>
+<li>更重要的是，优化器不会把这些计算算到”查询成本（cost）“中，优化器只关心随机页面读取。这样会使得查询的成本被低估，导致该执行计划还不如全表扫描。这样不仅可能会消耗更多的CPU和内存资源，还可能会影响查询的并发性。还不如改写成union。</li>
+</ul>
+</li>
+<li><p>选择合适的索引列顺序</p>
+<p> 说明：<strong><em>只适用于b-tree索引</em></strong></p>
+<p> 在一个多列b-tree索引中，索引列的顺序意味着索引首先按照最左列进行排序，其次是第二列，等。所以，索引可以按照升序或者降序进行扫描，以满足精确符合列顺序的order by, group by 和 distinct等子句的查询需求。</p>
+<p> 有的建议是：将选择性最高的列放到索引最前列。但是这个建议，<strong>通常不如避免随机IO和排序那么重要</strong>。</p>
+<p> 当不需要考虑排序和分组时，将选择性最高的列放在前面通常是很好地。这时候索引的作用只适用于优化where条件的查找。这种情况下，这样索引能最快地过滤出所需要的行，对于在where子句中只使用了索引部分前缀列的查询来说选择性也更高。然而，性能不只是依赖于所有索引列的选择性（整体基数），也和查询条件的具体值有关，也就是和值的分布有关。示例如下</p>
+ <figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> payment <span class="keyword">where</span> staff_id = <span class="number">2</span> <span class="keyword">and</span> customer_id = <span class="number">584</span>;</span><br><span class="line"><span class="comment"># 应该创建一个(staff_id,customer_id)还是应该颠倒以下顺序？可以跑一些查询来确定在这个表中的分布情况，并确定哪个列的选择性更高。</span></span><br><span class="line"><span class="keyword">select</span> <span class="keyword">sum</span>(staff_id=<span class="number">2</span>),<span class="keyword">sum</span>(customer_id=<span class="number">584</span>) <span class="keyword">from</span> payment;</span><br><span class="line"><span class="comment"># sum(staff_id=2)：7992</span></span><br><span class="line"><span class="comment"># sum(customer_id=584)：30</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> <span class="keyword">sum</span>(staff_id=<span class="number">2</span>) <span class="keyword">from</span> payment <span class="keyword">where</span> customer_id = <span class="number">584</span>;</span><br><span class="line"><span class="comment"># sum(staff_id=2)：17</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 需要注意的是，查询的结果非常依赖与选定的具体值，如果这样来，服务器的整体性能可能会更糟，或者不如预期</span></span><br><span class="line"><span class="comment"># 最好还是按照经验法则来，考虑全局技术和选择性，而不是某个具体查询</span></span><br><span class="line"><span class="keyword">select</span> <span class="keyword">count</span>(<span class="keyword">distinct</span> staff_id)/<span class="keyword">count</span>(*) <span class="keyword">as</span> staff_id_selectivity,</span><br><span class="line">    <span class="keyword">count</span>(<span class="keyword">distinct</span> customer_id)/<span class="keyword">count</span>(*) <span class="keyword">as</span> customer_id_selectivity,</span><br><span class="line">    <span class="keyword">count</span>(*) <span class="keyword">from</span> payment;</span><br><span class="line"><span class="comment"># 由结果可知，customer_id的选择性更高，所以它是索引列的第一列</span></span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> payment <span class="keyword">add</span> <span class="keyword">key</span> (customer_id,staff_id)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>聚簇索引</p>
+<p> InnoDB的聚簇索引实际上在同一个结构中保存了B-tree索引和数据行。当表有局促索引时，它的数据行实际上存放在索引的叶子页中。因为无法同时把数据航存放在两个不同的地方，所以一个表只能有一个聚簇索引（覆盖索引可以模拟多个局促索引的情况）。</p>
+<p> 图例在这</p>
+<p> 如果没有定义主键，InnoDB会选择一个唯一的非空索引代替。如果没有这样的索引，InnoDB会隐式定义一个主键来作为聚簇索引。InnoDB只聚集在同一个页面中的记录。包含相邻键值的页面可能会相距甚远。</p>
+<p> 聚簇索引的一些优点：</p>
+<ul>
+<li>可以把相关数据保存在一起。避免每一次都是磁盘IO</li>
+<li>数据访问更快。聚簇索引将索引和数据保存在同一个B-tree中，从聚簇索引中获取数据通常比在非聚簇索引中查找要快</li>
+<li><p>使用覆盖索引扫描的查询可以直接使用页节点中的主键值</p>
+<p>聚簇索引的一些缺点：</p>
+</li>
+<li><p>最大限度的提高了I/O密集型应用的性能，但是数据如果全部都放在内存中，则反问的顺序就没有那么重要，聚簇索引也就没有什么优势</p>
+</li>
+<li>插入速度严重依赖与插入顺序，按照主键的顺序插入是加载数据到InnoDB表中速度最快的，但是如果不是按照主键顺序加载，那么加载完成后，需要使用optimize table重新组织一下表。</li>
+<li>更新聚簇索引列的代价很高，因为会强制InnoDB将每个被更新的行移动到新的位置。</li>
+<li>基于聚簇索引的表在插入新行，或者主键被更新导致需要移动行的时候，可能面临”页分裂（page split）“的问题。当行的主键值要求必须将这一行插入到某个已满的页中时，存储引擎会将改页分裂成两个页面来运行，页分裂会导致表占用更多的磁盘空间</li>
+<li>聚簇索引可能导致全表扫描变慢，尤其是行比较稀疏，或者由于页分裂，导致的数据存储不连续的时候</li>
+<li>二级索引（非聚簇索引）可能比想象的要更大，因为在二级索引的叶子节点包含了引用行的主键列。</li>
+<li><p>二级索引访问需要两次索引查找，而不是一次</p>
+<p>因为二级索引中保存的不是指向行的物理位置的指针，而是行的主键值。意味着通过二级索引查找行，存储引擎需要到二级索引的叶子节点获得对应的主键，然后根据这个值，去聚簇索引中查找到对应的行。自适应hash索引能减少这样的重复操作。</p>
+<p>Innodb和myisam的数据分布对比：</p>
+<p>myisam按照数据插入的顺序存储在磁盘上，每一行有个行号，因为行是定长的，所以myisam可以从表的开头跳过所需的字节找到需要的行。</p>
+<p>myisam的图在这里</p>
+<p>要注意的是，在innodb中，聚簇索引“就是表”，所以不想myisam那样需要独立的行存储。</p>
+<p>聚簇索引的每一个叶子节点都包含了主键值，事务ID，用于事务和MVCC的回滚指针以及所有的剩余列。如果主键是一个列前缀索引，innodb也会包含完整的主键列和剩下的其他列。</p>
+<p>innodb的二级索引和聚簇索引很不相同。innodb的二级索引的叶子节点中，存的不是行指针，而是主键值，以此作为行的指针。这样的策略减少了当出现行移动或者数据页分裂时二级索引的维护工作。使用主键值当指针会让二级索引占用更多的空间，但是好处是，innodb在移动行的时候无需更新行指针</p>
+<p>聚簇索引，非聚簇索引，myisam保存数据和索引的区别，看这个图。</p>
+<p>从性能角度考虑，使用UUID作为聚簇索引会很糟糕，会使得聚簇索引的插入变得完全随机，最坏情况会导致数据没有任何聚集特性，而且插入不仅花费的时间更长，索引占用的空间也更大，页分裂和碎片化也更多。</p>
+</li>
+</ul>
+</li>
+<li><p>覆盖索引</p>
+<p> 如果一个索引包含（或者是覆盖）所有需要查询的字段的值，不需要再次回表查询，称之为覆盖索引。覆盖索引的好处有这些</p>
+<ul>
+<li>避免回表</li>
+<li>索引数目远小于数据行大小，因此如果只需要读取索引，就能够极大的减少数据访问量对于IO密集的应用友好，索引也容易全部放到内存里面，有利于myisam的索引压缩</li>
+<li>在单个页内，索引是按照顺序存储的，对于IO密集型的范围查询会比随机从磁盘读取每一行数据的IO少得多</li>
+<li>一些存储引擎如myisam在内存中之缓存索引，数据则依赖于操作系统来缓存，因此，访问数据需要一次系统调用。可能会导致严重的性能问题，尤其是系统调用占了数据访问中的最大开销的场景。</li>
+<li><p>由于InnoDB的聚簇索引，覆盖索引对InnoDB很有用。二级索引在叶子节点中保存了行的主键值，所以如果二级索引能覆盖查询，可以避免对主键索引的二次查询</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> film_id,store_id <span class="keyword">from</span> inventory;</span><br></pre></td></tr></table></figure>
+<p>当执行这条sql的时候，extra列显示为Using index，这表示，索引覆盖了查询。但是覆盖索引有很多坑可能会导致无法实现优化。MySQL查询优化器会在执行查询前判断是否有一个索引能进行覆盖。假设索引覆盖了where条件中的字段，但不是整个查询涉及的字段。如果条件为false，MySQL5.5也总是会回表获取数据行，尽管并不需要这一行而且最终会被过滤掉。如果需要解决这个问题的话，需要使用<strong>延迟关联</strong>。</p>
+</li>
+</ul>
+</li>
+<li><p>使用索引扫描来做排序</p>
+<p> MySQL有两种方式可以生成有序的结果：<strong>通过排序操作；或者按照搜因顺序扫描；</strong>。如果explain出来的type列的值为index，说明MySQL使用了索引扫描来做排序。</p>
+<p> 索引的扫描是很快的，从一条移动到下一条即可，但是，如果说索引没有覆盖扫描行的话，每一条索引记录都需要回表查询一次对应的行，基本都是随机IO，因此按索引顺序读取数据的速度通常要比顺序的全表扫描慢，尤其是IO密集型的工作负载时。</p>
+<p> 因此，应该尽可能，既满足排序，又满足查找行，这样最好。<strong>只有当索引的列顺序和order by子句的顺序完全一致，并且所有列的排序方向（正序或倒序）都一样时，MySQL才能使用索引对结果做排序。如果查询需要关联多张表，则只有当order by 子句引用的字段全部为第一个表时，才能使用索引做排序。order by 子句和查找型查询的限制是一样的：需要满足最左前缀的要求；否则；MySQL都需要执行排序操作，而无法利用索引排序。</strong></p>
+<p> 有一种情况下order by 子句可以不满足索引的最左前缀的要求，就是前导列为常量的时候。如果where子句或者join子句中对这些列制定了常量，就可以弥补索引的不足。</p>
+</li>
+</ol>
+<ol>
+<li><p>索引压缩</p>
+<p> 不太重要，myisam使用场景不多，不予考虑</p>
+</li>
+<li><p>冗余和重复索引</p>
+<p> 重复索引是指在相同的列上按照相同的顺序创建的相同类型的索引。应当避免，发现后应当立即删除</p>
+<p> 冗余索引大多数情况下都不需要，应当尽量扩展已有的索引而不是创建新索引。但是有时候，扩展已有的索引会导致其变的太多，从而影响其他使用该索引的查询的性能。同时，表中的索引越多插入的速度越慢。</p>
+</li>
+<li><p>未使用的索引</p>
+<p>赶紧删了，可以通过information_schema.index_statistics表，获取到每个索引的使用频率</p>
+</li>
+<li><p>索引和锁</p>
+<p>索引可以让查询锁定更少的行。如果查询从不访问那些不需要的行，那么就会锁定更少的行，从这方面来看对性能是有好处的。因为innodb虽然行锁效率高，内存使用少，当时锁定行的时候仍然会带来额外开销；其次，锁定超过需要的行会增加锁争用并减少并发性。</p>
+<p>InnoDB只有在访问行的时候才对其枷锁，而索引能减少Innodb访问的行数，从而减少锁的数量。但是只有当innodb在存储引擎层能够过滤掉所有不需要的行时才有效。如果索引无法过滤无效的行，那么在innodb检索到数据并返回给服务器层以后，MySQL服务器才能应用where子句。这时候已经无法避免锁定行了：innodb已经锁住了这些行，适当的时候才会释放。</p>
+<p>示例：</p>
+<p><strong>explain出现了using where，这表示MySQL服务器将存储引擎返回行以后再应用过滤条件</strong>。Innodb在二级索引上使用共享锁（读），但访问主键索引需要排他锁（写）。</p>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>MySQL</category>
+      </categories>
+      <tags>
+        <tag>MySQL</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>MySQL的Schema和数据类型优化</title>
     <url>/2020/12/16/Book%20Nodes/%E9%AB%98%E6%80%A7%E8%83%BDMySQL/2-Schema%E5%92%8C%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E4%BC%98%E5%8C%96/</url>
     <content><![CDATA[<p>| 1. 选择数据类型时候的基本原则</p><ol>
