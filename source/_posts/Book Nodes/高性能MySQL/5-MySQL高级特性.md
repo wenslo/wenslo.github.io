@@ -135,3 +135,55 @@ MySQL还支持键值、哈希和列表分区，这其中还有些支持子分区
 1.6 合并表
 
 不写了， 未来会被删除
+
+
+2. 视图
+
+```sql
+create view Oceania as select * from country where Continent = 'Oceania' with check option ;
+```
+
+实现视图最简单的方法就是将select语句的结果存放到临时表中。当需要访问视图的时候，直接访问这个临时表就可以了，看下面的查询
+
+```sql
+select * from Oceania where Name = 'Australia';
+```
+
+下面是使用临时表来模拟视图的方法，这里临时表的名字是为演示用的：
+
+```sql
+create temporary table TMP_Oceania_123 as select * from country where Continent = 'Oceania';
+
+select code,name from TMP_Oceania_123 where Name = 'Australia';
+```
+
+这样做会有明显的性能问题，优化器也很难优化在这个临时表上的查询。实现视图更好的方法是，重写含有视图的查询，将视图的定义SQL直接包含进查询的SQL中：
+
+```sql
+select code,name from country where Continent = 'Oceania' and Name = 'Australia';
+```
+
+MySQL可以使用这两种办法的任何一种来处理视图。这两种算法分别被称为**合并算法（Merge）和临时表算法（Temptable）**，如果可能，会尽可能的使用合并算法。MySQL甚至可以嵌套地定义视图，也就是在一个视图上再定义另一个视图。可以再explain extended 之后使用 show warnings来查看使用视图的查询重写后的结果。
+
+如果视图中包含group by 、 distinct、任何聚合函数、union、子查询等，只要无法在原表记录和视图记录中建立一一映射的场景中，MySQL都将使用临时表算法来实现视图。如果想确定MySQL到底是使用合并算法还是临时表算法，可以explain一条针对视图的简单查询：
+
+```sql
+explain select * from TMP_Oceania_123;
+```
+
+如果这里的select_type为DERIVED，说明该视图是采用临时表算法实现的。视图的实现算法是视图本身的属性，和作用在视图上的查询语句无关。例如：
+
+```sql
+create algorithm = temptable view v1 as select * from actor;
+explain select * from v1;
++--+-----------+----------+----------+----+-------------+----+-------+----+----+--------+-----+
+|id|select_type|table     |partitions|type|possible_keys|key |key_len|ref |rows|filtered|Extra|
++--+-----------+----------+----------+----+-------------+----+-------+----+----+--------+-----+
+|1 |PRIMARY    |<derived2>|NULL      |ALL |NULL         |NULL|NULL   |NULL|200 |100     |NULL |
+|2 |DERIVED    |actor     |NULL      |ALL |NULL         |NULL|NULL   |NULL|200 |100     |NULL |
++--+-----------+----------+----------+----+-------------+----+-------+----+----+--------+-----+
+```
+
+实现该视图的SQL本身并不需要临时表，但基于盖世兔无论执行什么样的查询，视图都会生成一个临时表。
+
+2.1 可更新视图
