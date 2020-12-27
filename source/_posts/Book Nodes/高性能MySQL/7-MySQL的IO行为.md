@@ -63,3 +63,7 @@ innodb怎样刷新日志缓冲。当innodb把日志缓冲刷新到磁盘日志�
 
 **高性能事务处理需要的最佳配置是吧innodb_flush_log_at_trx_commit设置为1且把日志文件放到一个有电池保护的写缓存的RAID卷中。这兼顾了速度和安全**。事实上，我们敢说任何希望能扛过高负荷工作负载的产品数据库服务器，都需要有这种类型的硬件。
 
+##### innodb怎样打开和刷新日志以及数据文件
+
+使用innodb_flush_method选项可以配置innodb如果跟文件系统相互作用。从名字来看，会以为只能影响innodb怎么写数据，实际上影响了innodb怎么读数据。windows和非windwos的操作系统对这个选项的值是互斥的：async_unbuffered、unbuffered和normal之鞥呢在windows下使用，而且windows下不能使用其他的值。在windows下默认值是unbuffered，其他操作系统都是fdatasync。
+
