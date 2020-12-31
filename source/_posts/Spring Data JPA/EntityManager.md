@@ -10,7 +10,7 @@ tags:
 - Spring Data JPA
 date: 2020-05-28 20:35:09
 
-
+description: EntityManager的一个问题
 ---
 
 

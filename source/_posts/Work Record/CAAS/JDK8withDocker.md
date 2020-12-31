@@ -9,7 +9,7 @@ tags:
 
 - 工作
 date: 2020-03-11
-
+description: docker部署jar包
 ---
 
 首先先docker search openjdk8，寻找到要使用的image。我使用的是adoptopenjdk/openjdk8这个。

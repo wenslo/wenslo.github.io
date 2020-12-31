@@ -10,7 +10,7 @@ tags:
 - 工作
 - 农科院
 date: 2019-11-01
-
+description:  Nexus打包碰到的问题
 ---
 
 打包如果打的是snapshot的包的话，包里只包含当前project下的文件，其他的依赖获取不到。

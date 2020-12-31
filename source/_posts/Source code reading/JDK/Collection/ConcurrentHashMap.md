@@ -11,6 +11,8 @@ tags:
 
 
 date: 2019-08-25
+description: ConcurrentHashMap，可以进行并发读，写操作互斥。HashMap是线程不安全的。
+
 ---
 
 > ConcurrentHashMap，可以进行并发读，写操作互斥。HashMap是线程不安全的。

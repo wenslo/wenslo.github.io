@@ -9,7 +9,7 @@ tags:
 
 - 工作
 date: 2020-05-08 19:07:03
-
+description: gson转换LocalDateTime时碰到的问题
 ---
 
 当使用gson转换为LocalDateTime的属性时，因为LocalDateTime相当于是个数组，而元数据为 yyyy-MM-dd HH:mm:ss的字符串，转换时会发生错误，需要进行如下的配置

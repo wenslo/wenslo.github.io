@@ -9,6 +9,7 @@ tags:
 
 - JDK源码
 date: 2019-07-18
+description: HashMap是无序的，那么说，Map接口有没有说有序的实现？有，两种，一种LinkedHashMap，一种就是TreeMap，先来看看LinkedHashMap。
 ---
 
 写在前面

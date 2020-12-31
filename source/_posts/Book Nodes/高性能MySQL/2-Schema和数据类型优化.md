@@ -9,6 +9,7 @@ tags:
 
 - MySQL
 date: 2020-12-16 17:30:57
+description: MySQL的Schema和数据类型优化
 ---
 
 | 1. 选择数据类型时候的基本原则

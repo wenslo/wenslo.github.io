@@ -10,7 +10,7 @@ tags:
 - docker
 
 date: 2020-06-02 15:32:18
-
+description: docker参数修改
 ---
 
 有时候需要修改docker的一些参数，如restart，或者command命令，但是不想重新构建容器，这时候可以这么做：

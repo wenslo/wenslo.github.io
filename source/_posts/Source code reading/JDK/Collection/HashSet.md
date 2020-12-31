@@ -10,6 +10,7 @@ tags:
 - JDK源码
 
 date: 2019-07-17
+description: hashset
 ---
 
 Set和List的区别就是，List是有序的，可重复的，而Set是无序的，不可重复的，但是为什呢，从来没有看过，这次来看下源码，看源码中是怎么来实现的

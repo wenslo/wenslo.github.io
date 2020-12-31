@@ -9,6 +9,7 @@ tags:
 
 - MySQL
 date: 2020年12月20日18:29:59
+description: MySQL高级特性
 ---
 
 1. 分区表

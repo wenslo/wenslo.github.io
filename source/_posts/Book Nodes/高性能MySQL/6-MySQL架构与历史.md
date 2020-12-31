@@ -9,6 +9,7 @@ tags:
 
 - MySQL
 date: 2020-12-23 23:25:08
+description: MySQL架构与历史，基础
 ---
 
 **InnoDB**

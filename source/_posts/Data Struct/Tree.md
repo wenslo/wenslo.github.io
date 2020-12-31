@@ -11,6 +11,7 @@ tags:
 
 mathjax: true
 date: 2019-04-12
+description: 树
 ---
 
 **树的定义**：

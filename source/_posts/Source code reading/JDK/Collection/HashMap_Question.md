@@ -10,6 +10,7 @@ tags:
 - JDK源码
 mathjax: true
 date: 2019-06-30
+description: hashmap
 ---
 
 > HashMap相关问题放这里，带着问题看，自己的思路解答也会放这里

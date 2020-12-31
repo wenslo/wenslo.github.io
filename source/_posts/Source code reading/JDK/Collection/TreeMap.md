@@ -10,6 +10,7 @@ tags:
 - JDK源码
 
 date: 2019-08-19
+description: Map的另一种有序实现，上一种是LinkedHashMap
 ---
 
 > Map的另一种有序实现，上一种是LinkedHashMap

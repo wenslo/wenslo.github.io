@@ -9,7 +9,7 @@ tags:
 
 date: 2020-04-28 22:46:31
 
-
+description: 常见形容词
 
 ---
 
