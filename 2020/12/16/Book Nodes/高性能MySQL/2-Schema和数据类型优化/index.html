@@ -52,18 +52,18 @@
   };
 </script>
 
-  <meta name="description" content="| 1. 选择数据类型时候的基本原则 更小的通常更好，占用更少的磁盘，内存和CPU缓存，处理时需要的CPU时钟周期也少，但是不建议项目初期就弄，不然改起来也太费劲了，超级痛苦。 简单的更好，比如能使用整形就不适用字符，能用date就不用字符串，因为字符集和排序规则使得字符串相比整形复杂。 避免为null，滴滴的数据表，全都是not null的，因为有null的列更难优化，耗费的成本更高，索引，统计">
+  <meta name="description" content="MySQL的Schema和数据类型优化">
 <meta name="keywords" content="MySQL">
 <meta property="og:type" content="article">
 <meta property="og:title" content="MySQL的Schema和数据类型优化">
 <meta property="og:url" content="https://wenslo.github.io/2020/12/16/Book Nodes/高性能MySQL/2-Schema和数据类型优化/index.html">
 <meta property="og:site_name" content="温海林的博客">
-<meta property="og:description" content="| 1. 选择数据类型时候的基本原则 更小的通常更好，占用更少的磁盘，内存和CPU缓存，处理时需要的CPU时钟周期也少，但是不建议项目初期就弄，不然改起来也太费劲了，超级痛苦。 简单的更好，比如能使用整形就不适用字符，能用date就不用字符串，因为字符集和排序规则使得字符串相比整形复杂。 避免为null，滴滴的数据表，全都是not null的，因为有null的列更难优化，耗费的成本更高，索引，统计">
+<meta property="og:description" content="MySQL的Schema和数据类型优化">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-12-16T15:21:03.568Z">
+<meta property="og:updated_time" content="2020-12-31T13:03:04.753Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="MySQL的Schema和数据类型优化">
-<meta name="twitter:description" content="| 1. 选择数据类型时候的基本原则 更小的通常更好，占用更少的磁盘，内存和CPU缓存，处理时需要的CPU时钟周期也少，但是不建议项目初期就弄，不然改起来也太费劲了，超级痛苦。 简单的更好，比如能使用整形就不适用字符，能用date就不用字符串，因为字符集和排序规则使得字符串相比整形复杂。 避免为null，滴滴的数据表，全都是not null的，因为有null的列更难优化，耗费的成本更高，索引，统计">
+<meta name="twitter:description" content="MySQL的Schema和数据类型优化">
 
 <link rel="canonical" href="https://wenslo.github.io/2020/12/16/Book Nodes/高性能MySQL/2-Schema和数据类型优化/">
 
@@ -251,7 +251,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-12-16 23:21:03" itemprop="dateModified" datetime="2020-12-16T23:21:03+08:00">2020-12-16</time>
+                <time title="修改时间：2020-12-31 21:03:04" itemprop="dateModified" datetime="2020-12-31T21:03:04+08:00">2020-12-31</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -266,6 +266,7 @@
             </span>
 
           
+            <div class="post-description">MySQL的Schema和数据类型优化</div>
 
         </div>
       </header>
@@ -424,20 +425,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">98</span>
+          <span class="site-state-item-count">89</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">11</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-count">20</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -473,7 +474,7 @@
 <div class="copyright">
   
   &copy; 2019 – 
-  <span itemprop="copyrightYear">2020</span>
+  <span itemprop="copyrightYear">2021</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>

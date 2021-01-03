@@ -1,11 +1,1421 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>MySQL高级特性</title>
+    <url>/2020/12/31/Book%20Nodes/%E9%AB%98%E6%80%A7%E8%83%BDMySQL/5-MySQL%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7/</url>
+    <content><![CDATA[<ol>
+<li><p>分区表</p>
+<p> 对用户来说，分区表是一个独立的逻辑表，但是底层由多个物理子表组成。实现分区的代码实际上是对一组底层表的句柄对象的封装。对分区表的请求，都会通过句柄对象转化成对存储引擎的接口调用。所以分区对于SQL层爱说是一个完全封装底层实现的黑盒，对应用是透明的，但是从底层的文件系统来看就很容易发现，每一个分区表都有一个使用#分割命名的表空间。</p>
+<p> MySQL在创建表时使用PARTITION BY 子句定义每个分区存放的数据。在执行查询的时候，优化器会根据分区定义过滤那些没有我们需要数据的分区，这样查询就无需扫描所有分区——只需要查找包含需要数据的分区就可以了。</p>
+<p> 分区的一个主要目的是将数据按照一个较粗的粒度分在不同的表中。这样做科技将相关的数据存放在一起，另外，如果想一次批量删除整个分区的数据也会变得方面。下面的场景中，分区可以起到非常大的作用。</p>
+<ul>
+<li>表非常大以至于无法全部都放在内存中，或者只在表的最后部分有热点数据，其他均是历史数据。</li>
+<li>分区表的数据更容易维护。例如，想批量删除大量数据可以使用清除整个分区的方式。另外，还可以对一个独立分区进行优化、检查、修复等操作</li>
+<li>分区表的数据可以分布在不同的物理设备上，从而高效地利用多个硬件设备</li>
+<li>可以使用分区表来避免某些特殊的瓶颈，例如innodb的单个索引的互斥访问、ext3文件系统的inode锁竞争等。</li>
+<li><p>如果需要，还可以备份和恢复独立的分区，这在非常大的数据集下的场景下效果非常好</p>
+<p>分区的一些限制：</p>
+</li>
+<li><p>一个表最多只能有1024个分区</p>
+</li>
+<li>MySQL5.1中，分区表达式必须是证书买或者是返回整数的表达式。在MySQL5.5中，某些场景汇总可以直接使用列来进行分区。</li>
+<li>如果分区字段中有主键或唯一索引的列，那么所有主键列和唯一索引列都必须包含进来。</li>
+<li>分区表中无法使用外键约束</li>
+</ul>
+</li>
+</ol><a id="more"></a>
+<p>1.1 分区表的原理</p>
+<p>分区表由多个相关的底层表实现，这些底层表由句柄对（Handler object）表示，所以我们也可以直接访问各分区。存储引擎管理分区的各个底层表和管理普通表一样（有的底层表都必须使用相同的存储引擎），分区表的索引知在各个底层表上各自加上一个完全相同的索引。<br>分区表操作的逻辑如下：</p>
+<p><strong>select查询</strong><br>当查询一个分区表的时候，分区层先打开并锁住所有的底表，优化器先判断是否可以过滤部分分区，然后在调用对应存储引擎接口访问各个分区的数据。</p>
+<p><strong>insert操作</strong><br>当写入一条记录时，分区层先打开并锁住所有的底层表，然确定那个分区接收这条记录，再将记录写入对应底层表。</p>
+<p><strong>delete操作</strong><br>当写入一条记录时，分区层先打开并锁住所有的底层表，然确定数据对应的分区，最后对底层表进行删除操</p>
+<p><strong>update操作</strong><br>当写入一条记录时，分区层先打开并锁住所有的底层表MySQL先确定需要更新的记录在哪个分区，然后取出数据并新，再判断更新后的数据应该放在哪个分区，最后对底层表行写入操作，并对原数据所在的底层表进行删除操作。</p>
+<p>有些操作是支持过滤的。例如，当删除一条记录时，MySQL要先找到这条记录，如果where条件恰好和分区表达式匹配就可以将所有不包含这条记录的分区都过滤掉。针对udpat语句同样有效。如果是insert操作，则本身就是知名中一分区，其他分区都会被过滤掉。MySQL先确定这条记录属于个分区，然后再将记录写入对应的底层分区表，无需对任何他分区进行操作。</p>
+<p>如果存储引擎能够自己实现行级锁，则会在分区层释放对应表锁。</p>
+<p>1.2 分区表的类型</p>
+<p>支持多种分区表，最多的是根据范围进行分区，每个分区存储落在某个范围的记录，分区表达式可以是列，也可以使包含列的表达式，例如：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> sales(</span><br><span class="line">    <span class="keyword">id</span> <span class="built_in">int</span> primary <span class="keyword">key</span> <span class="keyword">not</span> <span class="literal">null</span> auto_increment,</span><br><span class="line">    order_date datetime <span class="keyword">not</span> <span class="literal">null</span></span><br><span class="line">) <span class="keyword">engine</span>=<span class="keyword">InnoDB</span> <span class="keyword">partition</span> <span class="keyword">by</span> <span class="keyword">RANGE</span> (<span class="keyword">year</span>(order_date))(</span><br><span class="line">    <span class="keyword">partition</span> p_2010 <span class="keyword">values</span> <span class="keyword">less</span> <span class="keyword">than</span> (<span class="number">2010</span>),</span><br><span class="line">    <span class="keyword">partition</span> p_2011 <span class="keyword">values</span> <span class="keyword">less</span> <span class="keyword">than</span> (<span class="number">2011</span>),</span><br><span class="line">    <span class="keyword">partition</span> p_2012 <span class="keyword">values</span> <span class="keyword">less</span> <span class="keyword">than</span> (<span class="number">2012</span>),</span><br><span class="line">    <span class="keyword">partition</span> P_catchall <span class="keyword">values</span> <span class="keyword">less</span> <span class="keyword">than</span> MAXVALUE </span><br><span class="line">    );</span><br></pre></td></tr></table></figure>
+<p>partition分区子句中可以使用各种函数。但是有一个要求，表达式返回的值要是一个确定的正数，而不能是一个常数。根据时间间隔进行分区，是一种很常见的分区方式。</p>
+<p>MySQL还支持键值、哈希和列表分区，这其中还有些支持子分区，不生产环境中很少见到。</p>
+<p>1.3 如何使用分区表</p>
+<p>假设我们希望从一个非常大的表中查询出一段时间的记录，而这个表中包含了很多年的历史数据，数据是按照时间排序的，例如，希望查询最近几个月的数据，这大约有10亿条记录，而原表中有10TB的数据，这个数据量远大于内存，并确实用的是传统硬盘。</p>
+<p>首先很肯定：<strong>因为数据量巨大，肯定不嗯给你在每次查询的时候都扫描全表</strong>。考虑到索引在空间和维护上的消耗，也不希望使用索引。即使真的使用索引，会发现数据并不是按照想要的方式聚集的，而且会有大量的碎片产生，最终会导致一个查询产生成千上万的随机IO，应用程序也随之僵死。情况好一点的时候，也许可以通过一两个索引结局一些问题。不过多数情况下，索引不会有任何作用。这时候只有两条路可选：**让所有的查询都只在数据表上做顺序扫描，或者将数据表和索引全部缓存在内存里。</p>
+<p><strong>在数据量超大的时候，b-tree索引就无法起作用了</strong>。除非是索引覆盖查询，否则数据库服务器需要根据索引扫描的结果回表，查询所有符合条件的记录，如果数据量巨大，者将产生大量随机IO，随之，数据库的响应时间将大刀不可接受的程度。另外，索引维护（磁盘空间，IO操作）的代价也非常高。</p>
+<p>分区可以当做索引的最初形态，以代价非常小的方式定位到需要的数据在哪一片区域，在这片区域中，可以做顺序扫描，可以做索引，还可以将数据全都缓存到内存，等等。因为分区无需额外的数据结构记录每个分区有哪些数据，分区不需要正确定位每套数据的位置，也就无需额外的数据结构，所以代价非常低，只需要一个简单的表达式就可以表达每个分区存放的是什么数据。</p>
+<p>为了保证大数据量的可扩展性，一般有下面两个策略：</p>
+<ul>
+<li><p>全量扫描数据，不要任何索引</p>
+<p>  可以使用简单的分区方式存放表，不要任何索引，根据分区的规则大致定位需要的数据位置。只要能使用where条件，将需要的数据限制在少数分区中，则效率是很高的。当然，也需要做一些简单的运算保证查询的响应时间能够满足需求。使用该策略假设不用将数据完全放入到内存中，同时还假设需要的数据全都在硬盘上，因为内存相对很小，数据很快会被挤出内存，索引缓存起不了任何作用。这个策略适用于已正常的方式访问大量数据的时候。警告：必须将查询需要扫描的分区个数限制在一个很小的数量。</p>
+</li>
+<li><p>索引数据，并分离热点</p>
+<p>  如果数据有明显的热点，而且除了这部分数据，其他数据很少被访问到，那么可以将这部分热点数据单独放在一个分区中，让这个分区的数据能够有机会都缓存在内存中。这样查询就可以只访问一个很小的分区表，能够使用索引，也能够有效地使用缓存。</p>
+</li>
+</ul>
+<p>1.4 什么情况下会出问题</p>
+<ul>
+<li><p>null值会使分区过滤无效</p>
+<p>  分区表达式不能为null，如果为null或者是一个非法值的时候，记录都会被存放到第一个分区，然后MySQL会同时检查两个分区。5.5以后可以直接基于列进行分区。</p>
+</li>
+<li><p>分区列和索引不匹配</p>
+<p>  如果定义的索引和分区列不匹配，会导致查询无法进行分区锅炉工。假设在列a上定义了索引，而在列b上进行分区。因为每个分区都有其独立的索引，所以扫描列上的索引就需要扫描每一个分区对应的宿营。如果每个分区内对应缩影的飞叶子节点都会在内存中，那么扫描的速度还可以接收，如果能跳过某些分区索引当然会更好。要避免这个问题，应该避免简历和分区列不匹配的索引，除非查询中还同时包含了可以过滤分区的条件。</p>
+<p>  听起来避免这个问题很简单，不过有时候也会遇到一些意想不到的问题。例如，在一个关联查询中，分区表在管理按顺序中是第二个表，并且关联使用的索引和分区条件不匹配。那么关联时对第一个IE表符合条件的每一行，都需要访问并搜索第二个表的所有分区。</p>
+</li>
+<li><p>选择分区的成本可能很高</p>
+<p>  不同类型分区的实现方式不同，性能也不同。尤其是范围分区，对于回答这一行属于哪个分区、这些符合查询条件的分区的行在哪些分区这样的问题的成本可能会非常高，因为服务器需要扫描所有的分区定义的列表来找到正确的答案。类似这样的线性搜索的效率不高，所以随着分区数的增长，成本会越来越高。</p>
+<p>  示例：按行写入大量数据的时候，每写入一行数据到范围分区的表时，都需要扫描分区定义列表来找到合适的目标分区。可以通过限制分区的数量来缓解此问题，大多数系统来说，100个左右的分区毫无问题。</p>
+</li>
+<li><p>打开并锁住所有底层表的成本可能很高</p>
+<p>  当查询访问分区表的时候，MySQL需要打开并锁柱所有的底层表，这是分区表的另一个开销。这个开销也在分区过滤之前发生，所以无法通过分区过滤降低此开销，并且该开销也和分区类型无关，会影响所有的查询。这一点对一些本身操作非常快的查询，比如根据主键查找单行，会带来明显的额外开销。可以用批量操作的方式来降低单个操作的此类开销，比如使用批量插入或者load data infile，一次删除多行数据等等，淡然爱过同时还是要限制分区的个数</p>
+</li>
+<li><p>维护分区的成本可能很高</p>
+<p>  某些分区维护操作的速度会非常快，例如新增或删除分区。而有些操作，例如重组分区或者类似alter语句的操作：这类操作需要复制数据。重组分区的原理与alter类似，县创建一个临时的分区，然后将数据复制到其中，随后在删除原分区。</p>
+</li>
+</ul>
+<p>分区不是”银弹”，下面是目前分区实现中的一些其他限制：</p>
+<ul>
+<li>所有分区都必须使用相同的存储引擎</li>
+<li>分区函数中可以使用的函数和表达式也有一些限制</li>
+<li>某些存储引擎不支持分区</li>
+<li>对于myisam的分区表，不能使用load index info cache操作</li>
+<li>对于myisam的表，使用分区表时需要打开更多的文件描述符。虽然看起来是一个表，但是背后有很多独立的分区，每一个分区对于存储引擎来说都是一个独立的表。这样即使分区表只占用一个表缓存条目，文件描述符还是需要多个。因此，即使已经配置了合适的表缓存，以确保不会超过操作系统的单个进程可以打开的文件描述符的个数，但对于分区表而言，还是会出现文件描述符限制的问题。</li>
+</ul>
+<p>1.5 查询优化</p>
+<p>对于分区表来说，很重要的一点就是要在where条件中带入分区列。这样可以让优化器能够过滤掉无需访问的分区。如果没有这些条件，MySQL就需要让对应存储引擎访问这个表的所有分区，如果表非常大的话，就肯能会非常慢</p>
+<p>1.6 合并表</p>
+<p>不写了， 未来会被删除</p>
+<ol>
+<li>视图</li>
+</ol>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">view</span> Oceania <span class="keyword">as</span> <span class="keyword">select</span> * <span class="keyword">from</span> country <span class="keyword">where</span> Continent = <span class="string">'Oceania'</span> <span class="keyword">with</span> <span class="keyword">check</span> <span class="keyword">option</span> ;</span><br></pre></td></tr></table></figure>
+<p>实现视图最简单的方法就是将select语句的结果存放到临时表中。当需要访问视图的时候，直接访问这个临时表就可以了，看下面的查询</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> Oceania <span class="keyword">where</span> <span class="keyword">Name</span> = <span class="string">'Australia'</span>;</span><br></pre></td></tr></table></figure>
+<p>下面是使用临时表来模拟视图的方法，这里临时表的名字是为演示用的：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">temporary</span> <span class="keyword">table</span> TMP_Oceania_123 <span class="keyword">as</span> <span class="keyword">select</span> * <span class="keyword">from</span> country <span class="keyword">where</span> Continent = <span class="string">'Oceania'</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> code,<span class="keyword">name</span> <span class="keyword">from</span> TMP_Oceania_123 <span class="keyword">where</span> <span class="keyword">Name</span> = <span class="string">'Australia'</span>;</span><br></pre></td></tr></table></figure>
+<p>这样做会有明显的性能问题，优化器也很难优化在这个临时表上的查询。实现视图更好的方法是，重写含有视图的查询，将视图的定义SQL直接包含进查询的SQL中：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> code,<span class="keyword">name</span> <span class="keyword">from</span> country <span class="keyword">where</span> Continent = <span class="string">'Oceania'</span> <span class="keyword">and</span> <span class="keyword">Name</span> = <span class="string">'Australia'</span>;</span><br></pre></td></tr></table></figure>
+<p>MySQL可以使用这两种办法的任何一种来处理视图。这两种算法分别被称为<strong>合并算法（Merge）和临时表算法（Temptable）</strong>，如果可能，会尽可能的使用合并算法。MySQL甚至可以嵌套地定义视图，也就是在一个视图上再定义另一个视图。可以再explain extended 之后使用 show warnings来查看使用视图的查询重写后的结果。</p>
+<p>如果视图中包含group by 、 distinct、任何聚合函数、union、子查询等，只要无法在原表记录和视图记录中建立一一映射的场景中，MySQL都将使用临时表算法来实现视图。如果想确定MySQL到底是使用合并算法还是临时表算法，可以explain一条针对视图的简单查询：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> * <span class="keyword">from</span> TMP_Oceania_123;</span><br></pre></td></tr></table></figure>
+<p>如果这里的select_type为DERIVED，说明该视图是采用临时表算法实现的。视图的实现算法是视图本身的属性，和作用在视图上的查询语句无关。例如：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">create</span> algorithm = temptable <span class="keyword">view</span> v1 <span class="keyword">as</span> <span class="keyword">select</span> * <span class="keyword">from</span> actor;</span><br><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> * <span class="keyword">from</span> v1;</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+----+-------------+----+-------+----+----+--------+-----+</span></span><br><span class="line">|id|select_type|table     |partitions|type|possible_keys|key |key_len|ref |rows|filtered|Extra|</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+----+-------------+----+-------+----+----+--------+-----+</span></span><br><span class="line">|1 |PRIMARY    |&lt;derived2&gt;|NULL      |ALL |NULL         |NULL|NULL   |NULL|200 |100     |NULL |</span><br><span class="line">|2 |DERIVED    |actor     |NULL      |ALL |NULL         |NULL|NULL   |NULL|200 |100     |NULL |</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+----+-------------+----+-------+----+----+--------+-----+</span></span><br></pre></td></tr></table></figure>
+<p>实现该视图的SQL本身并不需要临时表，但基于盖世兔无论执行什么样的查询，视图都会生成一个临时表。</p>
+<p>2.1 可更新视图</p>
+<p>可更新视图（updatable view）是指可以通过更新这个视图来更新视图涉及的相关表。只要制定了合适的条件，就可以更新、删除甚至向视图中写入数据。例如：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">update</span> oceanic <span class="keyword">set</span> population = population *<span class="number">1.1</span> <span class="keyword">where</span> <span class="keyword">name</span> =<span class="string">'Australia'</span></span><br></pre></td></tr></table></figure>
+<p>如果视图定义中包含了group by , union , 聚合函数，以及其他一些特殊情况，就不能被更新了。更新视图的查询也可以是一个关联语句，但是有一个限制，被更新的列必须来自同一个表中。另外，所有使用临时表算法实现的视图都无法被更新。</p>
+<p>2.2 视图对性能的影响，总的来说是不推荐使用</p>
+<p>2.3 视图的限制</p>
+<p>MySQL不支持物化视图，也不支持在视图中创建索引。也无法通过 show create view 查看视图创建的原始SQL语句</p>
+<ol>
+<li>外键约束</li>
+</ol>
+<p>innodb是MySQL中唯一支持外间的内置存储引擎。</p>
+<p>使用外键是有成本的。比如外键通常都要求每次在修改数据时都要在另外一张表中多执行一次查找操作。虽然innodb强制外键使用索引，但还是无法消除这种约束检查的开销。如果外键列的选择性很低，泽会导致一个非常大且选择性很低的索引。例如，在一个非常大的表上有status列，并希望限制这个状态列的取值，如果该列只能取三个值，虽然这个列本身很小，但是如果主键很大，那么这个索引就会很大，而且这个所引出了做这个外键限制，也没有其他任何的作用。</p>
+<p>不过，在某些场景下，外键会提升一些性能。如果想确保两个相关表始终有一致的数据，那么使用外键比在应用程序中检查一致性的性能要高得多，此外，外键在相关数据的删除和更欣赏，也比在应用中维护要更高效，不过，外键维护操作时逐行进行的，所以这样的更新会比批量删除和更新要慢一些。</p>
+<p>外键约束使得查询需要额外访问一些别的表，这也意味着需要额外的锁。如果向子表中写入一条记录，外键约束会让innodb检查对应的父表的记录，也就需要对父表对应记录进行枷锁操作，来确保这条记录不会在这个事务完成之时就被删除了。这会导致额外的锁等待，甚至会导致一些死锁。因为没有直接访问这些表，所以这类死锁问题往往难以排查。</p>
+<p>如果只是用外键做约束，那么通常在应用程序里实现约束会更好。外键会带来很大的额外消耗，这里没有相关的基准测试的数据，不过有很多案例，发现外键约束就是瓶颈所在，删除外键后性能立即大幅提升。</p>
+<ol>
+<li>在MySQL内部存储代码</li>
+</ol>
+<p>优点有：</p>
+<ul>
+<li>它在服务器内部执行，离数据最近，另外在服务器上执行还可以节省贷款和网络延迟。</li>
+<li>这是一种代码重用。可以方便地统一业务规则，保证某些行为总是一致，所以也可以为应用提供一定的安全性</li>
+<li>它可以简化代码的维护和版本更新</li>
+<li>他可以帮助提升安全，比如提供更细粒度的权限控制。一个常见的例子是银行用于转移资金的存储过程：这个存储过程可以在一个事务中完成资金转移和记录用于审计的日志。应用程序也可以通过存储过程的接口访问那些没有权限的表。</li>
+<li>服务器端可以缓存存储过程的执行计划，这对于需要反复调用的过程，会大大降低消耗。</li>
+<li>因为是在服务器端部署的，所以备份，维护都可以在服务器端完成。索引存储程序的维护工作会很简单。它没有什么外部依赖，例如，不依赖任何Perl包和其他不想在服务器上部署的外部软件</li>
+<li>他可以在应用开发和数据库开发人员之间更好的分工。不过最好是由数据库专家来开发存储过程，因为不是每个应用开发人员都能写出高效的SQL查询。</li>
+</ul>
+<p>缺点有：</p>
+<ul>
+<li>MySQL本身没有提供好用的开发和调试工具，所以写起来要难一些</li>
+<li>存储代码效率要稍微差一些，使用的函数有限，所以也很难编写复杂的字符串维护功能，也很难实现太复杂的逻辑</li>
+<li>存储代码可能会给应用程序代码的部署带来额外的复杂性。原本只需要部署应用代码和库表结构变更，现在还需要额外地部署MySQL内部的存储代码</li>
+<li>因为存储程序都部署在服务器内，所以可能有安全隐患。如果将非标准的加密功能放在存储程序中，那么若是数据库被攻破，数据也就泄露了。但是若将加密函数放在应用程序代码中，那么攻击者必须同时攻破程序和数据库才能获得数据</li>
+<li>存储过程会给数据库服务器增加额外的压力，而数据库服务器的扩展性相比应用服务器要差很多</li>
+<li>MySQL并没有什么选项可以控制存储程序的资源消耗，所以在存储过程中的一个小错误，可能直接把服务器拖死</li>
+<li>存储代码在MySQL中的实现也有很多限制，执行计划缓存是连接级别的，游标的物化和临时表相同，在MySQL5.5版本之前，异常处理也非常困难，等等。</li>
+<li>调试MySQL的存储过程是一件很困那的事情。</li>
+<li>它和基于语句的二进制日志复制合作的并不好。在基于语句的复制中，使用存储代码有很多的坑</li>
+</ul>
+<p>4.1 存储过程和函数</p>
+<p>存储过程在替代很多小查询的时候要快很多，因为查询很小，相对于查询执行的成本，解析和网络开销就变得非常明显。存储过程无需网络通信开销、解析开销和优化器开销等。</p>
+<p>4.2 触发器</p>
+<p>可以减少客户端和服务器之间的通信。需要注意一下几点</p>
+<ul>
+<li>对每一个表的每一个事件，最多只能定义一个触发器（也就是说，不能再after insert 上定义两个触发器）</li>
+<li>MySQL只支持基于行的触发，也就是受，触发器始终是针对一条记录的，而不是针对整个SQL语句的。如果变更的数据集非常大的话，效率会很低。</li>
+<li>触发器可以掩盖服务器背后的工作，一个简单的SQL语句背后，因为触发器，可能包含了很多看不见的工作。例如，触发器可能会更新另一个相关表，那么这个触发器会让这条SQL影响的记录数翻一倍</li>
+<li>触发器的问题也很难排查，如果某个性能问题和触发器相关，会很难分析和定位。</li>
+<li>触发器可能导致死锁和锁等待。如果触发器失败，那么原来的SQL语句也会失败。如果没有意识到这其中是触发器在搞鬼，那么很难理解服务器抛出的错误代码时什么意思</li>
+</ul>
+<p>如果只考虑性能，那么MySQL触发器的实现中，对服务器限制最大的就是它的基于行的触发设置。因为性能的原因，很多时候无法使用触发器来维护汇总和缓存表。使用触发器而不是批量更新的一个原因就是，使用触发器可以保证数据总是一致的。</p>
+<p>innodb的触发器是在同一个事务中完成的，所以它们的操作是原子的，原操作和触发器操作会同时失败或者成功。不过，如果再innodb表上建立触发器去检查数据的一致性，要特别小心MVCC，稍不小心，可能会获得错误的结果。假设，想实现外键约束，但是不打算使用innodb的外键约束，打算编写一个before insert触发器来检查写入的数据对应列在另一个表中是存在的，但是若你在触发器中没有使用select for update，那么并发的更新语句可能会立刻更新对应记录，导致数据不一致。</p>
+<ol>
+<li>游标</li>
+</ol>
+<p>MySQL在服务端能提供只读的、单向的游标，而且只能在存储过程或者更底层的客户端API中使用。因为MySQL游标中指向的对象都是存储在临时表中而不是实际查询到的数据，所以MySQL游标总是只读的。它可以逐行指向查询结果，然后让程序做进一步的处理。在一个存储过程中，可以有多个游标，也可以在循环中嵌套地使用游标。</p>
+<p>因为游标是使用临时表实现的，所以在效率上给开发人员一个错觉。需要记住的一点是，当打开一个游标的时候，需要执行整个查询。看下面的</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">procedure</span> bad_cursor()</span><br><span class="line"><span class="keyword">begin</span></span><br><span class="line">    <span class="keyword">declare</span> film_id <span class="built_in">int</span>;</span><br><span class="line">    <span class="keyword">declare</span> f <span class="keyword">cursor</span> <span class="keyword">for</span> <span class="keyword">select</span> film_id <span class="keyword">from</span> film;</span><br><span class="line">    open f;</span><br><span class="line">    fetch f into film_id;</span><br><span class="line">    close f;</span><br><span class="line"><span class="keyword">end</span>;</span><br></pre></td></tr></table></figure>
+<p>这个例子可以看到，不用处理完所有的数据就可以立刻返回游标。在MySQL中，会带来很多的不必要的额外操作。使用show status诊断这个存储过程，可以看到它需要做1000个索引页的读取，做1000个写入。这是因为在表film中有1000条记录，而这些读和写都发生在第五行的打开游标动作。</p>
+<p>如果在关闭游标的时候，只是扫描一个大结果集的一小部分，那么存储过程可能不仅没有减少开销，相反带来了大量的额外开销。这时，你需要考虑使用limit来限制返回的结果集。</p>
+<p>游标也会让MySQL执行一些额外的IO操作，而这些操作的效率可能非常低。因为临时内存表不支持blob和text类型，如果游标返回的结果包含这样的列的话，MySQL就必须创建临时磁盘表来存放，这样性能可能会很糟。即使没有这样的列，当临时表大于tmp_table_size的时候，MySQL还是会在磁盘上创建临时表。</p>
+<p>MySQL不支持客户端的游标，不过客户端API可以通过缓存全部查询结果的方式模拟客户端的游标.这和直接将结果放在一个内存数组中来维护并没有什么不同。</p>
+<ol>
+<li>字符集和校对</li>
+</ol>
+<p><strong>只有基于字符的值真正的有字腹肌的概念。</strong>对其他类型的值，字符集只是一个设置，指定用哪一种字符集来比较或者其他操作。基于字符的值能存在某列中、某查询的字段中、表达式的计算结果中或者某个用户变量中，等等。</p>
+<p>MySQL的设置可以分为两类：创建对象时的默认值、在服务器和客户端通信时的设置。</p>
+<p>MySQL服务器有默认的字符集和校对规则，每个数据库也有自己的默认值，每个表也有自己的默认值。这是一个逐层继承的默认设置，最终最靠底层的默认设置将影响你创建的对象，这些默认值，自上而下的告诉MySQL应该使用什么字符集来存储某个列。</p>
+<ul>
+<li>创建数据库的时候，将根据服务器上的character_set_server来指定该数据库的默认字符集</li>
+<li>创建表的时候，将根据数据库的字符集设置指定这个表的字符集设置</li>
+<li>创建列的时候，将根据标的设置指定列的字符集设置</li>
+</ul>
+<p>需要记住的是，真正存放数据的事列，所以更高阶梯的设置只是指定默认值。一个表的默认字符集设置无法影响存储在这个表中某个列的值。只有当创建列而美欧为列指定字符集的时候，如果没有指定字符集，表的默认字符集才有作用。</p>
+<p>当服务器和客户端通信的时候，它们可能使用不同的字符集。这时，服务器端将进行必要的翻译转换工作：</p>
+<ul>
+<li>服务器端总是假设客户端是按照character_set_client设置的字符来传输数据和SQL语句的.</li>
+<li>当服务器收到客户端的SQL语句时，它先将其转换成自负其character_set_connection。它还是用这个设置来决定如何将数据转换成字符串</li>
+<li>当服务器端返回数据或者错误信息给客户端时，它会将其转换成character_set_result。</li>
+</ul>
+<p><strong>MySQL如何比较两个字符串的大小</strong></p>
+<p>如果比较的两个字符串的字符集不同，MySQL会先将其转成同一个字符集再进行比较。如果两个字符集不兼容的话，则会抛出错误。这种情况下需要通过函数convert()显式地将其中一个字符串的字符集转成一个兼容的字符集。MySQL5.0经常会有这样的隐式转换。</p>
+<p>还可以使用前缀和collate子句来制定字符串的字符集或校对字符集。例如，下面的实例中使用了前缀来指定字符集，还使用了collate子句制定了使用二进制校对规则：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> _utf8 <span class="string">'hello world'</span> <span class="keyword">collate</span> utf8_bin;</span><br></pre></td></tr></table></figure>
+<p>一些特殊情况</p>
+<ul>
+<li><p>诡异的character_set_database设置</p>
+<p>  当使用load data infile的时候，数据库总是将文件中的字符按照字符集aharacter_set_database来解析。在MySQL5.0之后，可以再load file infile 中使用子句character set来设定字符集，不过最好不要依赖这个设定。我们发现使用字符集最好的方式是先试用use 指定数据库，在执行 set names 来设定字符集，最后再夹在数据。MySQL在夹在数据的时候，总是以同样的字符集处理所有数据，而不管表中的列是否有不同的字符集设定</p>
+</li>
+<li><p>select into outfile</p>
+<p>  MySQL会将select into outfile的结果不做任何转码写入文件。目前除了使用函数convert()将所有的列都做一次换吗外，还没有什么办法可以指定输出的字符集。</p>
+</li>
+<li><p>嵌入式转义序列</p>
+<p>  MySQL会根据character_set_client的设置来解析转义序列，即使是字符串中包含前缀或者collate子句也一样。这是因为解析器在处理字符串中的转义字符时，完全不关心校对规则，对于解析器来说，前缀并不是一个指定，他只是一个关键字而已。</p>
+</li>
+</ul>
+<p><strong>字符集和校对规则</strong></p>
+<p>可以使用命令show characterset 和 show collation 来查看MySQL支持的字符集和校对规则。</p>
+<p>对于校对规则通常需要考虑的一个问题是，是否已大小写敏感的方式比较字符串，或者是以字符串编码的二进制值来比较大小。它们对应的校对规则的前缀分别是_cs、_ci和_bin，根据需要很容易选择。大小写敏感和二进制校对规则的不同之处在于，二进制校对规则直接使用字符的字节进行比较，而大小写敏感的校对规则在多字节字符集时，比如德语，有更复杂的比较规则。</p>
+<p><strong>字符集和校对规则如何影响查询</strong></p>
+<p>不同的字符集和校对规则之间的转换可能会带来额外的系统开销。例如，film在列title上有索引，可以加速下面的order by 查询</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> title ,release_year <span class="keyword">from</span> sakila.film <span class="keyword">order</span> <span class="keyword">by</span> title;</span><br><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> title <span class="keyword">from</span> film <span class="keyword">order</span> <span class="keyword">by</span> title <span class="keyword">collate</span> utf8mb4_bin;</span><br></pre></td></tr></table></figure>
+<p>只有排序要求的字符集和服务器数据的字符集相同的时候，才能使用索引进行排序。索引根据数据列的校对规则进行排序，这里使用的是utf8_general_ci。如果希望使用别的校对规则进行排序，那么MySQL就需要使用文件排序。MySQL8测试发现，依然使用了索引</p>
+<p>为了能够适应各种字符集，包括客户端字符集、在查询中显式指定的字符集，MySQL会在需要的时候进行字符集转换。例如，当使用两个字符集不同的列来关联两个表的时候，MySQL会尝试转换其中一个列的字符集。这和在数据列外面风装一个函数一样，会让MySQL无法使用这个列上的索引。如果你不确定MySQL内部是否做了这种转换，可以再explain extended 后使用show warnings来查看MySQL是如何处理的。丛输出中可以看到查询中使用的字符集，也可以看到MySQL是否做了字符集转换操作。</p>
+<p>UTF-8是一种多字节编码,它存储一个字符会使用变长的字节数，在MySQL内部，通常使用一个定长的空间来存储字符串，再进行相关操作，这样做的目的是希望总是保证缓存中有足够的空间来存储字符串。例如，一个编码是utf8的char(10)需要30个字节，即使最终存储的时候没有存储任何多字节字符串也是一样。变长的字段类型存储在磁盘上时不会有这个困扰，但是当它存储在临时表中或者用来处理排序时，也总是会分配最大可能的长度。</p>
+<p>在多字节字符集众，一个字符不再是一个字节。所以，在MySQL中有两个函数length 和 char_length来计算字符串的长度，在多字节字符集众，这两个函数的返回结果会不同。如果是用的是多字节字符集，那么确保在统计字符集的时候使用char_length。</p>
+<p>还有个地方是索引方面：<strong>如果要索引一个UTF8字符集的列，MySQL会假定每一个字符都是三个字节，所以最长索引前缀的限制一下缩短到原来的三分之一了</strong></p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> big_string(</span><br><span class="line">    <span class="keyword">str</span> <span class="built_in">varchar</span>(<span class="number">500</span>),</span><br><span class="line">    <span class="keyword">key</span>(<span class="keyword">str</span>)</span><br><span class="line">)<span class="keyword">default</span> <span class="keyword">charset</span>=utf8;</span><br><span class="line"><span class="keyword">show</span> <span class="keyword">warnings</span> ;</span><br><span class="line"><span class="keyword">show</span> <span class="keyword">create</span> <span class="keyword">table</span> big_string;</span><br></pre></td></tr></table></figure>
+<p>得了，MySQL 8 中，没有复现，说明这些问题已经被修复</p>
+<ol>
+<li>分布式事务</li>
+</ol>
+<p>XA事务，需要有一个事务协调器来保证所有的事务参与者都完成了准备工作（第一阶段）。如果协调器收到所有的参与者都准备好的消息，就会告诉所有的事务可以提交了，这是第二阶段。MySQL在这个XA事务中扮演的是一个参与者的角色，而不是协调者。</p>
+<p>实际上，MySQL中有两种XA事务。一方面，MySQL可以参与到外部的分布式事务中；另一方面，还可以通过XA事务来协调存储引擎和二进制日志。</p>
+<p>TODO，从其他地方找资料进行补充吧。</p>
+<ol>
+<li>查询缓存</li>
+</ol>
+<p>MySQL查询缓存保存查询返回的完整结果。当查询命中该缓存，MySQL会立即返回结果，跳过了解析。优化和执行阶段。</p>
+<p>查询缓存系统会追踪查询中涉及的每个表，如果这些表发生变化，那么和这个表相关的所有的查询缓存都将失效。这种机制效率看起来比较低，因为数据表变化时很有可能对应的查询结果并没有变更，但是这种简单实现代价很小， 而这点对于一个非常繁忙的系统来说非常重要。</p>
+<p>查询缓存对应用程序是完全透明的。应用程序无需关心MySQL是通过查询缓存返回的结果还是实际执行返回的结果。事实上，这两种方式执行的结果是万全县通的。换句话说，查询缓存无需使用任何语法。无论是MySQL开启或者关闭查询缓存，对应用程序都是透明的。</p>
+<p><strong>MySQL如何判断缓存命中</strong></p>
+<p>MySQL判断缓存命中的方法很简单，缓存存放在一个引用表中，通过一个哈希值引用，这个哈希值包括了如下引入，即查询本身，当前要查询的数据库，客户端协议的版本等一些其他可能会影响返回结果的信息。</p>
+<p>当判断查询缓存是否命中时，MySQL不会解析、正规化或者参数化查询语句，而是直接使用Sql语句和客户端发送过来的其他原始因袭。任何兹附上的不同，空格，注释，任何的不同都会导致缓存的不命中。所以在编写SQL语句的时候，需要特别注意这一点。通常使用同一个编码规则是一个好的习惯，在这这个好习惯会让你的系统运行的更快。</p>
+<p>当查询语句中有一些不确定的数据时，则不会被缓存，例如包含函数NOW或者current_date的查询不会被虎啊黁从。类似的，一些语句会根据不同的用户返回不同的结果，所以也不会被缓存。事实上，如果查询中包含任何用户自定义函数、存储函数、用户变量、临时表、mysql中的系统表，或者包含列级别权限的表，都不会被缓存。</p>
+<p>查询缓存是在完整的select语句基础上的。很多时候可以提升查询性能，但是使用的时候，有一些问题需要特别注意。首先，打开查询缓存对度和谐操作都会带来额外的消耗：</p>
+<ul>
+<li>读查询在开始之前必须先检查是否命中缓存。</li>
+<li>如果这个读查询可以被缓存，那么当完成执行后，MySQL若发现查询缓存中没有个这个查询，会将其结果存储查询缓存，这会带来额外的系统消耗</li>
+<li>这对写操作也会有影响，因为当向某个表写入数据的时候，MySQL必须将对应表的所有缓存都设置失效。如果查询缓存非常大或者碎片很多，这个操作就可能会带来很大的系统消耗</li>
+</ul>
+<p>innodb使用了多版本特性事务，会限制查询缓存的使用</p>
+<p><strong>查询缓存如何使用内存</strong></p>
+<p>查询缓存是完全存储在内存中的没所以在配置和使用它之前，我们需要先了解它是如何使用内存的。除了查询结果之外，需要缓存的还有很多别的维护相关的数据。这和文件系统有些类似，徐亚一些内存专门用来确定哪些内存目前是可用的，哪些是已经用掉的，哪些用来存储数据表和查询结果之前的映射。哪些用来存储查询字符串和查询结果。</p>
+<p>这些基本的管理维护数据结构大概需要40KB的内存资源，除此之外，MySQL用于查询缓存的内存被分为一个个的数据块，数据块是变长的。每一个数据库奥众存储了自己的类型、大小和存储的数据本身，还外加直向前一个和后一个数据块的指针，数据块的类型有，内UN查询将诶过，存储查询和数据表的映射，存储查询文本，等等。不同的存储块，在内存使用上并没有什么不同，从用户角度看无需区分。</p>
+<p>当服务器启动的时候，它先初始化查询缓存需要的内存。这个内存池初始是一个完整的空闲块。这个空闲块的大小就是你所配置的查询缓存大小再减去用于维护元数据的数据结构所消耗的空间。</p>
+<p>当有查询结果需要缓存的时候，MySQL先从大的数据块中申请一个数据块用于存储结果。这个数据块需要大于参数query_cache_min_res_unit的配置，即使差U型你将诶过远远小于此，人需要至少申请query_cache_min_res_unit空间，因为需要在查询开始返回结果的时候就分配空间，而此时是无法阈值查询结果到底多大的，所以MySQL无法为每一个查询结果精确分配大小恰好匹配的缓存空间。</p>
+<p>因为需要先锁住空间块，然后找到合适大小数据块，所以相对来说，分配内存快是一个非常慢的操作。MySQL尽量避免这个操作的次数。当需要缓存一个差U型那结果的号死后，它先选择一个尽可能小的内存块，然后将结果存入其中。如果数据块全部用完，但仍有剩余数据需要存储，那么MySQL会申请一块新数据块，仍然是既可能笑得数据块，继续存储结果数据。当查询完成，如果申请的内存空间还有剩余，MySQL会将其释放，并存入空闲内存</p>
+]]></content>
+      <categories>
+        <category>MySQL</category>
+      </categories>
+      <tags>
+        <tag>MySQL</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>MySQL的复制</title>
+    <url>/2020/12/30/Book%20Nodes/%E9%AB%98%E6%80%A7%E8%83%BDMySQL/9-MySQL%E7%9A%84%E5%A4%8D%E5%88%B6/</url>
+    <content><![CDATA[<h4><span id="1-概述">1 概述</span></h4><hr><p>MySQL可以是一主一备，一主多备，双主，多主，等不同的组合方式。</p><p>支持两种复制方式：基于行的复制方式和基于语句的复制。这两种方式都是通过在主库上记录二进制日志、在备库重放日志的方式来实现异步的数据复制。这意味着，在同一时间点上，备库的数据可能与主库存在不一致，并且无法保证主备之间的延迟。一些大的语句可能导致备库产生几秒，几分钟甚至几小时的延迟。</p><a id="more"></a>
+
+
+<p>MySQL复制大部分是向后兼容的，新版本的服务器可以作为老版本的备库。但相反不行。</p>
+<p>复制通常不会增加主库的开销，主要是启用二进制日志带来的开销，但出于备份或及时从崩溃中恢复的目的，这点开销也是必要的。除此之外，每个备库也会对主库增加一些负载（网络IO等），尤其当备库请求从主库读取旧的二进制文件时，可能会造成更高的IO开销。另外锁竞争也可能阻碍事务的提交。最后，如果是从一个高吞吐量的主库上复制到多个备库，唤醒多个复制线程发送事件的开销将会累加。</p>
+<p>通过复制可以将读操作指向备库来获得更好的读扩展，但对于写操作，除非设计的当，否则并不适合通过复制来扩展写操作。在一主库多备库的架构中，写操作会被执行多次，这时候整个系统的性能取决于写入最慢的地方。</p>
+<p>当使用一主库多备库的架构时，可能会造成一些浪费，因为本质上它会复制大量不必要的重复数据，例如，对于1台主库和10台备库，会有11份的数据拷贝，并且这11台的缓存中存储了大部分相同的数据。这和在服务器上有11录RAID1类似。</p>
+<h5><span id="11-复制解决的问题">1.1 复制解决的问题</span></h5><hr>
+<ul>
+<li><p>数据分布</p>
+<p>  MySQL复制通常不会对带宽造成很大的压力，但是<strong>基于行的复制会比基于语句的复制的带宽压力更大</strong>。你可以随意地停止或开始复制，并在不同的地理位置来分布数据备份，例如不同的数据中心。即使在不稳定的网络环境下，远程复制也可以工作。但如果为了保持很低的延迟复制，最好有一个稳定的、低延迟链接。</p>
+</li>
+<li><p>负载均衡</p>
+<p>  通过MySQL复制可以将读操作分布到多个服务器上，实现对读密集型应用的优化，并且实现很方便，通过简单的代码修改就能实现基本的负载均衡。对于小规模的应用，可以简单地对机器名做硬编码或者使用dn轮训。也可使用更复杂的方法，例如网络负载均衡<br>  这一类的标准负载均衡解决方案，能够很好地将负载分配到不同的MySQL服务器上。linux虚拟服务器也能够很好地工作。</p>
+</li>
+<li><p>备份</p>
+<p>  对于备份来说，复制是一项很有意义的技术补充，但是复制既不是备份也不能够取代备份。</p>
+</li>
+<li><p>高可用性和故障切换</p>
+<p>  复制能够帮助应用程序避免MySQL单点失败，一个包含复制的设计良好的故障切换系统能够显著地缩短宕机时间</p>
+</li>
+<li><p>MySQL升级测试</p>
+<p>  使用更高版本的MySQL作为备库，保证在升级全部实例前，查询能够在备库按照预期执行。</p>
+</li>
+</ul>
+<h5><span id="12-复制如何工作">1.2 复制如何工作</span></h5><hr>
+<ul>
+<li>在主库上把数据更改记录到二进制日志（bin log）中</li>
+<li>备库将主库上的日志复制到自己的中继日志中(retry log)</li>
+<li>备库读取中继日志中的事件，将其冲放到备库数据之上。</li>
+</ul>
+<p>第一步是在主库上记录二进制日志。在每次准备提交事务完成数据更新前，主库将数据更新的事件记录到二进制日志中。MySQL会按事务提交的顺序而非每条语句的执行顺序来记录二进制日志。在记录二进制日志后，主库会告诉存储引擎可以提交事务了。</p>
+<p>下一步，备库将主库的二进制日志复制到其本地的中继日志中。首先，备库会启动一个工作线程，称为IO线程，IO线程跟主库建立一个普通的客户端连接，然后再朱哭丧启动一个特殊的二进制（binlog dump）线程，这个二进制转储线程会读取主库上二进制日志中的时间。它不会对事件进行轮训。如果该线程追赶上了主库，它将进入睡眠状态，直到主库发送信号通知其有新的事件产生时才会被环境，备库IO线程会将接收到的事件记录到中继日志中.</p>
+<p>备库的SQL线程执行最后一步，该线程从中继日志中读取事件并在备库执行，从而实现备库数据的更新。当SQL线程追赶上IO线程时，中继日志通常已经在系统缓存中，所以中继日志的开销很低。SQL线程执行的事件也可以通过配置选项来决定是否写入其自己的二进制日志中，它对后面的场景非常有用。</p>
+<p>这种复制架构实现了获取事件和重放事件的解耦，允许这两个过程异步进行。也就是说IO线程能够独立于SQL线程之外进行工作.但这种架构也限制了复制的过程，其中最重要的一点是在主库上并发运行的查询在备库只能串行化执行，因为只有一个SQL线程来重放中继日志中的事件。这是很多工作负载的性能瓶颈所在。虽然有一些解决方案，但大多数用户仍然受制于单线程。</p>
+<h4><span id="2-配置复制">2 配置复制</span></h4><hr>
+<ol>
+<li>在每台服务器上创建复制账号</li>
+<li>配置主库和备库</li>
+<li>通知备库连接到主库并从主库复制数据。</li>
+</ol>
+<h5><span id="21-创建复制账号">2.1 创建复制账号</span></h5><hr>
+<p>MySQL会赋予一些特殊的权限给复制线程。在备库运行的IO线程会建立一个到主库的TCP/IP链接，这意味着必须在主库创建一个用户，并赋予其合适的权限。备库IO线程以该用户名连接到主库并读取其二进制文件。通过以下语句创建用户账号：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">grant</span> <span class="keyword">replication</span> <span class="keyword">slave</span>,<span class="keyword">replication</span> <span class="keyword">client</span> <span class="keyword">on</span> *.* <span class="keyword">to</span> repl@<span class="string">'127.0.0.1'</span> <span class="keyword">identified</span> <span class="keyword">by</span> <span class="string">'p4ssword'</span>;</span><br><span class="line"><span class="comment"># 这个在新版本中不适用，只适合5.5之前的版本，新版本对这两条语句做了拆分</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#3解决办法:</span></span><br><span class="line"><span class="comment">#创建账户:create user ‘用户名’@’访问主机’ identified by ‘密码’;</span></span><br><span class="line"><span class="comment">#赋予权限:grant 权限列表 on 数据库 to ‘用户名’@’访问主机’ ;(修改权限时在后面加with grant option)</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">create</span> <span class="keyword">user</span> <span class="string">'slave'</span>@<span class="string">'%'</span> <span class="keyword">identified</span> <span class="keyword">by</span> <span class="string">'slave1234'</span>;</span><br><span class="line"><span class="keyword">grant</span> <span class="keyword">replication</span> <span class="keyword">slave</span> <span class="keyword">on</span> *.* <span class="keyword">to</span> <span class="string">'slave'</span>@<span class="string">'%'</span>;</span><br><span class="line"><span class="keyword">flush</span> <span class="keyword">privileges</span>;</span><br></pre></td></tr></table></figure>
+<h5><span id="22-配置主库和备库">2.2 配置主库和备库</span></h5><hr>
+<p>下一步需要在主库上开启一些设置，需要打开二进制文件并指定一个独一无二的服务器ID（server ID），在主库的my.conf文件中增加或修改如下内容：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">log_bin = mysql-bin</span><br><span class="line">server_id = 10</span><br></pre></td></tr></table></figure>
+<p>必须明确地指定一个唯一的服务器ID，默认服务器ID通常为1，因此一定要自定义一个，通常做法是选择服务器IP地址的后八位，但是要保证是唯一不变的。最好选择一些有意义的约定并遵守。</p>
+<p>如果之前没有在MySQL的配置文件中指定log-bin选项，就需要重新启动MySQL。为了确认二进制日志文件是否已经在主库上创建，使用show master status命令。检查输出，如下</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">+<span class="comment">-------------+--------+------------+----------------+-----------------+</span></span><br><span class="line">|File         |Position|Binlog_Do_DB|Binlog_Ignore_DB|Executed_Gtid_Set|</span><br><span class="line">+<span class="comment">-------------+--------+------------+----------------+-----------------+</span></span><br><span class="line">|binlog.000003|1364176 |            |                |                 |</span><br><span class="line">+<span class="comment">-------------+--------+------------+----------------+-----------------+</span></span><br></pre></td></tr></table></figure>
+<p>备库也需要在my.cnf中增加类似的配置，并且同样需要重启服务器。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">log_bin = mysql-bin</span><br><span class="line">server_id = 2</span><br><span class="line">relay=log = /var/lib/mysql/mysql-relay-bin</span><br><span class="line">log_slave_updates=1</span><br><span class="line">read_only = 1</span><br></pre></td></tr></table></figure>
+<p>这些选项并不总是必要的。只有server_id时必须的。log_bin默认情况下是根据机器名来命名的，但如果机器名变化了可能会导致问题，为了简便，主库和备库设置为相同的值。</p>
+<p>另外还有两个选项：relay_log（指定中继日志的位置和命名）和log_slave_updates（允许备库将其重放的日志也记录到自身的二进制日志中），后一个选项会给备库增加额外的工作，但正如后面将会看到的，我们有理由为每个备库设置该选项。</p>
+<p>有时候只开启了二进制日志，却没有开启log_slave_updates，可能会碰到一些奇怪的现象，例如，当配置错误时可能会导致备库数据被修改。如果可能的话，最好使用read_only配置选项，该选项会阻止任何没有特权权限的线程修改数据（所以最好不要给予用户超出需要的权限）。但read_only选项常常不是很实用，特别是对于那些需要在备库建表的应用。</p>
+<h5><span id="23-启动复制">2.3 启动复制</span></h5><hr>
+<p>下一步是告诉备库如何连接到主库并重放其二进制日志。这一步不要通过修改my.cnf来配置，而是使用change master to语句，该语句完全替代了my.cnf中的设置，并且允许以后指向别的主库时无需重启备库。</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">change</span> <span class="keyword">master</span> <span class="keyword">to</span> master_host = <span class="string">'server1'</span> ,master_user = <span class="string">'repl'</span>,master_password =<span class="string">'p4ssword'</span>,master_log_file =<span class="string">'mysql-bin.0000001'</span>,master_log_pos =<span class="number">0</span></span><br></pre></td></tr></table></figure>
+<p>master_log_pos参数被设置为0，因为要从日志的开头读起。当执行完这条语句后，可以通过show slave status语句来检查复制是否正确执行。</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">slave</span> <span class="keyword">status</span>;</span><br><span class="line"><span class="comment"># TODO</span></span><br></pre></td></tr></table></figure>
+<p>slave_io_state，slave_io_running和slave_sql_running这三列显示当前备库复制尚未运行。MySQL知道第一个事件从文件的第四位开始读。</p>
+<p>运行命令开始复制</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">start</span> <span class="keyword">slave</span>;</span><br></pre></td></tr></table></figure>
+<p>执行该命令没有显示错误，我们再用show slave status命令检查。</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">slave</span> <span class="keyword">status</span>;</span><br><span class="line"><span class="comment"># TODO</span></span><br></pre></td></tr></table></figure>
+<p>从输出可以看到IO线程和SQL线程都已经开始运行,seconds_behind_master的值也不再为null。IO线程正在等待从主库传递过来的事件，这意味着IO线程已经读取了主库所有的事件.日志位置发生了变化,表明已经从主库获取和执行了一些事件.如果实在主库上做一些数据更新，就会看到备库的文件或者日志文职都可能会增加。备库中的数据同样会随之更新。</p>
+<p>还可以从线程列表中看到复制线程。在主库上可以看到由备库IO线程向主库的连接。</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">processlist</span>;</span><br></pre></td></tr></table></figure>
+<p>同样，在备库也可以看到两个线程，一个是IO线程，一个是SQL线程。</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">processlist</span>;</span><br></pre></td></tr></table></figure>
+<p>这些线程总是运行在system user账号下，其他列的值则不相同。例如，当SQL线程回放事件时，info列可能显示正在执行的查询</p>
+<h5><span id="24-从另一个服务器开始复制">2.4 从另一个服务器开始复制</span></h5><hr>
+<p>大多数情况下有一个已经运行了一段时间的主库，然后用一台新安装的备库与之同步，此时这台备库还没有数据。</p>
+<p>有几种办法来初始化备库或者从其他服务器克隆数据到备库。包括从主库复制数据，从另外一台备库克隆数据，以及使用最近的一次备份来启动备库，需要有三个条件来让主库和备库保持同步。</p>
+<ul>
+<li>在某个时间点的主库的数据快照</li>
+<li>主库当前的二进制日志文件，和获得数据快照时在该二进制文件中的偏移量，我们把这两个值称为日志文件坐标（log file coordinates）。通过这两个值可以确定二进制日志的位置。可以通过show master status命令来获取这些值。</li>
+<li>从快找时间到现在的二进制日志</li>
+</ul>
+<p>下面是一些从被的服务器克隆备库的方法</p>
+<ul>
+<li><p>使用冷备份</p>
+<p>  最基本的方法是关闭主库，把数据复制到备库。重启主库后，会使用一个新的二进制日志文件，我们在备库通过执行change master to 指向这个文件的起始处。这个方法的缺点很明显，在复制数据时需要关闭主库</p>
+</li>
+<li><p>使用热备份</p>
+<p>  如果仅使用了myisam表，可以在主库运行时使用mysqlhotcopy或rsync来复制数据。</p>
+</li>
+<li><p>使用mysqldump</p>
+<p>  如果只包含innodb表，那么可以使用以下命令来转储主库数据并将其加载到备库，然后设置响应的二进制日志坐标</p>
+  <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">mysqldump --single-transcation --all-databases --master-data=1 --host=server1 | mysql --host=server2</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<pre><code>选项--single-transaction使得转储的数据为事务开始前的数据。如果使用的是非事务型表，可以使用--loack-all-tabels选项来获得所有表的一致性转储。
+</code></pre><ul>
+<li><p>使用快照或备份</p>
+<p>  只要知道对应的二进制日志坐标，就可以使用主库的快照或者备份来初始化备库（如果只使用备份，需要确保从备份的时间点开始的主库二进制文件都要存在）。只需要把备份或快照恢复到备库，然后使用change master to 指定二进制日志的坐标。</p>
+</li>
+<li><p>使用Percona Xtrabackup</p>
+</li>
+<li><p>使用另外的备库</p>
+<p>  可以使用任何一种提及的克隆或拷贝技术从任意一台备库上将数据克隆岛另外一台服务器，但是如果使用的是mysqldump，—master-data选项就不会起作用。</p>
+<p>  此外，不能使用show master status来获得主库的二进制日志坐标，而是在获取快照时使用show slave status来获取备库在主库上的执行位置。</p>
+<p>  使用另外的备库进行数据克隆最大的缺点是，如果这台备库的数据已经和主库不同步，克隆到的就是脏数据库。</p>
+</li>
+</ul>
+<h5><span id="25-推荐的复制配置">2.5 推荐的复制配置</span></h5><p>在主库上二进制日志最重要的选项就是sync_binlog： sync_binlog=1</p>
+<p>如果开启该选项，MySQL每次在提交事务前会将二进制日志同步到磁盘上，保证在服务器崩溃时不会丢失事件。如果禁止该选项，服务器会少做一些工作，但二进制日志文件可能在服务器崩溃时损坏或丢失信息。在一个不需要作为主库的备库上，该选项带来了不必要的开销。他只适合于二进制日志，而非中继日志。</p>
+<p>如果无法容忍服务器崩溃导致表损坏，推荐使用innodb。在表损坏无关紧要时，myisam是可以接受的，但在一次备库服务器崩溃重启后，myisam可能已经处于不一致状态。一种可能是语句没有完全应用到一个或多个表上，那么即使修复了表，数据也可能是不一致的。</p>
+<p>如果使用innodb，我们强烈推荐设置如下选项：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">innodb_flush_logs_at_trx_commit # Flush every log write</span><br><span class="line">innodb_support_xa=1 # MySQL 5.0 and newer only</span><br><span class="line">innodb_safe_binlog  #MySQL 4.1 only，roughly equivalent to innodb support_xa</span><br></pre></td></tr></table></figure>
+<p>这些事MySQL5.0及最新版本中的默认配置，我们推荐明确指定二进制日志的名字，以保证二进制日志名在所有服务器上是一致的，避免因为服务器名的变化导致的日志文件名变化。你可能认为以服务器名来命名二进制日志无关紧要，但经验表明，当在服务器间转移文件、克隆新的备库、转储备份或者其他一些你想不到的场景下，可能会导致很多问题。为了避免这些问题，需要给log_bin选项制定一个参数。可以随意地给一个绝对路径，但必须明确地指定基本的命名：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">log_bin=/var/lib/mysql/mysql-bin</span><br></pre></td></tr></table></figure>
+<p>在备库上，我们同样推荐开启如下配置选项，为中继日志指定绝对路径</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">relay_log = /path/to/logs/relay-bin</span><br><span class="line">skip_slave_start</span><br><span class="line">read_only</span><br></pre></td></tr></table></figure>
+<p>通过设置relay_log可以避免中继日志文件基于文件名来命名，防止之前剃刀哥可能在主库发生的问题。指定绝对路径可以避免多个MySQL版本中存在的bug，这些bug可能会导致中继日志在一个意料外的位置创建。skip_slave_start选项能够阻止备库在崩溃后自动启动复制。这可以给你一些机会来修复可能发生的问题。如果备库在崩溃后自动启动并且处于不一致的状态，就可能会导致更多的损坏，最后将不得不把所有数据丢弃，并重新开始配置备库</p>
+<p>read_only选项可以组织大部分用户更改非临时表，除了复制SQL线程和其他拥有超级权限的用户之外，这也是要尽量避免给正常账号授予超级权限的原因之一。</p>
+<p>即使开启了所有我们建议的选型，备库仍然可能在崩溃后被终端，因为master.info和中继日志文件都不是崩溃安全的。默认情况下甚至不会刷新到磁盘，直到MySQL5.5版本才有选项来控制这种行为。如果正在使用MySQL5.5并且不介意额外的fsync()导致的性能开销，最好设置以下选项。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">sync_master_info = 1</span><br><span class="line">sync_relay_log = 1</span><br><span class="line">sync_relay_log_info = 1</span><br></pre></td></tr></table></figure>
+<p>如果备库和主库的延迟很大，备库的IO线程可能会写很多中继日志文件，SQL线程在重放完一个中继日志中的时间后会尽快将其删除（通过relay_log_purge选项来控制）。 但如果延迟非常严重，IO线程可能会把整个磁盘撑满.解决办法是配置realy_log_space_limit变量。如果所有中继日志的大小之和超过这个值，IO线程会停止,等待SQL线程释放磁盘空间</p>
+<p>还有一个隐藏的问题。如果备库没有从主库获取所有的中继日志，这些日志可能在主库崩溃时丢失。早先这个选项存在一些bug，使用率也不高，所以用到这个选项遇到bug的风险会更高。除非磁盘空间真的非常紧张，否则最好让中继日志使用其需要的磁盘空间，这也是为什么我们没有将relay_log_space_limit列入推荐的配置选项的原因。</p>
+<h4><span id="3-复制的原理">3 复制的原理</span></h4><h5><span id="31-基于语句的复制">3.1 基于语句的复制</span></h5><hr>
+<p>在MySQL5.0之前的版本中只支持语句语句的复制（逻辑复制），这在数据库领域是很少见的。基于语句的复制模式下，主库会记录那么造成数据更改的查询，当备库读取并重放这些事件时，实际上只是把主库上执行过的SQL再执行一遍。这种方式既有好处，也有缺点。</p>
+<p>最明显的好处是实现相当简单。理论上讲，简单地记录和执行这些语句，能够让主备保持同步。另一个好处是二进制日志里的事件更加紧凑，所以相对而言，基于语句的模式不会使用太多带宽。一条更新好几兆数据的语句在二进制日志里可能只占几十个字节。另外mysqlbinlog工具是基于语句的日志的最佳工具。</p>
+<p>但事实上基于语句的方式可能并不如其看起来那么便利。因为主库上的数据更新除了执行的语句外，可能还依赖于其他元素。例如，同一条SQL在主库和备库上执行的时间可能不同，因此在传输的二进制日志中，除了查询语句，还包括了一些元数据信息，如当前的时间戳。即使如此，还存在着一些无法被正确复制的SQL。例如，使用current_user()函数的语句。存储过程和触发器在使用基于语句的复制模式时也可能存在问题。</p>
+<p>另一个问题是更新必须是串行的。这需要更多的锁，有时候要特别关注这一点。另外不是所有的存储引擎都支持这种复制模式。尽管这些存储引擎是包括在MySQL5.5及之前版本中发行的。</p>
+<h5><span id="32-基于行的复制">3.2 基于行的复制</span></h5><hr>
+<p>5.1开始支持基于行的复制，最大的好处是可以正确地复制每一行。一些语句可以被更加有效的复制。</p>
+<p>由于无需重放更新主库数据的查询，使用基于行的复制模式能够高效地复制数据。重放一些查询的代价可能会很高。例如，下面有一个查询将数据从一个大表汇总到小表：<br><figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> summary_table(col1,col2,col3) <span class="keyword">select</span> col1,col2,<span class="keyword">sum</span>(col3) <span class="keyword">from</span> enormous_table <span class="keyword">group</span> <span class="keyword">by</span> col1,col2;</span><br></pre></td></tr></table></figure></p>
+<p>如果表enormous_table的列col1和col2有三种组合，这个查询可能在源表上扫描多次，但最终只在目标表上产生三行数据。但使用基于行的命令方式，在备库上开销会小很多。这种情况下，基于行的复制模式更加高效。</p>
+<p>但在另一方面，下面这条语句使用基于语句的复制方式代价会小很多。</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">update</span> enormous_table <span class="keyword">set</span> col1 = <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+<p>由于这条语句做了全表更新，使用基于行的复制开销会很大，因为每一行的数据都会被记录到二进制日志中，这使得二进制日志事件非常庞大。并且会给主库上记录日志和复制增加额外的负载，更慢的日志记录会降低并发度。</p>
+<p>没有哪种模式是完美的，MySQL能够在这两种复制模式减动态切换。默认情况下使用的是基于语句的复制方式，但如果发现语句无法被正确地复制，就切换到基于行的复制模式。还可以根据需要来设置会话级别的变量 binlog_format，控制二进制日志格式。</p>
+<p>对于基于行的复制模式，很难进行时间点恢复，但并非不可能</p>
+<h5><span id="33-基于行或基于语句哪种更优">3.3 基于行或基于语句：哪种更优</span></h5><hr>
+<p>理论上基于行的复制模式整体上更优，并且在实际应用中也适用于大多数场景。</p>
+<ul>
+<li><p>基于语句的复制模式的有点</p>
+<p>  当贮备的模式不同时，逻辑复制能够在多种情况下工作。例如，在主备上的表的定义不同但数据类型相兼容、列的顺序不同等情况。这样就很容易现在备库上修改scheam，然后将其提升为主库，减少停机时间。基于语句的复制方式一般允许更灵活的操作。</p>
+<p>  基于语句的方式执行复制的郭恒基本上就是执行SQL语句.这意味着所有在服务器上发生的变更都以一种容易理解的方式运行.这样当出现问题时可以很好的去定位.</p>
+</li>
+<li><p>基于语句的复制模式的缺点</p>
+<p>  很多情况下通过基于语句的模式无法复制正确，几乎每一个安装的备库都会至少碰到一次。事实上对于存储过程，触发器以及其他的一些语句的复制在5.0和5.1的一系列版本中存在大量的BUG。这些语句的复制的方式已经被修改了很多次，以使其更好地工作。简单的说，如果正在使用触发器或者存储过程，就不要使用基于语句的复制模式，除非能够清楚的确定不会碰到复制问题。</p>
+</li>
+<li><p>基于行的复制模式的优点</p>
+<p>  几乎没有基于行的复制模式无法处理的场景。对于所有的SQL构造、触发器、存储过程等都能正确执行。只是当你试图做一些诸如在备库修改表的schema这样的事情时才可能导致复制失败。</p>
+<p>  这种方式同样可能减少锁的使用，因为它并不要求这种强串行化是可重复的。</p>
+<p>  基于行的复制模式会记录数据变更，因此在二进制日志中记录的都是实际上在主库上发生了变化的数据。你不需要查看一条语句去猜测它到底修改了哪些数据。在某种程度上，该模式能够更加清楚滴知道服务器上发生了哪些更改，并且有一个更好的数据变更记录。另外在一些情况下基于行的二进制日志还会记录发生改变之前的数据，因此这可能有利于某些数据恢复。</p>
+<p>  在很多情况下，由于无须像基于语句的复制那样需要为查询建立执行计划并执行查询，因此基于行的复制占用更少的CPU。</p>
+<p>  最后在某些情况下，基于行的复制能够帮助更快地找到并解决数据不一致的情况。举个栗子，如果是使用基于语句的复制模式，在备库更新一个不存在的记录时不会失败，但在基于行的复制模式下则会报错并停止复制。</p>
+</li>
+<li><p>基于行的复制模式的缺点</p>
+<p>  由于语句并没有在日志里记录，因此无法判断执行了哪些SQL，除了需要知道行的变化外，正在很多情况下也很重要（未来会被修复）。使用一种完全不同的方式在备库进行数据变更，而不是执行SQL，事实上，执行基于行的变化的过程就像一个黑盒子，你无法知道服务器正在做什么。并且没有很好的文档和解释。因此当出现问题时，可能很难找到问题所在。例如，若备库使用一个效率低下的方式去寻找行记录并更新，你无法观察到这一点。</p>
+<p>  如果有多层的复制服务器，并且所有的都被配置成基于行的复制模式，当会话级别的变量@@binlog_format被设置为statement时，所执行的语句在原服务器上被记录为基于语句的模式，但第一层的备库可能将其记录成行模式，并传递给其它层的备库。也就是说你期待的基于语句的日志在复制拓扑中将会被切换到基于行的模式。基于行的日志无法处理注入在被备库修改表的schema这样的情况，而基于语句的日志可以。</p>
+<p>  在某些情况下，例如找不到要修改的行时，基于行的复制可能会导致复制停止，而基于语句的复制则不会。这也可以认为是基于行的复制的一个有点。该行为可以通过slave_exec_mode来进行配置。</p>
+</li>
+</ul>
+<h5><span id="34-复制文件">3.4 复制文件</span></h5><hr>
+<p>复制会使用到的一些文件，除了二进制日志文件和中继日志文件外，还有其他很多文件。</p>
+<ul>
+<li><p>mysql-bin.index</p>
+<p>  当在服务器是哪个开启二进制日志时，同时会生成一个和二进制日志同名的但是以index为后缀的文件，该文件用于记录磁盘上的二进制日志文件。这里的index并不是指表的索引，而是说这个文件的每一行包含了二进制文件的文件名。</p>
+<p>  你可能认为这个文件时多余的，可以被删除（毕竟MySQL可以在磁盘上找到它所需要的文件）。事实上并非如此，MySQL依赖于这个文件，除非在这个文件里有记录，否则MySQL识别不了二进制日志文件。</p>
+</li>
+<li><p>mysql-relay-bin-index</p>
+<p>  中继日志的索引文件，和mysql-bin.index作用类型</p>
+</li>
+<li><p>master.info</p>
+<p>  这个文件用于保存备库连接到主库所需要的信息，格式为纯文本。此文件不能删除，否则备库在重启后无法连接到主库。这个文件以文本的方式记录了复制用户的密码，所以要注意权限控制。</p>
+</li>
+<li><p>relay-log.info</p>
+<p>  这个文件包含了当前备库复制的二进制日志和中继日志坐标（例如，备库复制在主库上的位置），同样也不要删除这个文件，否则在备库重启后将无法获知从哪个位置开始复制，可能会导致重放已经执行过的语句。</p>
+</li>
+</ul>
+<p>以.index作为后缀的文件也与expire_logs_days存在交互，该参数定义了MySQL清理过期日志的方式，如果文件mysql-bin.index在磁盘上不存在，某些版本中自动清理就不会起作用。</p>
+<p>最好能显式的执行一些日志清理策略，比如设置expire_logs_days参数或者其他方式，否则MySQL的二进制日志可能会将磁盘撑满。当做这些事情时，还需要考虑到备份策略。</p>
+<h5><span id="35-发送复制事件到其他备库">3.5 发送复制事件到其他备库</span></h5><hr>
+<p>log_slave_updates 选项可以让备库变成其他服务器的主库。在设置该选项后，MySQL会将其执行过的时间记录到它自己的二进制日志中。这样它的备库就可以从其日志中检索并执行事件。</p>
+<p>在这种场景下，主库将数据更新事件写入二进制日志，第一个备库提取并执行这个时间。这时候一个事件的生命周期应该已经结束了，但由于设置了log_slave_updates，备库会将这个事件写到她自己的二进制日志中。这样第二个备库就可以将时间提取到它的中继日志中并执行。这意味着作为源服务器的主库可以将数据变化传递给没有与其直接相连的备库上。默认情况下这个选项是被打开的，这样在连接到备库时就不需要重启服务器。</p>
+<p>当第一个备库从主库获得的事件写入到其二进制日中中时，这个日志在备库二进制日中中的位置与其在主库二进制日志中的位置几乎肯定是不相同的，可能在不同的日志文件或文件内不同的位置。这意味着你不能嘉定所有拥有同一逻辑复制点的服务器拥有相同的日志坐标。</p>
+<p>除非你已经注意到要给每个服务器分配一个唯一的服务器ID,否则按照这种方式配置备库会导致一些奇怪的错误,甚至还会导致复制停止.一个常见的问题是:为什么要制定服务器ID,难道MySQL在不知道复制命令来源的情况下不能执行么?为什么MySQL要在意服务器ID是全局唯一的。问题的答案自安于MySQL在复制过程中如何防止无限循环。当复制SQL线程读中继日志时，会丢弃事件中记录的服务器ID和该服务器本身ID相同的事件，从而打破了复制过程中的无限循环。在某些复制拓扑结构下打破无限循环非常重要，例如 主-主复制结构。</p>
+<h5><span id="36-复制过滤器">3.6 复制过滤器</span></h5><hr>
+<p>复制过滤选项允许你金复制服务器上一部分数据，不过这可能没有想象中那么好用。有两种过滤方式：<strong>在主库上过滤日志到二进制日志中的时间；以及在备库上过滤记录到中继日志的时间</strong>。</p>
+<p>使用选项**binlog_do_db和binlog_ignore_db来控制过滤，不需要开启他们，否则还得解释，数据为啥不一致啊。</p>
+<h4><span id="4-复制拓扑">4. 复制拓扑</span></h4><hr>
+<p>可以在任意个主库和备库之间建立复制，只有一个限制：<strong>每一个备库只能有一个主库</strong>。基本原则如下：</p>
+<ul>
+<li>一个MySQL备库实例只能有一个主库</li>
+<li>每个备库必须有一个唯一的服务器ID</li>
+<li>一个主库可以有多个备库</li>
+<li>如果打开了log_slave_updates选项，一个备库可以把其主库上的数据变化传播到其他备库。</li>
+</ul>
+<h5><span id="41-一主库多备库">4.1 一主库多备库</span></h5><p>备库之间根本没有交互，仅仅是连接到同一个主库上。</p>
+<p>在有少量写和大量读的时候，这种配置是非常有用的。可以把读分摊到多个备库上，知道备库给主库造成了太大的负担，或者主备之间的带宽成为瓶颈为止。</p>
+<p>下面是它的一些用途：</p>
+<ul>
+<li>为不同的角色使用不同的备库</li>
+<li>把一台备库当做待用的主库，除了复制没有其他数据传输。</li>
+<li>将一台备库放到远程数据中心，用作灾难恢复。</li>
+<li>延迟一个或多个备库，以备灾难恢复</li>
+<li>使用其中一个备库，作为备份，培训，开发或者测试使用服务器</li>
+</ul>
+<p>这种结构流行的原因是它避免了很多其他拓扑结构的复杂性：例如：<strong>可以方便地比较不同备库重放的事件在主库二进制日志中的位置。换句话说，如果在同一个逻辑点停止所有备库的复制，他们读取的是主库上同一个日志文件的相同物理位置。这是个很好的特性，可以减轻管理员许多工作，例如把备库提升为主库</strong>。</p>
+<p>这种特性只存在于兄弟备库之间。在没有直接的主备或者兄弟关系的服务器上去比较日志文件的位置要复杂得多。</p>
+<h5><span id="42-主动-主动模式下的-主-主复制">4.2 主动 - 主动模式下的 主 - 主复制</span></h5><hr>
+<p>主-主复制（双主复制）包含两套服务器，互为主备。是一对主库。</p>
+<p>这种配置最大的问题是如何解决冲突，两个可写的互主服务器导致的问题非常多。通常发生在两台服务器同时修改一行记录，或者同时在两台服务器上向一个包含auto_increment列的表里插入数据。</p>
+<p>MySQL不支持多主库复制</p>
+<p>允许向两个服务器上写入所带来的麻烦远大于其带来的好处。但是 主动 - 被动模式则会非常有用</p>
+<h5><span id="43-主动-被动模式下的-主-主-复制">4.3 主动 - 被动模式下的 主  主 复制</span></h5><hr>
+<p>主要区别在于，其中的一台服务器是只读的被动服务器。</p>
+<p>这种方式使得反复切换主动和被动服务器非常方便，因为服务器的配置是对称的。这使得故障转译和故障恢复很容易。它也可以让你在不关闭服务器的情况下执行维护、优化表、升级操作系统等其他任务。</p>
+<p>例如，<strong>执行alter table操作可能会锁住整个表</strong>，阻塞对表的读和写，这可能会花费很长时间并导致服务中断。然后在主-主配置下，可以先停止主动服务器上的备库复制线程，然后在被动服务器上执行alter操作，交换角色，最后再闲钱的主动服务器上启动复制线程。这个服务器将会读取中继日志并执行相同的alter语句。这可能花费很长时间，但不要紧，因为该服务器没有为任何活跃查询提供服务。</p>
+<p>对称的设置：</p>
+<ol>
+<li>确保两台服务器上有相同的数据</li>
+<li>启用二进制日志，选择唯一的服务器ID，并创建复制账号</li>
+<li>启用备库更新的日志记录，后面将会看到，这是故障转移和故障恢复的关键。</li>
+<li>把被动服务器配置成只读，防治可能与主动服务器上的更新产生冲突，这一点是可选的</li>
+<li>启动每个服务器的MySQL实例</li>
+<li>将么个主库设置为对方的备库，使用新创建的二进制日志开始通过</li>
+</ol>
+<p>主动服务器上更新时会发生什么事情：更新没记录到二进制日志中，通过复制传递给被动服务器的中继日志中。被动服务器执行查询并将其记录到自己的二进制日志中（因为开启了log_slave_updates选项）。由于事件的服务器ID与主动服务器的相同,因此主动服务器将忽略这些时间.</p>
+<p>设置主动-被动的主-主拓扑结构在某种意义上类似于创建一个热备份,但是可以使用这个备份来提高性能,例如,用它来执行读操作、备份、离线维护以及升级等。真正的热备份做不了这些事情，但是，并不会获得比单台服务器更好的写性能。</p>
+<h5><span id="44-拥有备库的主-主结构">4.4 拥有备库的主-主结构</span></h5><hr>
+<p>优点是增加了荣誉，对于不同地理位置的复制拓扑，能够消除站点单点失效的问题。</p>
+<h5><span id="45-环形复制">4.5 环形复制</span></h5><hr>
+<p>环形结构没有双主结构的一些优点，例如对称的配置和简单的故障转移，并且完全依赖与环上的每一个可用节点，大大增加了系统失效的几率，如果移除一个节点，这个节点发起的事件就会陷入无限循环。环形结构非常脆弱，尽量避免。</p>
+<h5><span id="46-主库-分发主库以及备库">4.6 主库、分发主库以及备库</span></h5><hr>
+<p>当备库足够多时，会对主库造成很大的负载。每个备库会在主库上创建一个线程，并执行binlog dump命令。该命令会读取二进制文件中的数据，并将其发送给备库。每个备库都会重复这样的工作，它们不会共享binlog dump的资源。</p>
+<p>如果有很多备库，并且有大的事件时，例如一次很大的load data file操作，主库上的负载会显著上升，甚至可能由于备库同时请求同样的事件而耗尽内存并崩溃。另一方面，如果备库请求的数据不再文件系统的缓存中，可能会导致大量的磁盘年间所，这同样会影响主库的性能并增加锁的竞争。</p>
+<p>因此，如果需要多个备库，一个好的办法是从主库移除负载并使用分发主库。分发主库事实上也是一个备库，它的唯一目的就是提取和提供主库的二进制日志。多个备库连接到分发主库，这使得原来的主库摆脱了负担。为了避免在分发主库上做十几的查询，可以将它的表格修改为blackhole存储引擎。如图</p>
+<p>很难说备库数据达到多少时需要一个分发主库。按照通用规则，如果主库接近满负载，不应该为其建立10个以上的备库。如果有少量的写操作，或者只复制其中一部分表，主库皆可以提供更多的复制。另外，也不一定只使用一个分发主库。如需要的话，可以使用多个分发主库向大量的备库进行复制，或者使用金字塔的分发主库，在某些情况下，可以通过设置sleve_compressed_protocol来节约一些主库带宽。这对跨数据中心复制很有好处。</p>
+<p>还可以通过分发主库实现其他目的，例如，对二进制日志进行过滤和重写规则。这比在每个备库上重复进行日志记录，重写和查询高效的多。</p>
+<p>使用分发主库的另一个缺点是无法使用一个备库来代替主库，因为由于分发主库的存在，导致各个备库与原始主库的二进制日志坐标已经不相同。</p>
+<h5><span id="47-树或金字塔形">4.7 树或金字塔形</span></h5><hr>
+<p>这种设计的好处是减轻了主库的负担。缺点是中间层出现的任何错误都会影响到多个服务器。如果每个备库和主库直接相连就不会存在这样的问题。同样，中间层次越多，处理故障会更困难、更复杂。</p>
+<h5><span id="48-定制的复制方案">4.8 定制的复制方案</span></h5><hr>
+<ul>
+<li>选择性复制</li>
+</ul>
+<p>为了利用访问局部性原理（locality of reference），并将需要读的工作驻留在内存中，可以复制少量数据到备库中。如果每个备库只拥有主库的一部分数据，并且将读分配给备库，就可以更好地利用备库的内存。并且每个备库也只有主库一部分的写入负载，这样主库的能力更强并能保证备库延迟。</p>
+<p>这个类似于水平数据划分，但它的优势在于主库包含了所有的数据集，这意味着无需为了一条写入查询去访问多个服务器。如果读操作无法在备库上找到数据，还可以通过主库来查询。即使不能从备库上读取所有数据，也可以移除大量的主库读负担。</p>
+<p>最简单的方法是在主库上将数据划分道不同的数据库里。然后将每个数据库复制到不同的备库上。例如，若需要将公司的每一个部分的数据复制到不同的备库，可以创建名为sales、marketing、procurement等的数据库，每个备库通过选项replicate_wild_do_table选项来限制给定数据库的数据。下面是sales数据库的配置：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">replicate_wild_do_tabe = sales.%</span><br></pre></td></tr></table></figure>
+<p>也可以通过一台分发主库进行分发。举个栗子，如果想通过一个很慢或者非常昂贵的网络，从一台负载很高的数据库上复制一部分数据，就可以使用一个包含blackhole表和过滤规则的本地分发主库，分发主库可以通过复制过滤移除不需要的日志。这可以避免在主库上进行不安全的日志选项设定，并且无需传输所有的数据到远程备库。</p>
+<ul>
+<li>分离功能<br>许多应用都混合了在线事务处理（OLTP）和在线数据分析（OLAP）的查询。OLTP查询比较短，并且是事务型的，OLAP查询通常很大，也很慢，并且不要求绝对最新的数据。这两种查询给服务器带来的负担完全不同，因此它们需要不同的配置，甚至可能使用不同的存储引擎或者硬件。</li>
+</ul>
+<p>一个常见的办法是将OLTP服务器的数据复制到专门为OLAP工作负载准备的备库上。这些备库可以有不同的硬件、配置、索引或者不同的存储引擎。如果决定在备库上执行OLAP查询，就可能要忍受更大的复制延迟或降低备库的服务质量。这意味着在一个非专用的备库上执行一些任务时，可能会导致不可接受的性能。例如执行一条长时间运行的查询。</p>
+<ul>
+<li>数据归档</li>
+</ul>
+<p>可以在备库上实现数据归档，也就是说可以再备库上保留主库上删除过的数据，在主库上通过delete语句删除数据是确保delete语句不传递到备库就可以实现的。有两种通常的办法：一种是在主库上选择性地禁止二进制日志，另一种是在备库上使用replicate_ignore_db规则（都很危险）</p>
+<p>第一种方法需要先将SQL_LOG_BIN设置为0,然后再进行数据清理。这种方法的好处是不需要再备库进行任何配置，由于SQL语句根本没有记录到二进制日志中，效率会稍微有所提升。最大缺点也正因为没有将主库的修改记录下载，因此无法使用二进制日志来进行审计或者做按时间点的数据恢复。另外还需要super权限。</p>
+<p>第二种方法是在清理数据之前对主库上特定的数据库使用use语句。例如，可以创建一个名为purge的数据库，然后再备库的my.cnf文件里设置replicate_ignore_db=purge并重启服务器。备库将会忽略使用了USE语句指定的数据库。这种方法没有第一种方法的缺点，但有一个另外的缺点：备库需要去读取它不需要的时间。另外，也可能有人在purge数据库上执行非清理查询，从而导致备库无法重放改时间。</p>
+<ul>
+<li>将备库用作全文检索</li>
+</ul>
+<p>许多应用要求合并事务和全文检索。一个普遍的做法是配置一台备库，将某些表设置为myisam存储引擎，然后创建全文索引并执行全文检索查询。这避免了在主库上同时使用事务型和非事务型存储引擎所带来的复制问题，减轻了主库维护全文索引的负担。</p>
+<ul>
+<li>只读备库</li>
+</ul>
+<p>许多机构将备库设置为只读，以防止在备库进行的无意识修改导致复制通断。可以通过设置read_only选项实现。它会禁止大部分写操作，除了复制线程和拥有超级权限的用户以及临时表操作。只要不给也不应该给普通用户超级权限，这英爱是很完美的方法。</p>
+<ul>
+<li>模拟多主库复制</li>
+</ul>
+<p>当前MySQL不支持多主库复制（一个备库拥有多个主库）。但是可以通过把一台备库轮流指向多台主库的方式来模拟这种结构。</p>
+<p>需要做一些额外的工作来为每个主库跟踪二进制日志坐标。可能还需要保证备库的IO线程在每一次循环读取超过需要的数据，否则可能因为每次循环反复地提取和抛弃大量数据导致主库的网络请求和开销明显增大。</p>
+<ul>
+<li>创建日志服务器</li>
+</ul>
+<p>创建没有数据的日志服务器。它唯一的作用就是更加容易重放并且/或者过滤二进制日志事件。对崩溃后重启复制很有帮助，同时对基于时间点的恢复也很有帮助。</p>
+<p>假设有一组二进制日志或者中继日志，可能从备份或者一台崩溃的服务器上获取，希望能够重放这些日志中的事件，可以停通过mysqlbinlog工具从其中提取出事件，但更加方便和高效的方法是配置一个没有任何数据的MySQL实例并使其认为这些二进制日志是它拥有的。如果只是临时需要。因为无需执行二进制日志，日志服务器也就不需要任何数据。它的目的仅仅是将数据提供给别的服务器。</p>
+<p>假设日志被命名为somelog-bin.000001,somelog-bin000002等，将这些日志放到日志服务器的日志文件夹中，假设为/var/log/mysql。然后在启动服务器前编辑my.cnf文件，如下图所示：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">log_bin = /var/log/mysql/somelog-bin</span><br><span class="line">log_bin_index = /var/log/mysql/somelog-bin.index</span><br></pre></td></tr></table></figure>
+<p>服务器不会自动发现日志，因此还需要更新日志的索引文件。下面这个命令可以在类unix系统上完成</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">ls -l /var/log/mysql/somelog-bin.[0-9]* &gt; /var/log/mysql/somelog-bin.index</span><br></pre></td></tr></table></figure>
+<p>确保运行MySQL的账户能够读写日志索引文件。现在可以启动日志服务器并通过show master logs命令来确保其找到日志文件。</p>
+<p>为什么使用日志服务器比用mysqlbinlog来实现恢复更好呢？有以下几个原因：</p>
+<ul>
+<li>复制作为应用二进制日志的方法已经被大量的用户所测试，能够证明是可行的。mysqlbinlog并不能确保像复制那样工作，并且可能无法正确生成二进制日志中的数据更新。</li>
+<li>复制的速度很快，因为无需将语句从日志导出来并传递给MySQL</li>
+<li>可以很容易观察到复制过程</li>
+<li>能够更方便处理错误。例如，可以跳过执行失败的语句。</li>
+<li>更方便过滤复制事件</li>
+<li>有时候mysqlbinlog会因为日志记录格式更改而无法读取二进制日志。</li>
+</ul>
+<h4><span id="5-复制和容量规划">5. 复制和容量规划</span></h4><hr>
+<p>写操作通常是复制的瓶颈，并且很难使用复制来扩展写操作。例如，假设工作负载为20%的写以及80%的读。为了简单计算，假设有以下前提：</p>
+<ul>
+<li>读和写包含同样的工作量</li>
+<li>所有的服务器是等同的，每秒能进行1000次查询。</li>
+<li>备库和主库有同样的性能特征。</li>
+<li>可以把所有的读操作转移到备库。</li>
+</ul>
+<p>如果当前有一个服务器能支持每秒1000次查询，那么应该增加多少备库才能处理当前两倍的负载，并将所有的读查询分配给备库？</p>
+<p>看上去应该增加两个备库并将1600次读操作平分给它们。但是不要忘记，写入负载同样增加到了400次每秒，并且无法在主备服务器之间进行分摊。每个备库每秒必须处理400次写入，这意味着每个备库写入占了40%，只能每秒为600次查询提供服务。因此，需要三台而不是两台备库来处理双倍负载。</p>
+<p>如果负载再增加一倍呢？将有每秒800次写入，这时候主库还能处理，但备库的写入同样提升到80%，这样就需要16台备库来处理每秒3200次读查询。并且如果再增加一点负载，主库也会无法承担。</p>
+<p>这远远不是线性扩展，查询数量增加4倍，却需要17倍的服务器。这说明当为单台主库增加备库时，将很快达到投入远高于回报的地址。这仅仅是基于上面的假设，还忽略了一些事情，例如，单线程的基于语句的复制常常导致备库容量小于主库。</p>
+<h5><span id="51-为什么复制无法扩展写操作">5.1 为什么复制无法扩展写操作</span></h5><hr>
+<p>糟糕的服务容量比例的根本原因是不能像分发读操作那样把写操作等同地分发到更多服务器上。换句话说，复制只能扩展读操作，无法扩展写操作。</p>
+<p>有没有办法使用复制来增加写入能力？答案是否定的，根本不行。对数据进行分区是唯一可以扩展写入的方法。</p>
+<p>可能会想到使用主-主拓扑结构，并为两个服务器执行写操作。这种配置比主备结构能支持稍微多一点的写入，因为可以在两台服务器之间共享串行化带来的开销。如果每台服务器上执行50%的写入，那复制的执行量也只有50%需要串行化。理论上讲，这比在一台机器上对100%的写入并发执行，而在另外一台机器上对100%的写入做串行化要更优。</p>
+<p>但是这种策略不能扩展写入的原因。它只能在两台服务器之间共享串行化写入的缺点。所以，链中最弱的一环并不是那么弱，它只提供了比主动-被动复制稍微好点的性能，但是增加了很大的风险，通常不能带来任何好处。</p>
+<h5><span id="52-备库什么时候开始延迟">5.2 备库什么时候开始延迟</span></h5><hr>
+<p>首先应该观察复制延迟的尖刺。如果有复制延迟的曲线图，需要注意到图上的一些短暂的延迟骤升，这时候可能负载加大，备库短时间内无法跟上主库。当负载接近耗尽备库的容量时，会发现曲线上的突起会更高更宽。前面曲线的上升角度不变，但随后当备库在产生延迟后开始追赶主库时，将会产生一个平缓的斜坡。这些突起的出现和增长是一个警告信息，意味着已经接近容量限制。</p>
+<p>为了预测在某个是简单会发生什么，可以认为制造延迟，然后看多久，备库能够赶上主库。目的是为了明确说明曲线上的斜坡的陡度。如果将备库停止一个小时，然后开启并在一个小时内追赶上，说明正常情况下只消耗了一半的容量。也就是说，如果中午12.00停止备库复制，在1.00开启，并且在2.00追赶上，备库在一小时内完成了两个小时内的所偶变更，说明复制可以再双倍速度下运行。</p>
+<h5><span id="53-规划冗余容量">5.3 规划冗余容量</span></h5><hr>
+<p>在构建一个大型应用时，有意让服务器不被充分使用，这是一种聪明而且划算的方式，尤其是在使用复制的时候。有多余容量的服务器可以更好的处理负载尖锋，也有更多的能力处理慢速查询和维护工作（如optimize table），并且能够更好的跟上复制。</p>
+<p>试图同时向主-主拓扑结构的两个节点来写入或减少复制问题通常是不划算的。分配给每台机器的读负载应该低于50%，否则，如果某台服务器失效，就没有足够的容量了。如果两台服务器都能够独立处理负载，就用不着担心复制的问题了。</p>
+<p>构建冗余容量也是实现高可用性的最佳方式之一，当然还有别的方式，例如，当错误发生时让应用在降级模式下运行。</p>
+<h4><span id="6-复制管理和维护">6 复制管理和维护</span></h4><hr>
+<p>复制增加了MySQL监控的复杂性。尽管复制发生在主库和备库上，但大多数工作是在备库上完成的，这也正是最常出问题的地方。是否所有的备库都在工作？最慢的备库延迟是多大？MySQL本身提供了大量可以回答上述问题的信息，但要实现自动化监控过程以及使复制更健壮，还是需要用户做更多的的工作。</p>
+<p>在主库上，可以使用show master status命令来查看当前主库的二进制日志位置和配置，还可以查看主库当前有哪些二进制日志是在磁盘上的。</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">master</span> <span class="keyword">logs</span>;</span><br><span class="line">+<span class="comment">-------------+---------+---------+</span></span><br><span class="line">|Log_name     |File_size|Encrypted|</span><br><span class="line">+<span class="comment">-------------+---------+---------+</span></span><br><span class="line">|binlog.000001|668      |No       |</span><br><span class="line">|binlog.000002|179      |No       |</span><br><span class="line">|binlog.000003|1364199  |No       |</span><br><span class="line">|binlog.000004|156      |No       |</span><br><span class="line">+<span class="comment">-------------+---------+---------+</span></span><br></pre></td></tr></table></figure>
+<p>该命令用于给purge master logs命令决定使用哪个参数，另外还可以通过show binlog events来查看复制时间。例如，在运行前一个命令后，我们在另一个不曾使用过的服务器上创建一个表，因为知道这是唯一改变数据的语句，并且也知道语句在二进制日志中的偏移量是156，所以可以看大如下内容：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">binlog</span> <span class="keyword">events</span> <span class="keyword">in</span> <span class="string">'binlog.000003'</span> <span class="keyword">from</span> <span class="number">156</span></span><br><span class="line"></span><br><span class="line">+<span class="comment">-------------+---+--------------+---------+-----------+------------------------------------+</span></span><br><span class="line">|Log_name     |Pos|Event_type    |Server_id|End_log_pos|Info                                |</span><br><span class="line">+<span class="comment">-------------+---+--------------+---------+-----------+------------------------------------+</span></span><br><span class="line">|<span class="keyword">binlog</span><span class="number">.000003</span>|<span class="number">156</span>|Anonymous_Gtid|<span class="number">1</span>        |<span class="number">233</span>        |<span class="keyword">SET</span> @@SESSION.GTID_NEXT= <span class="string">'ANONYMOUS'</span>|</span><br><span class="line">|<span class="keyword">binlog</span><span class="number">.000003</span>|<span class="number">233</span>|<span class="keyword">Query</span>         |<span class="number">1</span>        |<span class="number">342</span>        |<span class="keyword">DROP</span> <span class="keyword">SCHEMA</span> <span class="keyword">IF</span> <span class="keyword">EXISTS</span> sakila        |</span><br><span class="line">|<span class="keyword">binlog</span><span class="number">.000003</span>|<span class="number">342</span>|Anonymous_Gtid|<span class="number">1</span>        |<span class="number">419</span>        |<span class="keyword">SET</span> @@SESSION.GTID_NEXT= <span class="string">'ANONYMOUS'</span>|</span><br><span class="line">|<span class="keyword">binlog</span><span class="number">.000003</span>|<span class="number">419</span>|<span class="keyword">Query</span>         |<span class="number">1</span>        |<span class="number">531</span>        |<span class="keyword">CREATE</span> <span class="keyword">SCHEMA</span> sakila <span class="comment">/* xid=94 */</span>   |</span><br><span class="line">+<span class="comment">-------------+---+--------------+---------+-----------+------------------------------------+</span></span><br></pre></td></tr></table></figure>
+<h5><span id="62-测量备库延迟">6.2 测量备库延迟</span></h5><hr>
+<p>一个比较普遍的问题是如何监控备库落后主库的延迟有多大。虽然show slave status输出的seconds_behind_master列理论上显示了备库的延时，但由于各种各样的原因，并不总是准确的。</p>
+<ul>
+<li>备库seconds_bebind_master值是通过将服务器当前的时间戳与二进制日志中的时间戳相对比得到的，所以只有在执行事件时才能报告延迟。</li>
+<li>如果备库复制线程没有运行，就会报延迟为null</li>
+<li>一些错误（例如主备的max_allowed_packet不匹配，或者网络不稳定）可能中断复制并且/或者停止复制线程，但second_behind_master将显示为0而不是显示错误。</li>
+<li>即使备库线程正在运行，备库有时候可能无法计算延时。如果发生这种情况，备库会报0或者null。</li>
+<li>一个大事务可能会导致延迟拨动，例如，有一个事务更新数据长达一个小时，最后提交，这条更新将比他实际发生时间晚一个小时才记录到二进制日志中。当备库执行这条语句时，会临时地报告备库延迟为一个小时，然后又很快标称0。</li>
+<li>如果分发主库落后了，并且其本身也有已经追赶上它的备库，备库的延迟将显示为0，而事实上和源主库之间是有延迟的。</li>
+</ul>
+<p>解决这些问题的办法是，忽略seconds_behind_master的值，并使用一些可以直接观察和衡量的方式来监控备库延迟。最好的解决办法是使用heartbeat record，这是一个在主库上会每秒更新一次的时间戳。为了计算延时，可以直接用备库当前的时间戳减去心跳记录的值。这个方法能够解决刚刚我们提到的所有问题，另外一个额外的好处是我们还可以通过时间戳知道备库当前的复制情况。</p>
+<p>心跳还有其他好处，记录在二进制日志中的心跳记录拥有许多用途，例如在一些很难解决的场景下可以用于灾难恢复。</p>
+<h5><span id="63-确定主备是否一致">6.3 确定主备是否一致</span></h5><hr>
+<p>理想情况下，备库和主库的数据应该是完全一样的。但事实上备库可能发生错误并导致数据不一致。即使没有明显的错误，备库同样可能因为MySQL自身的特性导致数据不一致，例如MySQL的BUG，网络中断、服务器崩溃，非正常关闭或者其他一些错误。</p>
+<p>按照经验来看，主备一致应该是一种规范，而不是例外，也就是说，检查你的主备一致性应该是一个日常工作，特别是当使用备库来做备份时尤为重要，因为你肯定不希望从一个已经损坏的备库里获得备份数据。</p>
+<p>MySQL并没有内建的方法来比较一台服务器与别的服务器的数据是否相同。它提供了一些组件来为表和数据生成校验值，例如checknum table。但当复制正在进行时，这种方法是不可行的。</p>
+<p>pt-table-checksum是唯一能够有效比较主备一致性的工具。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">pt-table-checknum --replicate=test.checksum &lt;master_host&gt;</span><br></pre></td></tr></table></figure>
+<h5><span id="64-从主库重新同步备库">6.4 从主库重新同步备库</span></h5><hr>
+<p>传统的修复不一致的办法是关闭备库，然后从主库复制一份数据。当备库数据不一致的问题可能导致严重后果时，一旦发现就应该将备库停止并从生产环境移除，然后在从一个备份中克隆或者恢复备库。</p>
+<p>这种方法的缺点是不太方便，特别是数据量很大时。如果能够找出并修复不一致的数据，要比从其他服务器上重新克隆数据有效的多。如果发现的不一致并不严重，就可以保持备库在线，并重新同步受影响的数据。</p>
+<p>最简单的办法是使用mysqldump转储受影响的数据并重新导入。在整个过程中，如果数据没有发生变化，这种方法会很好。你可以在主库上简单地锁住表然后进行转储，再等待备库赶上主库，然后将数据导入到备库中。（需要等待备库赶上主库，这样就不至于为其他表引入新的不一致，例如那么可能通过和失去同步的表做join后进行数据更新的表）</p>
+<p>虽然这种方法在许多场景下是可行的，但在一个繁忙的服务器上有可能行不通。另外一个缺点是在备库上通过非复制的方式改变数据。通过复制改变备库数据（通过在主库上执行更新）通常是一种安全的技术，因为它避免了竞争条件和其他意料外的事情。如果表很大或者网络带宽受限，转储和重载数据的代价依然很高。当在一个有一百万行的表上只有一千行不同的数据呢？转储和重载表是非常浪费的。</p>
+<p>pt-table-sync可以解决该问题。</p>
+<h5><span id="65-改变主库">6.5 改变主库</span></h5><hr>
+<p>主需要在备库简单的使用change master to 命令，并制定合适的值。大多数值都是可选的。只需要制定需要的改变的项即可。备库将抛弃之前的配置和中继日志并从新的主库开始复制。同样新的参数会被更新到master.info文件中，这样就算重启，备库配置信息也不会丢失。</p>
+<p>整个过程中最难得是获取新主库上合适的二进制日志位置，这样备库才可以从老主库相同的逻辑位置开始复制。</p>
+<p>把备库提升为主库要更苦难一点。有两种场景需要将备库替换为主库，一种是计划内的提升，一种是计划外的提升。</p>
+<ul>
+<li><p>计划内的提升</p>
+<ul>
+<li>停止向老的主库写入</li>
+<li>让备库追赶上主库</li>
+<li>将一台备库配置为新的主库</li>
+<li>将备库和写操作指向新的主库，然后开启主库的写入</li>
+</ul>
+</li>
+</ul>
+<p>更深入一点，下面是大多数配置需要的步骤</p>
+<ol>
+<li>停止当前主库上的所有写操作。如果可以，最好能将所有的客户端程序关闭（除了复制链接）。为客户端程序建立一个do not run这样的类似标记可能会有所帮助。如果正在使用虚拟IP地址,也可以简单的关闭虚拟IP,然后断开所有的客户端链接以关闭其打开的事务.</li>
+<li>通过flush tables with read lock在主库上停止所有活跃的写入，这一步是可选的。也可以在主库上设置read_only选项。从这一刻开始，应该禁止向即将被替换的主库做任何写入。因为一旦它不是主库，写入就意味着数据丢失。注意，即使设置read_only也不会阻止当前已存在的食物继续提交，为了更好的保证这一点，可以先kill掉所有打开的事务，这样将会真正的结束所有写入。</li>
+<li>选择一个备库作为新的主库，并确保它已经完全跟上主库（例如，让它执行完所有从主库获得的中继日志）</li>
+<li>确保新主库和旧主库的数据是一致的。</li>
+<li>在新主库上执行stop slave。</li>
+<li>在新主库上执行 change master to master_host = ‘’，然后在执行reset slave ，使其断开与老主库的链接，并丢弃master.info里记录的信息（这就是不建议把复制连接信息写到配置文件里的原因之一）</li>
+<li>执行show master status记录新主库的二进制日志坐标</li>
+<li>确保其他主库已经追赶上。</li>
+<li>关闭旧主库</li>
+<li>激活新主库上事件</li>
+<li>将客户端连接到新主库</li>
+<li>在每台备库上执行change master to语句，使用之前通过show master status获得的二进制日志坐标，来指向新的主库。</li>
+</ol>
+<ul>
+<li>计划外的提升</li>
+</ul>
+<p>当主库崩溃时，需要提升一台备库来替代它，这个过程可能就不太容易。如果只有一台备库，可以直接使用这台备库。但如果有超过一台的备库，就需要做一些额外的工作。</p>
+<p>另外，还有潜在的丢失复制事件的问题。可能有主库上已经发生的修改还没有更新到它的任何一台备库上的情况。甚至还可能一条语句在主库上执行了回滚，但在备库上没有回滚，这样备库可能超过主库的逻辑复制位置。如果能在某一点恢复主库的数据，也许就可以取得丢失的语句并手动执行它们。</p>
+<p>以下是对主备拓扑结构中的备库进行提升的过程：</p>
+<ol>
+<li>确定哪台备库的数据最新。检查每台备库上show slave status命令的输出，选择其中master_log_file / read_master_log_pos的值最新的那个</li>
+<li>让所有备库执行完所有其从崩溃前的旧主库那获得的中继日志。如果在未完成前修改备库的主库，它会抛弃剩下的日志事件，从而无法获知该备库在什么地方停止。</li>
+<li>执行前一小节的5-7步</li>
+<li>比较每台备库和新主库上的master_log_file / read_master_log_pos的值。</li>
+<li>执行前一小节的10 - 12步。</li>
+</ol>
+<p>如果有备库和新主库的位置不相同，则需要找到该备库最后一条执行的时间在新主库的二进制日志中响应的位置，然后在执行change master to ，可以通过mysqlbinlog工具来找到备库执行的最后一条查询，然后在主库上找到同样的查询，进行简单的计算就可以得到。</p>
+<p>为了便于描述，假设每个日志事件有一个自增的数字ID，最新的备库，也就是新主库，在旧主库崩溃时获得了编号为100的事件，假设有另外两台备库：replica2和replica3。replica2已经获取了99号事件，replica3获取了98号事件。如果把两台备库都指向新主库的同一个二进制日志位置，它们将从101号事件开始复制，从而导致数据不同步。但只要新主库的二进制日志已经通过log_slage_updates打开，就可以在新主库的二进制日志中找到99号和100号日志，从而将备库恢复到一直的状态。</p>
+<p>由于服务器重启，不同的配置，日志轮转或者flush logs命令，同一个事件在不同的服务器上可能有不同的偏移量。找到这些时间可能会耗时很长并且枯燥，但是通常没有难度。通过mysqlbinlog从二进制日志或中介日志中解析出每台备库上执行的最后一个事件，并同样使用该命令解析新主库上的二进制日志，找到相同的词典哈讯，mysqlbinlog会打印出该事件的偏移量，在change master to 命令中使用这个值。</p>
+<p>更快的方法是把新主库的停止的备库上的字节偏移量想减，它显示了字节为止的差异。然后把这个值和新主库当前二进制日志的位置相减，就可以得到期望的查询的位置。只需要验证一下就可以据此启动备库。</p>
+<p>看个例子。假设server1是server2和server3的主库，其中服务器server1已经崩溃，根据show slave status获得master_log_file/read_master_file_post的值，server2已经执行完了server1上的所有二进制日志，但server3还不是最新数据。如图：</p>
+<p>如图所示，我们可以确定，server2已经执行忘了主库上的所有二进制日志，因为master_log_file和read_master_log_pos的值和server1上最后的日志位置是相吻合的，因此我们可以将server2提升为新主库，并将server3设置为server2的备库。</p>
+<p>应该在server3上为需要执行的change master to语句赋予什么样的参数呢？这里需要做一点点计算和调查。server3在偏移量1493停止，比server2执行的最后一条语句的偏移量1582要小89字节。server2正在想偏移量为8167的二进制日志写入，8167-89=8087，因此理论上我们应该将server3指向server2的日志的偏移量设置为8087的位置。最好去确认下这个位置附近的日志时间，以确定在该位置上是否是正确的日志时间，因为可能有别的例外，例如有些更新你只发生在server2上</p>
+<p>假设我们观察到的事件是一样的，下面这条命令会将server3切换为server2的备库</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">change</span> <span class="keyword">master</span> <span class="keyword">to</span> master_host = <span class="string">'server2'</span>,master_log_file=<span class="string">'mysql-bin.000009'</span>, master_log_post=<span class="number">8078</span></span><br></pre></td></tr></table></figure>
+<p>如果服务器在崩溃时已经完成并记录了超过一个时间，会怎么样呢？因为server2仅仅读取并执行到了偏移位置1582，你可能永远的失去了一个时间。但是如果老主库的磁盘没有损坏，仍然可以通过mysqlbinlog或者从二进制服务器日志中找到丢失的事件。</p>
+<p>如果需要从老主库上恢复丢失的时间，建议在提升新主库之后且在允许客户端连接之前做这件事情。这样就无需再没台备库上都执行丢失的事件，只需使用复制来完成。但如果崩溃的老主库完全不可用，就不得不等待，稍后再做这一项工作。</p>
+<p>上述流程中一个可调整的地方是使用可靠的方式来存储二进制日志，比如SAN或者分布式复制数据库设备（DRBD）。即使主库完全失效，依然能够获得它的二进制日志。也可以设置一个日志服务器，把备库指向它，然后让所有备库赶上主库失效的点。这使得提升一个备库为新的主库没那么重要，本质上这个计划中的提升是相同的。</p>
+<h5><span id="66-在一个主-主配置中交换角色">6.6 在一个主 - 主配置中交换角色</span></h5><hr>
+<p>主主复制拓扑结构的一个好处就是可以很容易的切换主动和被动的角色，因为其配置是对称的。</p>
+<p>当在主-主配置下切换角色时，必须确保任何时候只有一个服务器可以写入。如果两台服务器交叉写入，可能会导致写入冲突。换句话说，在切换角色后，原被动服务器不应该接收到主动服务器的任何二进制日志。可以通过确保原被动服务器的复制SQL线程在该服务器可写之前已经赶上主动服务器来避免。</p>
+<p>通过以下步骤切换服务器角色，可以避免更新重复的危险；</p>
+<ol>
+<li>停止主动服务器上的所有写入。</li>
+<li>在主动服务器上执行set global read_only = 1，同时在配置文件里也设置一下read_only，防止重启后失效。但记住这不会阻止拥有超级权限的用户更改数据。如果想阻止所有人更改数据，可以执行flush tables with read lock。如果没有这么做，你必须kill所有的客户端连接以保证没有长时间运行的语句或者未提交的事务。</li>
+<li>在主动服务器上执行show master status并记录二进制日志坐标。</li>
+<li>使用主动服务器上的二进制日志坐标在被动服务器上执行select master_pos_wait()。该语句将会阻塞，知道复制跟上主动服务器中。</li>
+<li>在被动服务器上执行set global read_only =0，这样就变换成主动服务器。</li>
+<li>修改应用的配置，使其写入到新的主动服务器中。</li>
+</ol>
+<h4><span id="7-复制的问题和解决方案">7 复制的问题和解决方案</span></h4><h5><span id="71-数据损坏或丢失的错误">7.1 数据损坏或丢失的错误</span></h5><hr>
+<p>MySQL的复制并不能很好地从服务器崩溃、掉电，磁盘损坏、内存或网络错误中恢复。回到这些问题时几乎可以肯定都需要从某个点开始重启复制。</p>
+<p>大部分由于非正常关机后导致的肤质问题都是由于没有把数据及时地刷到磁盘。下面是意外关闭服务器时可能会碰到的情况。</p>
+<ul>
+<li><p>主库意外关闭</p>
+<p>  如果没有设置主库的sync_binlog选项，就可能在崩溃前没有降最后的几个二进制日志时间刷新到磁盘中。备库IO线程因此也可能一直处于读不到尚未写入磁盘的事件的状态中。当主库重新启动时，备库将重连到主库并在此尝试去读该事件，但主库会告诉备库没有这个二进制日志偏移量。二进制日志转储线程通常很快，因此这种情况并不经常发生。</p>
+<p>  结局色这个问题的办法是指定备库从下一个二进制文件的开头度日志。但是有一些日志事件将会永久的丢失，建议使用pt-table-checknum来检查主备一致性，以便于修复。可以通过在主库开启sync_binlog来避免事件丢失。</p>
+<p>  即使开启了sync_binlog，myisam表的数据仍然可能在崩溃的时候损坏，对于innodb事务，如果innodb_flush_log_at_trx_commit没有设为1，也可能丢失数据（但数据不会损坏）</p>
+</li>
+<li><p>备库意外关闭</p>
+<p>  当备库再一次非计划中的关闭后重启时，回去读master.info文件以找到上次停止复制的位置。不幸的是，该文件没有同步写到磁盘，文件中存储的信息可能是错误的。备库可能会尝试重新执行一些二进制日志事件，这可能会导致唯一索引错误。除非能确定备库在哪里停止，否则唯一的办法就是忽略那些错误。pt-slave-restart工具可以完成</p>
+<p>  如果使用的都是innodb表，可以再重启后观察MySQL错误日志。innodb在恢复过程中会打印出它的恢复点的二进制日志坐标。可以使用这个值来决定备库指向主库的偏移量。</p>
+</li>
+</ul>
+<p>除了MySQL非正常关闭导致的数据丢失外，磁盘上二进制文件或中继日志文件损坏并不罕见。下面是一些更普遍的场景：</p>
+<ul>
+<li><p>主库上的二进制文件损坏</p>
+<p>  如果主库上的二进制日志损坏，除了忽略损坏的位置外你别无选择。可以再主库上执行flush logs命令，这样主库会开始一个新的日志文件，然后将备库指向该文件的开始位置。也可以试着去发现损坏区域的结束位置。某些情况下可以通过set global sql_slave_skip_counter = 1来忽略一个损坏的事件，如果有多个损坏的事件，就需要重复该步骤，知道跳过所有损坏的时间。但是如果有太多的损坏事件，这么做可能就没有意义了。损坏的事件头会阻止服务器找到下一个事件。这种情况下，可能不得不手动地找到下一个完好的事件。</p>
+</li>
+<li><p>备库上的中继日志损坏</p>
+<p>  如果主库上的日志是完好的，就可以通过change master to 命令丢弃并获取损坏的事件。只需要将备库指向它当前正在复制的位置。这会导致备库丢弃所有在磁盘上的中继日志。就这一点而言，MySQL5.5做了一些改进，它能够在崩溃后自动重新获取中继日志。</p>
+</li>
+<li><p>二进制日志于innodb事务日志不同步</p>
+<p>  当主库崩溃时，innodb可能将一个事务标记为已提交，此时该事务可能还没有记录到二进制日志中。除非是某个备库的中继日志已经保存，否则没有任何办法恢复丢弃的事务。MySQL5之后可以设置sync_binlog选项来防止该问题。</p>
+</li>
+</ul>
+<p>当一个二进制日志损坏时，能恢复多少数据取决于损坏的类型。</p>
+<ul>
+<li><p>数据改变，但事件仍是有效的SQL</p>
+<p>  不幸的是,MySQL无法察觉这种损坏。因此最好还是经常检查备库的数据是否正确。在MySQL未来的版本中可能会被修复。</p>
+</li>
+<li><p>数据改变并且事件时无效的SQL</p>
+<p>  这种情况可以通过mysqlbinlog提取出事件并看到一些错乱的数据，例如：</p>
+  <figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">update</span> tab1 <span class="keyword">col</span>???????</span><br></pre></td></tr></table></figure>
+<p>  可以通过增加偏移量的方式找到下一个事件，这样就可以之忽略这个损坏的事件。</p>
+</li>
+<li><p>数据遗漏并且/或者事件的长度是错误的</p>
+<p>  这种情况下，mysqlbinlog可能会发生错误退出或者直接崩溃，因为它无法读取时间，并且找不到下一个事件的开始位置。</p>
+</li>
+<li><p>某些事件已经损坏或被覆盖，或者偏移量已经改变并且下一个事件的起始偏移量也是错误的</p>
+<p>  同样，mysqlbinlog没作用。</p>
+</li>
+</ul>
+<p>当损坏非常严重，通过mysqlbinlog已经无法获取日志事件时，就不得不进行一些十六进制的编辑或者通过一些繁琐的技术找到日志事件的边界。通常不困难，因为有一些可辨识的标记会分割事件。</p>
+<p>如下面的例子，先用mysqlbinlog找到样例日志的日志事件偏移量</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">mysqlbinlog mysql-bin.000113 | egrep '^# at '</span><br><span class="line"></span><br><span class="line">at 4</span><br><span class="line">at 98 </span><br><span class="line">15 447</span><br></pre></td></tr></table></figure>
+<p>一个找到日志便宜量的比较简单的方法是比较一下string命令输出的偏移量：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">strings -n 2 -t d mysql-bin.000113</span><br><span class="line">std</span><br><span class="line">test</span><br><span class="line">C'C</span><br><span class="line">std</span><br><span class="line">test</span><br></pre></td></tr></table></figure>
+<p>注意以’G结尾的字符串在日志事件开头的一个字节后的位置。他们是固定长度的事件头的一部分。</p>
+<p>简单分析后应该能从二进制日志中找到这些模式并找到下一个完成的日志事件偏移量。然后通过mysqlbinlog的—start-position选项来跳过损坏的事件，或者使用change master to 命令的 master_log_pos参数。</p>
+<h5><span id="72-使用非事务型表">7.2 使用非事务型表</span></h5><hr>
+<p>如果一切正常，基于语句的复制通常能够很好的处理非事务型表。但是当对非事务型表的更新发生错误时，例如在查询完成前被kill，就可能导致主库和备库的数据不一致。</p>
+<p>例如，假设更新一个myisam表的100还能够数据，若查询更新到了其中50条时有人kill该查询，会发生什么呢？一般的数据改变了，而另一半则没有，结果是复制必然不同步，因为该查询会在备库重放并更新完100行数据（MySQL嘶吼会在主库上发现查询引起的错误，而备库上则没有报错，伺候复制将会发生错误并中断）</p>
+<p>如果使用的是myisam表，在关闭MySQL之前需要确保已经运行了stop slave，否则服务器在关闭时会kill所有正在运行的查询（包括没有完成的更新）。事务型存储引擎则没有这个问题。如果使用的是事务型表，失败的更新会在主库上回滚并不会记录到二进制日志中。</p>
+<h5><span id="73-混合事务型和非事务型表">7.3 混合事务型和非事务型表</span></h5><hr>
+<p>如果使用的是事务型存储引擎，只有在事务提交后才会将查询记录到二进制日志中。因此如果事务回滚，MySQL就不会记录这条查询，也就不会在备库上重放。</p>
+<p>但是如果混合使用事务型和非事务型表，并且发横了一次回滚，MySQL能够回滚事务表的更新，但非事务型表则被永久地更新了。只要不发生类似查询中被kill这样的错误，就不是问题：MySQL此时会记录该查询并记录一条rollback语句到日志中。如果是同样的语句也在备库执行，所有的都很正常。这样效率会低一点，因为备库需要做一些工作最后再把它们丢弃掉。但理论上能够保证主备的数据一致。</p>
+<p>但是如果备库发生死锁而主库也没有也可能会导致问题。事务型表的更新会被回滚，而非事务型表则无法回滚，此时备库和主库的数据是不一致的。</p>
+<p>防止该问题的唯一办法是避免混合使用事务型和非事务型表。如果遇到这个问题，唯一的解决办法是忽略错误，并重新同步相关的表。</p>
+<p>基于行的复制不会受到这个问题的影响。因为它记录的是数据的修改，而不是SQL语句.如果一条语句改变了一个myisam表和一个innodb表的某些航,然后主库上发生了一次死锁,innodb表的更新会被回滚,而myisam标的更新仍会被记录到日志中并在备库重放</p>
+<h5><span id="74-不确定语句">7.4 不确定语句</span></h5><hr>
+<p>当使用基于语句的复制模式时，如果通过不确定的方式更改数据可能会导致主备不一致。例如，一条带有limit的update语句更改的数据取决于查找航的顺序，除非能保证主库和备库上的顺序相同。例如，若行根据主键排序，一条查询可能在主库和备库上更新不同的行，这些问题非常微妙并且很难注意到。所以一些人禁止对哪些会更新数据的语句使用limit。另一种不确定的行为是在一个拥有多个唯一索引的表上使用replace或者insert ignore语句，MySQL在主库和备库上可能会选择不同的索引。</p>
+<p>另外还要注意那些涉及information_schema表的语句。他们很容易在主库和备库上产生不一致，其结果也会不相同。</p>
+<h5><span id="75-主库和备库使用不同的存储引擎">7.5 主库和备库使用不同的存储引擎</span></h5><hr>
+<p>基于语句的复制方式，如果备库使用了不同的存储引擎，则可能造成一条查询在主库和备库上的执行结果不同。</p>
+<h5><span id="76-备库发生数据改变">7.6 备库发生数据改变</span></h5><hr>
+<p>基于语句的复制方式前提是确保备库上有和主库相同的数据，因此不应该允许对备库数据的任何修改（read_only）。假设有如下语句：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> table1 <span class="keyword">select</span> * <span class="keyword">from</span> table2;</span><br></pre></td></tr></table></figure>
+<p>如果备库上table2的数据和主库上不同，该语句会导致table1的数据也会不一致。换句话说，数据不一致可能会在表之间传播。不仅仅是insert … select查询，所有类型的查询都有可能发生。有两种可能的结果：备库上发生重复索引键冲突错误或者根本不提示任何错误。如果能报告错误还好，起码能够提示你主备数据已经不一致。无法察觉的不一致可能会悄无声息的导致各种问题</p>
+<p>唯一的解决办法就是重新从主库同步数据。</p>
+<h5><span id="77-不唯一的服务器id">7.7 不唯一的服务器ID</span></h5><hr>
+<p>如果不小心为两台备库设置了相同的服务器ID，看起来似乎没有什么问题，但如果查看错误日志，或者使用innotop查看主库，可能会看到一些固态的信息。</p>
+<p>在主库上，会发现两台备库中只有一台连接到主库（通常情况下所有的备库都会建立连接以等待随时进行复制）。在备库的错误日志中，则会发现反复的重连和连接断开信息，但不会提及被错误配置的服务器ID。</p>
+<p>MySQL可能会缓慢的进行正确的复制，也可能无法进行正确复制，这取决于MySQL的版本，给定的备库可能会丢失二进制日志时间，或者重复执行事件，导致重复建错误（或者不可见的数据损坏）。也可能因为备库的互相竞争造成主库的负载升高。如果备库竞争非常激烈，会导致错误日志在很短时间内急剧增大。</p>
+<p>唯一的解决办法是小心设置备库的服务器ID。建立映射表。</p>
+<h5><span id="78-未定义的服务器id">7.8 未定义的服务器ID</span></h5><hr>
+<p>如果没有在my.cnf里定义服务器ID，可以通过chnge master to 来设置备库，但无法启动复制。</p>
+<h5><span id="79-对未复制数据的依赖性">7.9 对未复制数据的依赖性</span></h5><hr>
+<p>如果在主库上有备库不存在的数据库或表，复制会很容易意外中断，反之亦然。假设主库上有一个备库不存在的数据库，命名为search。如果在主库上发生对该数据库中表的更新，备库会在尝试重放这些更新时中断。同样的，如果在主库上创建一个备库上已存在的表，复制也可能会中断。</p>
+<p>没有办法，只能避免</p>
+<h5><span id="710-丢失的临时表">7.10 丢失的临时表</span></h5><hr>
+<p>临时表在某些时候比较有用，但不幸的是，它与基于语句的复制方式是不相容的。如果备库崩溃或者正常关闭，任何复制线程拥有的临时表都会丢失。重启备库后，所有依赖于该临时表的语句都会失败。</p>
+<p>当基于语句进行复制时，在主库上没有安全使用临时表的方法。很多人确实很喜欢临时表。但是不管它们的存在多么短暂，都会使得备库的启动和停止以及崩溃恢复变得困难，即使是在一个事务内使用也是一样。</p>
+<p>如果备库重启后复制因找不到临时表而停止，可能需要做下面一些事：可以直接跳过错误，或者手动创建一个名字和结构相同的表来代替消失的临时表。不管用什么办法，如果写入查询依赖于临时表，都可能造成数据不一致。</p>
+<p>避免使用临时表没有看起来那么难，临时表主要有两个比较有用的特性：</p>
+<ul>
+<li>只对创建临时表的线程课件。所以不会和其他拥有相同名字临时表的连接起冲突。</li>
+<li>随着连接关闭而消失，所以无需显式的移除它们。</li>
+</ul>
+<p>可以保留一个专用的数据库，在其中创建持久表，把他们作为临时表，模拟这些特性，只需要为它们选择一个唯一的名字。当应用不在使用临时表后，可以将其删除或者使用一个清理线程来进行移除。使用实体表而非临时表还有别的好处。例如，能够帮助你更容易的调试应用程序，因为可以通过别的链接来查看应用正在维护的数据。如果使用的是临时表，可能就没这么容易做到。</p>
+<p>但是实体表会多一些开销，例如创建更慢，因为为这些表分配.frm文件需要刷新到磁盘。可以通过禁止sync_frm选项来加速，但是这坑你导致钱财的风险。</p>
+<p>如果确实需要使用临时表，也应该在关闭备库前确保slaev_open_temp_tables状态变量值为0。如果不是0，在重启备库后就可能会出现问题。合适的流程是执行stop slave，检查变量，然后再关闭备库。如果在停止复制前检查变量，可能会发生竞争条件的风险。</p>
+<h5><span id="711-不复制所有的更新">7.11 不复制所有的更新</span></h5><hr>
+<p>如果错误的使用set sql_log_bin=0或者没有理解过滤规则，备库可能会丢失主库上已经发生的更新。有时候希望利用此特性来做归档，但常常会导致意外并出现不好的结果。</p>
+<p>例如，假设设置了replicate_do_db规则，把sakila数据库的数据复制到某一台备库上。如果在主库执行如下语句，会导致主备数据不一致；</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">use</span> <span class="keyword">test</span>;</span><br><span class="line">upate sakila.actor ...</span><br></pre></td></tr></table></figure>
+<h5><span id="712-innodb枷锁读引起的锁争用">7.12 InnoDB枷锁读引起的锁争用</span></h5><hr>
+<p>正常情况下，InnoDB的读操作是非阻塞的，但在某些情况下需要枷锁。特别是在使用基于语句的复制方式时，执行insert … select操作会锁定源表上的所有行。MySQL需要枷锁以确保该语句的执行结果和在主库和备库上是一致的。实际上，枷锁导致主库上的语句串行化，以确保和备库上执行的方式相同。</p>
+<p>这种设计可能导致锁竞争、则色，以及锁等待超时等情况。一种缓解的办法就是避免让事务开启太久以减少阻塞。可以再主库上尽快的提交事务以释放所。</p>
+<p>把大命令拆成小命令，使其尽可能简短。这也是一种减少锁竞争的有效方法。即使有时很难做到，但也是值得的</p>
+<p>另一种方法是替换掉insert … select语句，在主库上先执行select into outfile，在执行load data in file。这种方法更快，并且不需要加锁。这种方法很特殊，但有时候很有用。最大的问题是为输出文件选择一个唯一的名字，并在完成后清理掉文件。可以通过之前讨论过的connection_id()来保证文件名的唯一性。并且可以使用定时任务在链接不在使用你这些文件后进行自动清理工。</p>
+<p>也可以尝试关闭上面的锁机制，而不是使用上面的变通方法。有一种方法可以做到，但在大多数场景下并不是好办法，备库可能会在不知不觉间就失去和主库的数据同步。这也会导致在做恢复时二进制日志变得毫无用处。但如果确实觉得这么做利大于弊，可以使用下面的方式来关闭这种锁机制。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"># This is not safe!</span><br><span class="line">innodb_locks_unsafe_for_binlog=1</span><br></pre></td></tr></table></figure>
+<p>这使得查询的结果所依赖的数据不再枷锁。如果第二条查询修改了数据并在第一条查询之前先提交。在主库和备库上执行这两条语句的结果可能不相同。对于复制和基于时间点的恢复都是如此。</p>
+<p>为了了解读取锁定是如何防止混乱的，假设有两张表，一个没有数据，另一个只有一行数据，值为00.有两个事务更新数据，事务1将第二张表的数据插入到第一张表，事务2更新第二张表。如图：两个事务更新数据，使用共享锁串行化读取</p>
+<p>第二步非常重要，事务2尝试去更新源表，这需要在更新的行上加排他锁（写锁）。排他锁与其他锁是不相容的，包括事务1在行记录上加的共享锁。因此事务2需要等待直到事务1完成。事务按照其提交的顺序在二进制日志中记录，所以在备库重放这些事务时产生相同的效果。</p>
+<p>但从另一个方面来说，如果事务1没有在读取的行上加共享锁，就无法保证了。如果没有枷锁，记录在日志中的事务顺序在主备上可能会产生不同的结果。MySQL会先记录事务2，这回影响到事务1在备库上的结果，而主库上则不会发生，从而导致了主备的数据不一致。</p>
+<p>强烈建议将innodb_locks_unsafe_for_binlog的值设置为0。基于行的复制由于记录了数据的变化而非语句，因此不会存在这个问题。</p>
+<h5><span id="713-在主-主复制结构中写入两台主库">7.13 在主-主复制结构中写入两台主库</span></h5><hr>
+<p>太多不写，基本没有机会可以用到</p>
+<h5><span id="714-过大的延迟复制">7.14 过大的延迟复制</span></h5><hr>
+<p>复制延迟是一个很普遍的问题。不管怎么样，最好在设计应用程序时能够让其容忍备库出现延迟。如果系统在备库出现延迟时就无法很好的工作，那么应用程序也许就不应该用到复制。但是也有一些办法可以让备库跟上主库。</p>
+<p>MySQL单线程复制的设计导致备库的效率相当低下。即使备库有很多磁盘、CPU或者内存，也会很容易落后于主库。因为备库的单线程通常只会有效的使用一个CPU和磁盘.而事实上,备库通常都会和主库使用相同配置的机器.</p>
+<p>备库上的锁同样也是问题。其他在备库运行的查询可能会阻塞住复制线程。因为复制是单线程的，复制线程在等待时将无法做别的事情。</p>
+<p>复制一般有两种产生延迟的方式：突然产生延迟然后再跟上，或者稳定的延迟增大。前一种通常姑娘是由于一条运行很长时间的查询导致的，而后者即使在没有长时间的查询时也会出现。</p>
+<p>不幸的是，目前我们没那么容易确定备库是否接近其容量上限。正如之前所提到的。如果负载总是保持均匀的，备库在负载达到99%时和其负载在10%的时候表现的性能相同，但一旦达到100%时就会突然开始产生延迟。但实际上负载不太可能很稳定，所以当备库接近写容量时，就可能在尖峰负载时看到复制延迟的增加。</p>
+<p>当备库无法跟上时，可以记录备库上的查询并使用一个日志分析工具找出哪里慢了。不要依赖与自己的直觉，也不要基于查询在主库上的查询性能进行判断，因为主库和备库性能特征很不相同。最好的分析办法是暂时在备库上打开慢查询日志记录，然后使用pt-query-digest工具来分析。如果打开了log_slow_slave_statementse选项，在标准的MySQL慢查询日志能够记录复制线程执行的语句，这样就可以找到在复制时哪些语句满了。</p>
+<p>除了购买更快的磁盘和CPU,备库没有太多的调优空间。大部分选项都是禁止某些额外的工作来减少备库的负载。一个简单的办法是配置innodb，使其不要那么频繁的刷新磁盘，这样事务会提交的更快一些。可以通过设置innodb_flush_log_at_trx_commit的值为2来实现。还可以在备库上禁止二进制日志记录，把innodb_locks_unsafe_for_binlog设置为1，并把myisam的delay_key_write设置为all。但是这些设置以牺牲安全换取速度。如果需要将备库提升为主库，记得把这些选项这只会安全的值。</p>
+<p><strong>不要重复写操作中代价比较高的部分</strong></p>
+<p>重构应用或者优化查询通常是最好的保持备库同步的办法。尝试去最小化系统中重复的工作。任何主库上昂贵的写操作都会在每一个备库上重放。如果可以把工作转移到备库，那么就只有一台备库需要执行，然后我们可以把写的结果回传到主库，例如，通过执行load data infile。</p>
+<p>例子：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">replace</span> <span class="keyword">into</span> main_db.summary_table(col1,col2,...)</span><br><span class="line"><span class="keyword">select</span> col1,<span class="keyword">sum</span>(col2,...)</span><br><span class="line"><span class="keyword">from</span> main_db.enormous_table <span class="keyword">group</span> <span class="keyword">by</span> col1;</span><br></pre></td></tr></table></figure>
+<p>如果在主库上执行查询，每个备库将同样需要执行庞大的group by 查询。当进行太多这样的操作时,备库将无法跟上。把这些工作转移到一台备库上也许会有帮助。在备库上创建一个特别保留的数据库，用于避免和从主库上复制的数据产生冲突。可以执行以下查询：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">replace</span> <span class="keyword">into</span> smmary_db.summary_table(col1,col2,...)</span><br><span class="line"><span class="keyword">select</span> col1,<span class="keyword">sum</span>(col2,...)</span><br><span class="line"><span class="keyword">from</span> main_db.enormous_table <span class="keyword">group</span> <span class="keyword">by</span> col1;</span><br></pre></td></tr></table></figure>
+<p>现在可以执行select info outfile，然后再执行load data infile，将结果集加载到主库中。现在重复工作被简化为load data infile操作。如果有N个备库,就节约了N-1次庞大的group by 操作。</p>
+<p>该策略的问题是需要处理陈旧数据。有时候从备库读取的数据和写入主库的数据很难保持一致。如果难以在备份上读取数据，依然能够简化并节省库备工作。如果分离查询的replace和select部分，就可以把结果返回给应用程序，然后将其插入到主库中。首先，在主库执行如下查询：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> col1, <span class="keyword">sum</span>(col2,...) <span class="keyword">from</span> main_db.enormous_table <span class="keyword">group</span> <span class="keyword">by</span> col1;</span><br></pre></td></tr></table></figure>
+<p>然后为结果集的每一行重复执行如下语句，将结果插入到汇总表中：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">replae into main_db.summary_table (col1,col2,...) <span class="keyword">values</span> (?,?,...)</span><br></pre></td></tr></table></figure>
+<p>这种方法再次避免了在备库上执行查询中的group by 部分。将select 和 repalce分离后意味着查询的select操作不会在每一台备库上重放。</p>
+<p>这种通用的策略，节约了备库上昂贵的写入操作部分，在很多情况下很有帮助：计算查询的结果代价很昂贵，但一旦计算出来后，处理就很容易。</p>
+<p><strong>在复制之外并行写入</strong></p>
+<p>另一种避免备库严重延迟的办法是绕过复制。任何在主库的写入操作必须在备库串行化。因此有理由认为串行化写入并不能充分利用资源。所有写操作都应该从主库传递到备库么？如果把备库有限的串行写入容量留给那些真正需要通过复制进行的写入？</p>
+<p>这种考虑有助于对写入进行区分。特别是，如果能确定一些写入可以轻易的在复制之外执行，就可以并行化这些操作以利用备库的写入容量。</p>
+<p>一个很哈的例子是之前讨论过的数据归档。OLTP归档需求通常是简单的单行操作。如果只是把不需要的记录从一个表转移到另一个表，就没有必要将这些写入复制到备库。可以禁止归档查询记录到二进制日志中，然后分别在主库和备库上单独执行这些归档查询。</p>
+<p>自己复制数据到另外一台服务器，而不是通过复制，听起来很扯，但对一些应用很有意义，特别是如果应用是某些标的唯一更新源。复制的瓶颈通常集中在小部分表上。如果能在复制之外单独处理这些表，就能够显著的加快复制。</p>
+<p><strong>为复制线程预取缓存</strong></p>
+<p>如果有正确的工作负载，就能通过预先将数据读入内存中，以受益于在备库上的并行IO所带来的好处。这种方式大部分人并不会使用，因为除非有争取的工作负载特性和硬件配置，否则可能没有任何用户。我们刚刚讨论过的其他几种变通方式是更好的选择，并且有更多的方法来应用他们。</p>
+<p>有两种可行的实现方法。一种是通过程序实现，略微比备库SQL提前读取中继日志并将其转换为SELECT语句执行。这会使得服务器将数据从磁盘加载到内存中农，这样当SQL线程执行到对应的语句时，就无须从磁盘读取数据。事实上，select语句可以并行的执行，所以可以加速SQL线程的串行IO。当一条语句正在执行时，洗啊一条语句需要的数据也正在从磁盘加载到内存中。</p>
+<p>如果满足下面这些条件，预取可能弧有效：</p>
+<ul>
+<li>复制SQL线程是IO密集型的，但备库服务器并不是IO密集型的.一个完全的IO密集型服务器不会受益于预取，因为他没有多余的磁盘性能来提供预取。</li>
+<li>备库有多个硬盘驱动器，也许8个或者更多。</li>
+<li>是用的是innodb引擎，并且工作集远不能完全加载到内存中。</li>
+</ul>
+<p>一个受益于预读取的例子是随机单行update语句，这些语句通常在主库山高并发执行。delete语句也可能受益于这种方法，但insert语句则不太可能会，尤其是当顺序插入时，因为前一次插入已经使得索引预热了。</p>
+<p>如果表上有很多索引，同样无法预取所有将要被修改的数据。update语句可能需要更新所有索引，但select语句通常只会读取主键和一个二级索引。update语句依然需要去读取其他索引的数据已进行更新。在多索引表上这种方法效率会降低。</p>
+<p>只有在清除硬件和操作系统的状况时才能尝试这种方法。正确设置参数非常重要，但是并没有绝对正确的参数组合。</p>
+<p>另一种方法是innobd内部实现的。它可以允许设置事务为特殊的模式，以语序innodb执行假更新。因此可以使用一个程序来执行这些假更新，这样复制线程就可以更快的执行真正的更新。</p>
+<h5><span id="715-例子主库的过大的包">7.15 例子主库的过大的包</span></h5><hr>
+<p>主库的max_allow_packet值和备库的不匹配。这种情况下，主库可能会记录一个备库认为过大的包。当备库获取到该二进制日志事件时，可能会碰到各种各样的问题，包括无线报错和重试，或者中继日志损坏。</p>
+<h5><span id="716-受限制的复制贷款">7.16 受限制的复制贷款</span></h5><hr>
+<p>如果带宽受限，可以开启备库上的slave_compressed_protocol选项。当备库连接主库时，会请求一个被压缩的连接，和MySQL客户端使用的压缩连接一样。使用的压缩引擎是zip，它能将文本类型的数据压缩到大约其原始大小的三分之一。代价是额外的CPU时间，包括在主库和备库上解压数据。</p>
+<h5><span id="717-磁盘空间不足">7.17 磁盘空间不足</span></h5><hr>
+<p>可能因为二进制日志、中继日志或临时文件将磁盘撑满。特别是在主库上执行了load data infile查询并在备库开启了log_slave_updates选项。延迟越严重，接收到但尚未执行的中继日志会占用越多的磁盘空间。可以通过监控磁盘并设置relay_log_space选项来避免这个问题。</p>
+<h5><span id="718-复制的局限性">7.18 复制的局限性</span></h5><hr>
+<p>M大量的SQL函数和编程实践不能被可靠的复制.</p>
+<p>服务器BUG，大多数MySQL的朱版本都存在历史遗留的复制BUG。</p>
+<h4><span id="8-复制有多快">8. 复制有多快</span></h4>]]></content>
+      <categories>
+        <category>MySQL</category>
+      </categories>
+      <tags>
+        <tag>MySQL</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>MySQL操作系统和硬件优化</title>
+    <url>/2020/12/29/Book%20Nodes/%E9%AB%98%E6%80%A7%E8%83%BDMySQL/8-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%92%8C%E7%A1%AC%E4%BB%B6%E4%BC%98%E5%8C%96/</url>
+    <content><![CDATA[<h3><span id="1什么限制了mysql的性能">1.什么限制了MySQL的性能</span></h3><hr><p>最常见的两个瓶颈是CPU和IO资源。当数据可以放在内存中或者可以从磁盘中以足够块的速度读取时，CPU可能出现瓶颈。把大量的数据完全放到大容量的内存中，以现在的硬件条件是完全可行的。</p><a id="more"></a>
+
+<p>另一方面，IO瓶颈，一般发生在工作所需的数据远远超过有效内存容量的时候。如果应用程序是分布在网络上的，如果有大量的查询和低延迟的要求，瓶颈可能转移到网络上，而不再是磁盘IO。</p>
+<h4><span id="2-如何为mysql选择cpu">2 如何为MySQL选择CPU</span></h4><hr>
+<p>档升级或者购买硬件的时候，应当考虑下工作负载是不是CPU密集型。可以通过CPU利用率来判断是否是CPU密集型的工作负载，但是仅看CPU整体的负载是不合理的，还需要看看CPU使用率和大多数重要的查询的IO的平衡，并注意CPU负载是否均匀分配。</p>
+<h5><span id="21-哪个更好更快的cpu还是更多的cpu">2.1 哪个更好，更快的CPU还是更多的CPU</span></h5><hr>
+<p>当遇到CPU密集型的工作时,MySQL通常可以从更快的CPU中获益。但这不是绝对的，因为还依赖于负载情况和CPU数量。古老的MySQL在多CPU上有扩展性问题，即使新版本也不能对单个查询并发利用多个CPU。因此，CPU速度限制了每个CPU密集型查询的响应时间。</p>
+<p>调优服务器的目标：</p>
+<ul>
+<li><p>低延时（快速响应）</p>
+<p>  要做到这一点，需要高速CPU，因为每个查询只能使用一个CPU。</p>
+</li>
+<li><p>高吞吐</p>
+<p>  如果能同时运行很多查询语句，则可以从多个CPU处理查询中受益。然后，实践中，取决于具体情况。因为MySQL还不能再多个CPU中完美扩展，能用多少CPU是有极限的。不过新版本可以。</p>
+</li>
+</ul>
+<p>MySQL复制也能在高速CPU下工作的很好，而多CPU对复制的帮助不大。如果工作负载是CPU密集型，主库上的并发任务传递到备库以后会被简化为串行任务，这样即使备库硬件比主库好，也可能无法保持跟主库之间的同步。也就是说，备库的瓶颈通常是IO子系统，而不是CPU。</p>
+<p>如果有一个CPU密集型的工作负载，考虑是需要更快的CPU还是更多CPU的另外一个因素是查询语句实际在做什么。在硬件层面，一个查询可以在执行或等待。处于等待状态常见的原因是在运行队列中等待（进程已经是可运行状态，但所有的CPU都忙）、等待闩锁（Latch）或锁（Lock）、等待磁盘或网络。那么你期望查询是等待什么呢？如果等待闩锁或锁，通常需要更快的CPU；如果在运行队列中等待，那么更多或者更快的CPU都有可能有帮助。（也有可能例外，例如，查询等待InnoDB日志缓冲区的mutex，直到IO完成前都不会释放，这可能表型需要更多的IO容量）。</p>
+<p>这就是说，MySQL在某些工作负载下可以有效地利用很多CPU。例如，假设有很多连接查询的是不同表（假设这些查询不会造成表锁的竞争，实际上对myisam和memory表可能会有问题），并且副武器的总吞吐量比任何单个查询的响应时间都更重要。吞吐量在这种情况下可以非常高，因为线程可以同时运行而互不争用。</p>
+<p>再次说明，在理论上这可能更好的工作：不管查询是读取不同的表还是相同的表，InnoDB都会有一些全局共享的数据结构，而myisam在每个缓冲区都有全局所。而且不仅仅是存储引擎，服务器层也会有全局所。以前InnoDB承担了所有的骂名，但最近做了一些改进后，暴露了服务器层中的其他瓶颈。例如臭名昭著的lock_open互斥量（Mutex），在MySQL5.1和更早版本中可能就是个大问题，另外还有其他一些服务器级别的互斥量（例如查询缓存）</p>
+<h5><span id="23-扩展到多个cpu和核心">2.3 扩展到多个CPU和核心</span></h5><hr>
+<p>多CPU在联机事务处理（OLTP）系统的场景中非常有用。这些系统通常执行许多小的操作，并且是从多个连接发起请求，因此可以在多个CPU上运行。在这样的环境中，并发可能成为瓶颈。大多数web应用程序都属于这一类。</p>
+<p>OLTP服务器一般使用InnoDB，尽管它在多CPU的环境中还存在一些未解决的并发问题。然而，不只是InnoDB可能成为瓶颈：任何共享资源都是潜在的竞争点。InnoDB之所以获得大量关注是因为它是高并发环境下最常见的存储引擎。但myisam在大压力时的表现也不好，即使不修改任何数据只是读取数据也是如此。许多并发瓶颈，如InnoDB的行锁和myisam的表锁，没有办法优化，除了尽可能快地处理人物之外。没有别的办法解决，这样，锁就可以尽快分配给等待的任务。如果有一个锁是造成它们都在等待的原因，那么不管有多少CPU都一样。因此，即使是一些高并发工作负载，也可以从更快的CPU中收益。</p>
+<p>实际上有两种类型的数据库并发问题，需要不同的方法来解决</p>
+<ul>
+<li><p>逻辑并发问题</p>
+<p>  应用程序可以看到自愿的竞争，如表或者行锁争用。这些问题通常需要好的策略来解决，如改变应用程序、使用不同的存储引擎、改变服务器的配置，或使用不同的锁定提示或事务隔离级别。</p>
+</li>
+<li><p>内部并发问题</p>
+<p>  比如信号量、访问innodb缓冲池页面的资源争用，等等。可以尝试通过改变服务器的设置、改变操作系统，或使用不同的硬件解决这些问题，但通常只能缓解而无法彻底消灭。在某些情况下，使用不同的存储引擎或给存储引擎打补丁，可以帮助缓解这些问题。</p>
+</li>
+</ul>
+<p>MySQL是吧的扩展模式是指它可以有效利用的CPU数量，以及在压力不断增长的情况下如何扩展，这同时取决于工作负载和系统架构。通过系统架构的手段是指通过调整操作系统和硬件，而不是通过优化使用MySQL的应用程序。CPU架构（RISC、CISC、流水线深度等）、CPU型号和操作系统都影响MySQL的扩展模式。这也是为什么说基础测试是非常重要的：一些系统可以在不断增加的并发下依然运行的很好，而另一些的表现则糟糕的多。</p>
+<p>有些系统在更多的处理器下，甚至可能降低整体性能。这是普遍的情况，我们了解到许多人试图升级到有多个CPU的系统。最后只能被迫恢复到旧系统。因为这种升级反而降低了性能。如果规划一个大的升级必须要同时考虑硬件，服务器版本和工作负载。</p>
+<p>现在CPU的两个复杂之处也值得提一下，首先是频率调整，这是一种电源管理技术。可以根据CPU的压力而动态的改变CPU的时钟速度。问题是他有时不能很好的处理间歇性突发的短查询的情况。因为操作系统可能需要一段时间来决定CPU的时钟是否应该变好。结果查询可能会有一段时间的速度。比较慢。并且响应时间增加了，频率调整可以能使得间歇性的工作负载性能低下，但可能更重要的是他会导致性能波动。</p>
+<p>第二个复杂之处是boost技术。周技术改变了我们的CPU模式的看法，我们曾经以为四核2GhzCPU有四个同样强大的核心，不管其中有些闲置或非闲置。由此，一个完美的可扩展系统，当它使用所有四个内核的时候，预计可以得到四倍的提升。但是现在已经不是这样了，因为它系统只使用一个核心时。处理器和运行在更高的时钟速度上。例如3GHz。这给很多的规划容量和可扩展性建模的工具处了一个难题。因为系统性能表现不再是线性的变化了。这也意味着，空闲CPU并不代表相同规模的资源浪费。如果有一台服务器上只运行了备库的复制，复制执行是单线程的。所以有三个CPU是空闲的。因此可以认为利用这些CPU执行其他任务而不影响复制，那就错了。</p>
+<h4><span id="3-平衡内存和磁盘内置">3 平衡内存和磁盘内置</span></h4><hr>
+<p>配置大量内存最大的原因不是因为可以在内存中保存大量数据，最终目的是避免磁盘IO。磁盘io比在内存中访问数据要慢的多。关键是要平衡内存和磁盘的大小，速度，成本和其他因素。以便为工作负载提供高性能的表现。</p>
+<p>最近被使用的数据可能很快再次被使用，以及相邻的数据可能很快需要使用。这些算法非常有效，因为他们算好的空间和时间的局部性原理。</p>
+<p>从程序员的视角看，CPU寄存器和高速缓存是透明的，并且与硬件架构相关。管理他们是编译器和CPU的工作。然而程序员会有意识的注意到内存和硬盘的不同。并且在程序中通常区分使用他们。</p>
+<p>在数据库服务器上尤其明显。其行为往往非常符合我们刚刚提到的预测算法所做的预测。设计良好的数据会缓存，其效率通常超过操作系统的缓存。因为搜索系统缓存是为通用任务设计的，数据库库缓存，更了解数据库存取数据的需求。它包含特殊用途的逻辑，以帮助满足这些需求。此外，系统调用不需要访问数据库中的缓存数据。内存和存储是唯一可以改变的东西。</p>
+<h5><span id="31-随机io和顺序io">3.1 随机IO和顺序IO</span></h5><hr>
+<p>数据库服务器同时使用顺序和随机IO。随机IO从缓存中收益最多。想象有一个典型的混合工作负载。青黄的包含单行查找和多行范围扫描。可以说服自己相信这个说法。典型的情况是热点数据随机分布。因此，缓存这些数据将有助于避免昂贵的磁盘寻道。相反，顺序读取一般只需要扫描一次数据。所以缓存对他是没用的。除非能完全放在内存中缓存起来。</p>
+<p>顺序读取不能从缓存中受益的给另一个原因是他们比随机读快。这有以下两个原因：</p>
+<ul>
+<li><p>顺序IO比随机IO块。</p>
+<p>  顺序操作的执行速度比随机操作快，无论是在内存还是磁盘上。假设磁盘每秒可以做100个随机IO操作。并且合约完成每秒50M的顺序读取。如果每行100字节，随机读，可以每秒读100行。相比之下，顺序都可以每秒都50万行，是随机读的5000倍。或几个数量级的差异。因此，在这种情况下，随机IO可以从缓存中获得很多好处。</p>
+<p>  顺序访问内存行的速度也快于随机访问。现在的内存芯片通常可以随机访问约25万次100字节的行。或者每秒500万次的顺序访问。请注意，内存随机访问速度比磁盘随机访问快了2500倍，而内存中顺序访问只有磁盘10倍的速度。</p>
+</li>
+<li><p>存储引擎执行顺序读比随机读块</p>
+<p>  一个随机读一般意味着存储引擎必须执行索引操作。通常需要通过B树的数据结构查找，并且和其他值比较。相反，连续读取一般需要遍历一个简单的数据结构，例如链表。这样就减少了很多工作。反复这样操作，连续读取的速度就比随机读要快了。</p>
+</li>
+</ul>
+<p>最后，随机读取通常只要查找特定的行，但不仅仅只读取一行，而是要读取一整页的数据，其中大部分是不需要的。这浪费了很多工作。另一方面，顺序读取数据，通常发生在想要的页面上的所有行，所以更符合成本收益。</p>
+<p>综上所述，通过缓存顺序读取可以节省一些工作，但缓存随机读取可以计生工作的工作。换句话说，如果能负担得起，增加内存是解决随机IO读取问题最好的办法。</p>
+<h5><span id="32-缓存读和写">3.2 缓存，读和写</span></h5><hr>
+<p>如果有足够的内存,就可以完全避免磁盘读取请求。如果所有的数据文件都可以放在内存中，一旦服务区缓存热起来了，所有的读操作都会在缓存命中。虽然还是会有逻辑读取，不过物理读取就没有了。但写入时不同的问题。写入可以像读一样在内存中完成，但迟早要被写入到磁盘，所以它是需要持久化的。换句话说，缓存可延缓写入，但不能想消极读取一样消除写入。</p>
+<p>事实上，除了允许写入被延迟，缓存可以允许他们被集中操作，主要通过一下两个重要途径：</p>
+<ul>
+<li><p>多次写入，一次刷新</p>
+<p>  一片数据可以在内存中改变很多次，而不需要把所有的新值写到磁盘。当数据最终被刷新到磁盘后，最后一次物理写之前发生的修改都被持久化了。例如，许多语句可以更新内存中的计数器。如果计数器递增100次，然后写到磁盘，100次修改就被合并为一次写。</p>
+</li>
+<li><p>IO合并</p>
+<p>  许多不同部分的数据可以在内存中修改，并且这些修改可以合并在一起，通过一次磁盘操作完成物理写入。</p>
+</li>
+</ul>
+<p>这就是为什么许多交易系统使用预写日志（WAL）策略。预写日志采用在内存中变更页面，而不马上刷新到磁盘上的策略，因为刷新磁盘通常需要随机IO,这非常慢。相反，如果把变化的记录写到一个连续的日志文件，这就很快了。后台线程可以稍后把修改的页面刷新到磁盘，并在刷新过程中优化写操作。</p>
+<p>写入从缓存中大大受益，因为它把随机IO更多地转换到连续IO。异步写通常是由操作系统批量处理，使他们能以更优化的方式书信到磁盘。同步写必须在写入到磁盘之后才能完成。这就是为什么它们受益于RAID控制器中电池供电的回写高速缓存。</p>
+<h5><span id="33-工作集是什么">3.3 工作集是什么</span></h5><hr>
+<p>每个应用程序都有一个数据的工作集，就是做这个工作确实需要用到的数据。很多数据库都有大量不在工作集内的数据。</p>
+<p>可以把数据库想象为有抽屉的办公桌。工作集就是放在桌面上的完成工作必须使用的文件。桌面是这个比喻中的主缓存，而抽屉就是硬盘。就像完成工作不需要办公桌里每一张纸一样，也不需要把每个数据库状态内存中来获得最佳性能，只需要工作集就可以。</p>
+<p>工作集大小的不同取决于应用程序。对于某些应用程序工作及可能是总数据大小的1%。而对于其他应用。有可能接近百分之百。当工作集不能完全放在内存中时，数据库必须在磁盘和内存之间交换数据。已完成工作。这就是为什么内存不足，有可能看起来却像IO问题。有事没有办法把整个工作机的数据放在内存中。而并且有时也并不真的想这么做(例如，应用需要大量的顺序IO)。工作集能否完全放在内存中,对应用程序体系结构的设计会产生很大影响。</p>
+<p>工作机可以定义为基于时间的百分比。例如，一小时的工作集可能是一个小时内数据库使用的95%的页面，除了5%的的最不常用的页面。百分比是考虑这个问题最有用的方式，因为每小时可能需要访问的数据只有1%，但超过24小时，需要访问的数据可能增加到整个数据库中20%的不同页面。根据需要被缓存起来的数据量的多少，来思考工作集会更加直观，缓存的数据越多，工作负载就越可能成为CPU密集型。如果不能缓存足够的数据，工作集就不能完全放在内存中。</p>
+<p>应该依据最常用的页面集来考虑工作集，而不是最频繁读写的页面集。这意味着，确定工作集需要在应用程序内有测量的模块，而不能仅仅看外部资源的利用，例如IO访问,因为页面的IO操作跟逻辑访问页面不是同一回事。例如，MySQL可能把一个页面读入内存，然后访问它数百万次，但如果查看strace，只会看到一个IO操作。缺乏确定工作集所需的检测模块，最大的原因是没有对这个主题有比较多的研究。</p>
+<p>工作集包括数据和索引，所以应该采用缓存单位来计数。一个缓存单位是存储引擎工作的数据最小单位。</p>
+<p>不同存储引擎的缓存单位大小是不一样的，因此也使得工作集的大小不一样。例如，InnoDB在默认情况下是16KB的页。如果InnoDB做一个单行查找需要读取磁盘，就需要把该行的整个页面读入缓冲池进行缓存，这会引起一些缓存的浪费。假设要随机访问100字节的行。InnoDB将用掉缓冲池中很多额外的内存来缓存这些行，因为每一行都必须读取和缓存一个完整的16KB页面.因为工作集也包括索引,InnoDB也会读取并缓存查找行所需的索引树的一部分.InnoDB的索引页大小也是16KB，这意味着访问一个100字节的行可能一共要使用32KB的缓存空间（有可能更多，这取决于索引树有多深）。因此，缓存单位也是在InnoDB中精心挑选聚集索引非常重要的另一个原因。聚集索引不仅可以优化磁盘访问，还可以帮助在同一页面存储相关的数据，因此在缓存中可以尽量放下整个工作集。</p>
+<h5><span id="34-找到有效的内存磁盘比例">3.4 找到有效的内存/磁盘比例</span></h5><hr>
+<p>找到一个良好的内存/磁盘比例最好的方式是通过实验和基准测试。如果可以把所有东西放入内存，你就大功告成了，后面没有必要再为此考虑什么。但大多数的时候不可能这么做，所以要用数据的一个子集来做基准测试，看看将会发生什么。测试的目标是一个可接受的缓存命中率。缓存未命中是当有查询请求数据时，数据不能在内存中命中，服务器需要从磁盘获取数据。</p>
+<p>缓存命中率实际上也会决定使用了多少CPU，所以评估缓存命中率的最好方法是查看CPU使用率。例如，若CPU使用了99%的时间工作，用了1%的时间等待IO，那缓存命中率还是不错的。</p>
+<p>考虑下工作集是如何影响高速缓存命中率的。首先重要的一点，要认识到工作集不仅是一个单一的数字而是一个统计分布，并且缓存命中率是非线性分布的。例如，有10G内存，并且未缓存命中率为10%，可能会认为只需要增加11%以上的内存，就可以降低缓存的未命中率到0。但实际上，诸如缓存单位的大小之类的问题会导致缓存效率低下，可能意味着理论上需要50GB的内存,才能把未命中率降低到1%。即使与一个完美的缓存单位相匹配，理论预测也可能是错误的：例如数据访问模式的因素也可能让事情更复杂。解决1%的缓存未命中率甚至可能需要500GB的内存，这取决于具体的工作负载。</p>
+<p>有时候很容易去优化一些可能不会带来多少好处的地方。例如，10%的未命中率可能导致80%的CPU使用率，这已经是相当不错的了。假设增加内存，并能够让缓存未命中率下降到5%，简单来说，将提供另外约6%的数据给CPU。再简化一下，也可以说，把CPU使用率增加到了84.8%。然而，考虑到为了得到这个结果需要购买的内存，这不一定是一个大胜利。在现实中，因为内存和磁盘访问速度之间的差异、CPU真正操作的数据，以及许多其他因素，降低缓存未命中率到5%可能都不会太多改变CPU使用率。</p>
+<p>这就是为什么我们说，你应该争取一个可接受的缓存命中率，而不是将缓存未命中率降低到零。没有一个应该作为目标的数据，因为可以接受怎么定义，取决于应用程序和工作负载。有些应用程序有1%的缓存未命中都可以工作得非常好，而另一些应用实际上需要这个比例低到0.01才能良好运转。</p>
+<p>最好的内存/硬盘的比例还取决于系统上的其他组件。假设有16GB的内存、20GB的数据，以及大量未使用的磁盘空间系统。该系统在80%的CPU利用水平下运行的很好。如果想在这个系统上放置两倍多的数据，并且保持相同的性能水平，你可能会认为只需要让CPU数量和内存量也增加到两倍。然而，即使系统中的每个组件都按照增加的负载扩展相同的量（一个不切实际的假设），这依然可能会使得系统无法正常工作。有20GB数据的系统可能使用了某些组件超过50%的容量。例如，它可能已经用掉了每秒IO最大操作数的80%。并且在系统内排队也是非线性的。服务器将无法处理两倍的负载。因此，最好的内存/磁盘比例取决于系统中最薄弱的组件。</p>
+<h5><span id="35-选择硬盘">3.5 选择硬盘</span></h5><hr>
+<p>如果无法满足让足够的数据在内存中的目标。例如，估计将需要500GB的内存才能完全让CPU负载起当前的IO系统，那么应该考虑一个更强大的IO子系统，有时甚至要牺牲内存为代价。同时，应用程序的设计应该能够处理IO等待。</p>
+<p>这听起来似乎有悖常理。毕竟我们刚刚说过。更多的内存可以缓解IO子系统的压力，减少IO等待.为什么要加强IO子系统？如果只增加内存能解决问题吗？当然就在所涉及的因素之间的平衡。例如读写之间的平衡。每个艾欧操作的大小。以及每秒有多少这样的操作发生。例如，若需要快速写日志。就不能通过增加大量有效内存来避免磁盘写入。在这种情况下，投资一个高性能的IO系统。投资电池支持的写缓存或者固态存储。可能是个更好的主意。</p>
+<p>从传统磁盘读取数据的过程分为三个步骤。</p>
+<ul>
+<li>移动读取磁头到磁盘表面上的正确位置。</li>
+<li>等待磁盘旋转。所有所需的数据在读取磁头下。</li>
+<li>等待磁待磁盘旋转过去，所有所需的数据都被读取磁头读出。</li>
+</ul>
+<p>磁盘执行这些操作有多快？可以浓缩为两个数字：访问时间（步骤一和步骤二合并）和传输速度。这两个数字也决定延迟和存储量。不管是需要快速访问时间还是快速的传输速度或者两者混合，依赖于与正在运行的查询语句的种类，从完成一次磁盘都读取所需要的总时间来说，小的随机查找以步骤一和步骤二为主。而大的顺序读主要是第三步。</p>
+<p>其他一些因素也会影响磁盘的选择，哪个重要取决于应用。假设正在为一个在线应用选择磁盘。例如一个受欢迎的新闻网站。有大量小的磁盘随机读取。可能需要考虑下列因素。</p>
+<ul>
+<li><p>存储容量</p>
+<p>  对在线应用来说，容量很少成为问题。现在的磁盘足够大了。如果不够，用RAID把小磁盘组合起来是标准做法</p>
+</li>
+<li><p>传输速度</p>
+<p>  现在磁盘通常数据传输速度非常快。正如我们前面看到的，究竟多快，主要取决于主轴转速和数据存储在磁盘表面上的密度。再加上主机系统的接口的限制。无论如何，传输速度通常不是在线应用的限制因素。你们他们一般会做很多小的随机查找。</p>
+</li>
+<li><p>访问时间</p>
+<p>  对随机查找的速度而言，这是个主要因素，所以应该寻找更快的访问时间的磁盘。</p>
+</li>
+<li><p>物理尺寸</p>
+<p>  所有其他条件都相同的情况下，磁盘的物理尺寸也会带来差别。越小的磁盘，移动读取磁头需要的时间就越短。服务器级的2.5英寸磁盘性能。往往比他们的更大的盘更快，他们还可以节省电力，并且通常会融入机箱中。</p>
+</li>
+</ul>
+<p>和CPU一样,MySQL如何扩展到多个磁盘上取决于存储引擎和工作负载，InnoDB能很好地扩展到多个磁盘驱动器。然而，myisam的表锁限制其写的可扩展性，因此写繁重的工作加在myisam上，可能无法从多个驱动器中收益。虽然操作系统的文件系统缓冲和后台并发写入会有点帮助，但myisam相对于innodb在写可扩展性上有更多的限制。</p>
+<p>和CPU一样，更多的磁盘也不并总是更好。有些应用要求低延迟需要的是更快的驱动器，更不是更多的驱动器。例如，复制通常在更快的驱动器上表现更好，因为备库的更新是单线程的。</p>
+<h4><span id="4-固态存储">4.  固态存储</span></h4><hr>
+<p>高质量闪存设备具备：</p>
+<ul>
+<li>相比硬盘有更好的随机读写性能，闪存设备通常读明显比写要快。</li>
+<li>相比硬盘有更好的顺序读写性能。但是相比较而言不如随机IO的改善那么大，因为硬盘随机IO比顺序IO慢得多。入门级固态硬盘的顺序读取实际上还可能比传统硬盘慢</li>
+<li>相比硬盘能更好的支持并发。闪存设备可以支持更多的并发操作，事实上，只有大量的并发请求才能真正实现最大吞吐量。</li>
+</ul>
+<p>最重要的事情是提升随机IO和并发性。闪存记忆体可以再高并发下提供很好的随机IO性能，这正是范式化的数据库所需要的。设计非范式化的schema最常见的原因之一是为了避免随机IO，并且使得查询可能转化为顺序IO。</p>
+<h5><span id="优化固态存储上的mysql">优化固态存储上的MySQL</span></h5><hr>
+<ul>
+<li><p>增加innodb的IO容量</p>
+<p>  闪存比机械硬盘支持更高的并发量。所以可以增加读写线程数到10或15来获得更好的结果。也可以在两千到两万范围内调整innodb_io_capacity选项，这要看设备实际上能支撑多大的IOPS。尤其是对官方的innodb很有必要，内部很多算法依赖这个配置。</p>
+</li>
+<li><p>让innodb日志文件更大</p>
+<p>  即使最近版本的innodb中改进了崩溃恢复算法，也不应该把磁盘上的日志文件调的太大，因为崩溃恢复需要随机IO访问，会导致恢复需要很长一段时间。闪存存储让这个过程快很多，所以可以设置更大的innodb日志文件，以帮助提升和稳定性能。对oracle官方的innodb，这个设置尤其重要，它维持一个持续的脏页刷新比例有点麻烦，除非有相当大的日志文件，4G或者更大，在写的时候对服务器来说是个不错的选择。</p>
+</li>
+<li><p>把一些文件从闪存移到RAID</p>
+<p>  除了把innodb日志文件设置的更大，把日志文件从数据文件中拿出来，单独放在一个带有电池保护写缓存的RAID组上而不是固态设备上，也是个好主意。这么做有几个原因。一个原因是日志文件的IO类型，在闪存设备上不比在这样一个RAID组上要快。innodb写日志是以512字节为单位的顺序IO写下去,并且除了崩溃恢复会顺序读取，其他时候绝不会去读。这样的IO操作类型用闪存设备是很浪费。并且把小的写入操作从闪存转移到RAID卷也是个好主意，因为很小的写入会增加闪存设备的写放大因子，会影响一些设备的使用寿命。大小写操作混合到一起也会引起某些设备延时的增加。</p>
+<p>  基于相同的原因，有时把二进制日志文件转移到RAID卷也会有好处。并且你可能会认为ibdata1文件也适合放在RAID卷上，因为ibdata1文件包含双写缓冲和插入缓冲。尤其是双写缓冲会进行很多重复写入。在percona server中，可以把双写缓冲从ibdata1文件中拿出来，单独存放到一个文件，然后把这个文件放在RAID卷上。</p>
+<p>  还有另一个选择：可以利用percona server的特性，使用4KB的块写事务日志,而不是512字节.因为这会匹配大部分内存本身的块大小,所以可以获得更好的效果.</p>
+</li>
+<li><p>禁用预读</p>
+<p>  预读通过通知和预测读取模式来优化设备的访问,一旦认为某些数据在未来需要被访问到,就会从设备上读取这些数据。实际上在innodb中有两种类型的预读，我们发现在多种情况下的性能问题，其实都输预读以及它的内部工作方式造成的。在许多情况下，开销比收益大，尤其是在闪存存储，但没有证据证明提升多少性能。</p>
+</li>
+<li><p>配置InnoDB刷新算法</p>
+<p>  这决定innodb什么时候、刷新多少、刷新哪些页面，这是个非常复杂的主题。建议innodb_adaptive_checkpoint选项为keep_average，不要用默认值estimate。可以确保更持续的性能，避免服务器抖动<br>  另外建议为闪存设备设置innodb_flush_neighbor_page=0。这样可以避免innodb尝试查找相邻的脏页一起刷写。这个算法可能会导致更大快的写、更高的延迟以及内部竞争。在闪存存储设备商完全没必要，也没有什么收益，因为相邻的页面单独刷新不会冲击性能</p>
+</li>
+<li><p>禁用双写缓冲的可能</p>
+<p>  相对于把双写缓存转移到闪存设备，可以考虑直接诶关闭它。并且这个收益在闪存设备上比在传统磁盘上要高得多，禁用双写缓冲在闪存存储上可以提高MySQL整体性能差不多50%。</p>
+</li>
+<li><p>限制插入缓冲大小</p>
+<p>  插入缓冲（变更缓冲）设计用来减少当更新行不在内存中的非唯一索引引起的随机IO。在硬盘驱动器上，减少随机IO可以带来巨大的性能提升。对某些类型的工作服在，当工作集比内存大很多时，差异可能达到近两个数量级。插入缓冲在这类场景下就很有用。<br>  然而，对闪存就没必要了。闪存上随机IO非常快,所以即使完全禁用插入缓冲,也不会带来太大影响，尽管如此，可能你也不想完全禁用插入缓存。所以最好还是启用，因为IO只是修改不在内存中的索引页面的开销的一部分.对内存设备而言，最重要的配置是控制最大允许的插入缓冲大小，可以限制为一个相对比较小的值，而不是让它无限制地增长，这可以避免消耗设备上的大量空间，并避免ibdata1文件变得非常大的情况。</p>
+</li>
+</ul>
+<p>修改页大小，修改innodb页面校验算法。服务器开启超线程，当使用闪存存储时，会有很大帮助，因为磁盘通常不再是瓶颈，任务会更多地从IO密集变为CPU密集。</p>
+<h4><span id="5-为备库选择硬件">5 为备库选择硬件</span></h4><hr>
+<p>固态硬盘，最好是相同的硬件和配置，能承受主库的所有写入。</p>
+]]></content>
+      <categories>
+        <category>MySQL</category>
+      </categories>
+      <tags>
+        <tag>MySQL</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>MySQL的IO行为</title>
+    <url>/2020/12/26/Book%20Nodes/%E9%AB%98%E6%80%A7%E8%83%BDMySQL/7-MySQL%E7%9A%84IO%E8%A1%8C%E4%B8%BA/</url>
+    <content><![CDATA[<h2><span id="mysql的io行为">MySQL的IO行为</span></h2><hr><p>innodb不仅允许控制怎么恢复，还允许控制怎么打开和刷新数据，这会对恢复和整体性能产生巨大的影响。尽管可以影响它的行为，innodb的恢复流程实际上是自动的，并且经常在innodb启动时运行。撇开恢复并假设innodb没有崩溃或者出错，innodb依然有很多需要配置的地方。它有一系列复杂的缓存和文件设计可以提升性能，以及保证ACID特性，并且每一部分都是可配置的。</p><a id="more"></a>
+
+<h4><span id="innodb-事务日志">innodb 事务日志</span></h4><p>innodb使用日志来减少提交事务时的开销。因为日志中已经记录了事务，就无须在每个事务提交时把缓冲池的脏块刷新到磁盘中。事务修改的数据和索引通常会映射到表空间的随机位置，所以刷新这些变更到磁盘需要很多随机IO。innodb假设是用的是常规磁盘，随机IO比循序IO要昂贵得多,因为一个IO请求需要时间把磁头移动到正确的位置，然后等待磁盘上读出需要的部分，再转到开始位置。</p>
+<p>innodb用日志吧随机IO变成顺序IO，一旦日志安全写到磁盘，事务就持久化了，即使变更还没写到数据文件。如果一些糟糕的事情发生，比如断电，innodb可以重放日志并且回复已经提交的事务。</p>
+<p>当然，innodb最后还是必须把变更写到数据文件，因为日志有固定的大小。innodb的日志是环形方式写的：当写道日志的尾部，会重新跳转到开头继续写，但不会覆盖还没有应用到数据文件的日志记录，因为这样做会清除掉已提交事务的唯一持久化记录。</p>
+<p>innodb使用一个后台线程智能地书信这些变更到数据文件。这个线程可以批量组合写入，使得数据写入更顺序，以提高效率。实际上，事务日志把数据文件的随机IO转换为几乎顺序的日志文件和数据文件IO，把刷新操作转移到后台使查询可以更快完成，并且缓和查询高峰时IO系统的压力。</p>
+<p>整体的日志文件大小受控于innodo_log_file_size和innodb_log_files_in_group两个参数，这对写性能非常重要。日志文件的总大小是每个文件的大小之和。默认情况下，只有两个5MB的文件,总共10MB，这对于高性能工作来说太小了。至少需要几百M，甚至上G的日志文件.</p>
+<p>innodb使用多个文件作为一组循环日志.通常不需要修改默认的日志数量,只修改每个日志文件的大小即可.要修改日志文件大小,需要完全关闭MySQL,将旧的日志文件转移到其他地方保存,重新配置参数,然后重启.一定要确保MySQL干净地关闭了,或者还有日志文件可以保证需要应用到数据文件的事务记录,否则数据库就无法恢复了.当重启副武器的时候,查看MySQL的错误日志.再重启成功后,才能删除就的日志文件.</p>
+<p>日志文件大小和日志缓存。要确定立项的日志文件大小，必须权衡正常数据变更的开销和崩溃恢复需要的时间。如果日志太小，innodb将必须做更多的检查点，导致更多的日志写。在极个别情况下，写语句可能被拖累，在日志没有空间继续写入前，必须等待变更被应用到数据文件。另一方面，如果日志太大了，在崩溃恢复时innodb可能不得不做大量的工作。这可能极大地增加恢复时间，尽管这个处理在新的MySQL版本中已经改善跟多。</p>
+<p>数据大小和访问模式也将影响恢复时间。假设有一个1TB的数据和16GB的缓冲池，并且全部日志大小是128MB。如果缓冲池里有很多葬爷，并且它们均匀分布在1TB数据中，崩溃后恢复将需要相当长一段时间。innodb必须从头到尾扫描日志，仔细检查数据文件，如果需要还要应用变更到数据文件。这是很庞大的读写操作！另一方面，如果变更是局部的，就是说，如果只有几百MB数据被频繁地变更，恢复可能就很快，即使数据和日志文件很大。恢复时间也依赖于普通修改操作的大小，这根数据行的平均长度有关系。较短的行使得更多的修改可以放在同样的日志中，所以innodb可能必须在恢复时重放更多修改操作。</p>
+<p>当innodb变更任何数据时，会写一条变更记录到内存日志缓冲区。再缓冲满的时候，事务提交的时候，或者每一秒钟，innodb就会刷写缓冲区的内容到磁盘日志文件，无论上述三个条件哪个先到达。如果有大事务，增加日志缓冲区大小可以帮助减少IO。innodb_log_buffer_size可以控制日志缓冲区的大小。</p>
+<p>通常不需要吧日志缓冲区设置的非常大。推荐的范围是1-8m，一般来说足够了，除非要写很多大的blob记录。相对于innodb的普通数据，日志条目是非常紧凑的。它们不是基于页的，所以不会浪费空间来一次存储整个页。innodb也使得日志条目尽可能地短。有时甚至会保存为函数号和C函数的参数。</p>
+<p>较大的日志缓冲区在某些情况下也是有好处的：可以减少缓冲区中空间分配的争用。当配置一台有大内存的服务器时，有时简单地分配32-128m的日志缓冲，因为花费这么点相对而言比较小的内存并没有什么不好，还可以帮助避免压力平津。</p>
+<p>可以通过检查<strong>show innodb status</strong>的输出中log部分来监控innodb的日志和日志缓冲区的IO性能，通过观察innodb_os_log_written状态变量来查看innodb对日志文件写出了多少数据。一个好用的经验法则是：<strong>查看10-100秒间隔的数字，然后记录峰值。可以用这个来判断日志缓冲是否设置的正好。例如，若看到峰值是美妙写100k数据到日志，那么1M的日志缓冲可能足够了。也可以使用这个衡量标准来决定日志文件设置多大会比较好。如果峰值是100k/s，那么256m的日志文件足够存储至少2560秒的日志记录。这看起来足够了。作为一个经验法则，日志文件的全部大小，应该足够容纳服务器一个小时的活动内容。</strong></p>
+<p>innodb怎样刷新日志缓冲。当innodb把日志缓冲刷新到磁盘日志文件时，会先使用一个mutex锁住缓冲区，刷新到所需要的位置，然后移动剩下的条目到缓冲区的前面，当mutex释放时，可能有炒股go一个事务已经准备好刷新七日织记录。innodb有一个group commit功能，可以在一个IO操作内提交多个事务,但是在MySQL5 中打开二进制日志时,这个功能就不能用了.</p>
+<p>日志缓冲必须被刷新到持久化存储，以确保提交的事务完全被持久化了。如果和持久相比更在乎性能，可以修改innodb_flush_log_at_trx_commit变量来控制日志缓冲刷新的频繁程度。可能设置如下</p>
+<ul>
+<li>0，把日志缓冲写到日志文件，并且每秒钟刷新一次，但是事务提交时不做任何事。</li>
+<li>1，将日志缓冲写到日志文件，并且每次事务提交刷新到持久化存储。这是默认的设置，该设置能保证不会丢失任何已经提交的事务，除非磁盘或者操作系统是未刷新。</li>
+<li>2，每次提交时把日志缓冲写到日志文件，但是并不刷新。innodb每秒钟做一次刷新。0和2的最重要的不同是，如果MySQL进程挂了，2不会丢失任事务。如果整个服务器挂了或者断电了，则还是可能会丢失一些事务。</li>
+</ul>
+<p>了解“把日志缓冲写到日志文件”和“把日志刷新到持久化存储”之间的不同是很重要的。在大部分操作系统中，把缓冲写到日志知识简单的把数据从innodb的内存缓冲转移到了操作系统的缓冲，也是在内存里，并没有真的把数据写到了持久化存储。</p>
+<p>因此，如果MySQL崩溃了或者电源断电了，设置0和2通常会导致最多一秒的数据丢失，因为数据只可能存在操作系统的缓存。我们说通常，因为不论如何innodb会每秒尝试刷新日志文件到磁盘，但是在一些场景下也可鞥丢失超过一秒的食物，例如当刷新没延迟了。</p>
+<p>与此相反，把日志刷新到持久化存储意味着innodb请求操作系统把数据刷出缓存，并且确认写到磁盘了。这是一个阻塞IO的调用，知道数据被完全写回才会完成。因为写数据到磁盘比较慢，当innodb_flush_log_at_trx_commit被设置为1时，可能明显地降低innodb每秒可以提交的事务数，今天的告诉驱动器可能每秒只能执行一两百个磁盘事务，受限于磁盘旋转速度和寻址时间。</p>
+<p>有时磁盘控制器或者操作系统假装做了刷新，其实知识吧数据放到了另一个缓存，例如磁盘自己的缓存。这更快但是很危险，因为如果驱动器断电，数据依然可能丢失。这甚至比设置innodb_flush_log_at_trx_commit为不为1的值更糟糕，因为只可能导致数据损坏，不仅仅是丢失事务。</p>
+<p>设置innodb_flush_log_at_trx_commit为不为1的值坑会导致丢失事务。然而，如果不在意持久性，那么设置为其他的值也是有用的。也许你知识想拥有innodb的其他一些功能，例如聚簇索引，防治数据损坏，以及行锁。但仅仅因为性能原因用innodb替换myisam 的情况也并不少见。</p>
+<p><strong>高性能事务处理需要的最佳配置是吧innodb_flush_log_at_trx_commit设置为1且把日志文件放到一个有电池保护的写缓存的RAID卷中。这兼顾了速度和安全</strong>。事实上，我们敢说任何希望能扛过高负荷工作负载的产品数据库服务器，都需要有这种类型的硬件。</p>
+<h5><span id="innodb怎样打开和刷新日志以及数据文件">innodb怎样打开和刷新日志以及数据文件</span></h5><p>使用innodb_flush_method选项可以配置innodb如果跟文件系统相互作用。从名字来看，会以为只能影响innodb怎么写数据，实际上影响了innodb怎么读数据。windows和非windwos的操作系统对这个选项的值是互斥的：async_unbuffered、unbuffered和normal之鞥呢在windows下使用，而且windows下不能使用其他的值。在windows下默认值是unbuffered，其他操作系统都是fdatasync。</p>
+<p><strong>这是一个有点那一理解的选项，因为它既影响日志文件，业形象数据文件，而且有时候对不同类型的文件的处理也不一样。如果有一个选项来配置日志，另一个选项来配置数据文件，这样最好了，但实际上它们混合在同一个配置中。</strong></p>
+<p>下面是一些可能的值</p>
+<ul>
+<li><p>fdatasync</p>
+<p>  这在非windows系统上是默认值：innodb使用fsync()来刷新数据和日志文件。innobd通常用fsync代替fdatasync，即使这个值似乎表达的是相反的意思。fdatasync和fsync相似，但是只刷新文件的数据，而不包括元数据。因此，fsync会导致更多的IO，然而innodb的开发者都很保守，他们发现某些场景下fdatasync会导致数据损坏。innodb决定了哪些方法可以更安全地使用，有一些是编译时设置的，也有一些事运行时设置的。它使用尽可能最快的安全方法。</p>
+<p>  使用fsync的缺点是操作系统至少会在自己的缓存中缓冲一些数据。理论上，这种双重缓冲室浪费的，因为innodb管理自己的缓冲比操作系统能做的更加智能。然而，最后的影响跟操作系统和文件系统非常相关。如果能让文件系统做更智能的IO调度和批量操作,双重缓冲可能并不是坏事.有的文件系统和操作系统可以积累写操作合并执行,通过对IO重新排序来提升效率，或者并发写如多个设备。它们也可能做预读优化，例如，若连续请求了几个顺序的块，它会通知硬盘预读下一个块。</p>
+<p>  有时这些优化有帮助，有时么有。如果好奇fsync会做哪些具体的事，可以阅读系统的帮助手册。</p>
+<p>  innodb_per_file_table选项会导致每个文件独立地做fsync，这意味着写多个表不能合并到一个IO操作。这可能导致innodb执行更多的fsync操作。</p>
+</li>
+<li><p>0_DIRECT</p>
+<p>  innodb对数据文件使用0_DIRECT标记或者directio函数，这依赖于操作系统。这个设置并不影响日志文件并且不是在所有的类unix系统上都有效。但是linux是支持的。不像0_DSYNC标记，，它会同时影响读和写。</p>
+<p>  这个设置依然使用fsync来刷新文件到磁盘，但是会通知操作系统不要缓存数据，也不要预读。这个选项**完全关闭了操作系统缓存，并且使得所有的读和写都直接通过存储设备，避免了双重缓冲。</p>
+<p>  在大部分系统上，这个实现用fcntl调用来设置文件描述符的0_DIRECT标记，所以可以阅读fcntl的手册了解细节。</p>
+<p>  如果RAID卡支持预读，这个设置不会关闭RAID卡的预读。这个设置只能关闭操作系统和文件系统的预读。</p>
+<p>  如果使用0_DIRECT选项，通常需要带有写缓存的RAID卡，并且设置为write-back策略，因为这是典型的唯一能保持好性能的方法。当innodb和实际存储设备之间没有缓冲时使用0_DIRECT，例如当RAID卡没有写缓存时，可能导致严重的性能下降。现在有个多个写线程，问题小一点，但通常还有问题。MySQL5.5提供了更原生异步IO。</p>
+<p>  这个选项可能导致服务器预热时间变长，特别是操作系统的缓存很大的时候。也可能导致小容量的缓冲池比缓冲IO方法操作要慢得多。这是因为操作系统不会通过保持更多数据在自己的缓存中来帮助提升性能。如果需要的数据不再缓冲池，innodb将不得不从磁盘读取。这个选项不会对innodb_per_file_table产生任何额外的损失。相反，如果不用innodb_per_file_table，当使用0_DIRECT时，可能由于一些顺序IO而遭受性能损失。这种情况的发生是因为一些文件系统的每个inode都有一个mutex。当在这些文件系统上使用0_DIRECT时，确实需要打开innodb_file_per_table</p>
+</li>
+<li><p>ALL_0_DIRECT</p>
+<p>  这个选项在percona server 和 mariadb中可用。它使得服务器再打开日志文件时，也能使用标准MySQL中打开数据文件的方式（0_DIRECT）</p>
+</li>
+<li><p>0_DSYNC</p>
+<p>  这个选项使日志文件调用open函数时设置0_SYNC标记。它使得所有的写 同步。也就是说，只有数据写到磁盘后，写操作才返回。这个选项不影响数据文件。0_SYNC标记和0_DIRECT标记的不同之处在于，0_SYNC没有禁用操作系统层的缓存。因此，它没有避免双重缓冲，而且它没有使写操作直接操作到磁盘。使用了0_SYNC标记，在缓存中写数据，然后发送到磁盘。</p>
+<p>  使用0_SYNC标记做同步写操作，听起来可能跟fsync做的事情非常相似，但是它们两个的实现无论在操作系统层是硬件层都非常不同。使用了0_SYNC标记后，操作系统可能把使用同步IO标记下传给硬件层，告诉设备不要使用缓存，另一方面，fsync告诉操作系统把修改过的缓冲数据刷写到设备上，如果设备支持，紧接着回传第一个指令给设备刷星他自己的缓存，所以，毫无疑问，数据肯定记录在了物理媒介上。另一个不同是，使用了0_SYNC的话，每个write或pwrite操作都会在函数完成之前把数据同步到磁盘，完成前函数调用是阻塞的。相对来看，不用0_SYNC标记的写入调用fsync允许写操作积累在缓存，然后一次性刷新所有的数据。</p>
+<p>  这个选项设置0_SYNC标记，不是0_DSYNC标记，因为innodb开发者发现了0_DSYNC的bug。0_SYNC和0_DSYNC类似于fsync和fdatasync：0_SYNC同时同步数据和元数据，但是0_DSYNC只同步数据。</p>
+</li>
+<li><p>async_unbuffered</p>
+<p>  这是windows下的默认值。这个选项让innodb对大部分写使用没有缓冲的IO，里外是当innodb_flush_log_at_trx_commit设置为2的时候，对日志文件使用缓冲IO.</p>
+<p>  这个选项使得innodb在windows 2000 ,xp 以及更新版本中对数据读写都使用操作系统的原生异步IO。</p>
+</li>
+<li><p>unbuffered</p>
+<p>  只对windows有效。这个选项与async_unbuffered类似，但是不使用原生异步IO。</p>
+</li>
+<li><p>normal</p>
+<p>  只对windows有效。这个选项让innodb不要使用原生异步IO或者无缓冲IO。</p>
+</li>
+<li><p>nosync和littlesync</p>
+<p>  只为开发使用</p>
+</li>
+</ul>
+<p>如果使用类unix操作系统并且RAID控制器带有电池保护的写缓存，建议使用0_DIRECT。如果不是这样，默认值或者0_DIRECT都可能是最好的选择。</p>
+<h4><span id="innodb表空间">InnoDB表空间</span></h4><hr>
+<p>innodb把数据保存在表空间内，本质上是一个由一个或多个磁盘文件组成的虚拟文件系统。innodb用表空间实现很多功能，并不只是存储表和索引。它还保存了回滚日志、插入缓冲、双写换成，以及其他内部数据结构。</p>
+<p>配置表空间。通过innodo_data_file_path配置可以定制表空间文件。这些文件都放在innodb_data_home_dir指定的目录下，如：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">innodb_data_home_dir = /var/lib/mysql</span><br><span class="line">innodb_data_file_path = ibdata1:1G,ibdata2:1G,ibdata3:1G</span><br></pre></td></tr></table></figure>
+<p>这里在三个文件中创建了3G的表空间。有时人们并不清楚可以使用多个文件分散驱动器的负载，像这样：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">innodb_data_file_path = /disk1/ibdata1:1G;/disk2/ibdata2:1G;...</span><br></pre></td></tr></table></figure>
+<p>在这个例子中，表空间文件确实放在代表不同驱动器的不同目录中，InnoDB把这些文件首尾相连组合起来。因此，通常这种方式并不能获得太多收益。InnoDB先填满第一个文件，当第一个文件满了再用第二个，如此循环；负载并没有真的按照希望的高新能方式分布。用RAID控制器分布负载是更聪明的方式。</p>
+<p>为了允许表空间在超过了分配的空间时还能增长，可以像这样配置最后一个文件自动扩展：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">ibdaa3:1G:autoextend</span><br></pre></td></tr></table></figure>
+<p>磨人的行为是创建单个10MB的自动扩展文件。如果让文件可以自动扩展，那么最好给表空间大小设置一个上限，别让它扩展的太大，因为一旦扩展了，就不能收缩回来。例如，下面的例子现只能自动扩展文件最多道2GB：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">ibdata3:1G:autoextend:max:2G</span><br></pre></td></tr></table></figure>
+<p>管理一个单独的表空间可能有点麻烦，尤其是如果它是自动扩展的，并且希望回收空间时（因为这个原因，建议关闭自动扩展功能，至少设置一个合理的空间范围）。回收空间唯一的方式是导出数据，关闭MySQL，删除所有文件，修改配置，重启，让InnoDB创建新的数据文件，然后倒入数据。InnoDB的这种表空间管理方式很让人头疼，不能简单地删除文件或者改变大小。如果表空间损坏了，InnoDB会拒绝启动。对日志文件也一样的严格。如果想myisam一样随便移动文件，一定要谨慎。</p>
+<p>innobd_file_per_table选项让InnoDB为每张表使用一个文件。它在数据字典存储为 表名.ibd的数据。这使得删除一张表时回收空间简单多了，并且可以容易地分散表到不同的磁盘上。然而，把数据放到多个文件，总体来说可能导致更多的空间浪费，因为单个InnoDB表空间的内部碎片浪费分不到了多个.ibd文件。<strong>对于非常小的表，这个问题更大，因为InnoDB的页大小是16KB。即使表只有1KB的数据，仍然需要至少16KB的磁盘空间。</strong></p>
+<p>即使打开innodb_file_per_table选项，依然需要为回滚日志和其他系统数据创建共享表空间。没有把所有数据存在其中是明智的做法，但最好还是关闭它的自动增长，因为无法在不导入全部数据的情况下给共享表空间瘦身。</p>
+<p>一些人喜欢使用innodb_file_per_table，只是因为特别容易管理，并且可以看到每个表的文件。例如，可以通过查看文件的大小来确认表的大小，这比使用show table status来看快多了，这个命令需要执行很多复杂的工作来判断一个表分配了多少页面。</p>
+<p>设置innodb_per_file也有不好的一面：更差的drop table性能。这可能导致显而易见的服务器端阻塞，有如下两个原因：</p>
+<ul>
+<li>删除表需要从文件系统层去删除文件，这可能在某些文件系统(ext3)上会很慢。可以通过欺骗文件系统来缩短这个过程：把.ibd文件链接到一个0字节的文件，然后手动删除这个文件，而不用等待MySQL来做。</li>
+<li>让打开这个选项，每张表都在InnoDB中使用自己的表空间。结果是，移除表空间实际上需要InnoDB锁定和扫描缓冲池，查找属于这个表空间的页面，在一个有庞大的缓冲池的服务器上做这个操作是非常慢的。如果打算删除很多InnoDB表（包括临时表）并且用了innodo_file_per_table，可能会从percona esrver包含的一个修复中获益，它可以让服务器慢慢滴清理掉属于被删除表的页面。只需要设置innodb_lazy_drop_table这个选项。</li>
+</ul>
+<p>我们建议使用innodb_file_per_table并且给共享表空间设置大小范围，这样可以舒服点（不用处理那些空间回收的事）。如果遇到任何头痛的场景，考虑使用percona的修复</p>
+<p>事实上没有必要把innodb文件放在传统的文件系统上。像许多的传统数据库服务器一样，InnoDB提供使用裸设备的选项，例如，一个没有格式化的分区作为它的存储。然而，今天的文件系统已经可以存放足够大的文件，所以已经没有必要使用这个选项。使用裸设备可能提升几个百分点的性能，但是我们不认为这点效提升足以抵消这样做带来的坏处，我们不能直接用文件管理数据。当把数据存在一个裸设备分区时，不能使用mv,cp等任何其他工具来操作它。最终，这点小的性能收益显然不值得。</p>
+<p>行的旧版本和表空间。在一个写压力大的环境下，innodb的表空间可能增长得非常大。如果事物保持打开状态很久（即使它们没有做任何事），并且使用默认的repeatable read事务隔离级别，innodb将不能删除旧的行版本，因为没提交的事务依然需要看到它们。innodb把旧版本存在非共享表空间，所以如果有更多的数据在更新，共享表空间会持续增长。有时这个问题并非是没提交的事务的原因，也坑那是工作负载的问题：清理过程只有一个线程处理，直到最近的MySQL版本才改进，这可能导致清理线程处理速度跟不上旧版本行增加的速度。</p>
+<p>无论发生何种情况，show innodb status的数据都可以帮助定位问题。查看历史链表的长度会显示了回滚日志的大小，以页为单位。</p>
+<p>分析transactios部分的第一行和第二行可以证实这个观点，这部分展示了当前事务号以及清理线程完成到了哪个点。如果这个差距很大，可能有大量的没有清理的事务。例子：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">transactios</span><br><span class="line">trx id counter 90157601</span><br><span class="line">purge done for trx&apos;s n:o &lt;0 90157601 undo n:0&lt;0 0</span><br></pre></td></tr></table></figure>
+<p>事务标识表示是一个64比特的数字。有两个32比特的数字组成，所以需要一点数学计算来计算差距。我在这个例子中就很简单了，因为这个例子中有3028个潜在的没有被清理的事物（innotop可以做这个计算）。我们说潜在的,是因为这跟有很多没有清理的行是有很大差别的。只有改变了数据的事务，才会创建旧版本的行，但是有很多事务，没有修改数据。与此相反，一个事务也可能修改很多行。</p>
+<p>如果有个很大的回滚日志，并且表空间因此增长很快，可以强制MySQL减速来使innodb的清理线程可以跟得上。这听起来不怎么样，但是没有办法。否则，innobd将保持数据持续写入，填充磁盘最后磁盘空间爆满，或者表空间大于定义的上限。</p>
+<p>为了控制写入速度，可以设置innodb_max_purge_lag变量为一个大于0的值。这个值标识innobd开始延迟后面的语句更新数据之前，可以等待被清除的最大的实物数量。你必须知道工作负载以决定一个合理的值。例如，事务平均影响1KB的行,并且可以允许表空间里有100mb的未清理行,那么可以设置这个值为100000.</p>
+<p>牢记，没有清理的行版本会对所有查询产生影响，因为他们事实上使得表和索引更大了。如果清理线程确实跟不上，性能可能显著的下降。设置innodb_max_purge_lag变量也会降低性能，但是伤害较少。</p>
+<p>在更新版本的MySQL中，清理过程已经显著地提升了性能，并且从其他内部工作任务中分离出来。甚至可以创建多个专用的清理线程来更快地做这个后台工作。如果可以利用这些特性，会比限制副武器的服务能力要好得多。</p>
+<h4><span id="双写缓冲doublewrite-buffer">双写缓冲（Doublewrite buffer）</span></h4><hr>
+<p>innodb使用双写缓冲来避免页没写完整所导致的数据损坏。当一个磁盘写操作不能完整的完成时，不完整的页写入就可能发生。16KB的页可能只有一部分被写到磁盘上有多种多样的原因。可能导致页没有写完整,双写缓冲，在这种情况发生时可以保证数据完整性。</p>
+<p>双写缓冲是表空间一个特殊的保留区域,在一些连续的块中足够保存100个页.本质上是有个最近写回的页面的备份拷贝。档innodb从缓冲池刷新页面到磁盘时，首先把他们写到双鞋缓冲。然后再把它们写到其所属的数据区域中。这可保证每个页面都写入都是原子，并且持久化的.</p>
+<p>这意味着每个页都要写两遍。但是因为innodb写页面到双写缓冲是顺序的。并且只调用一次fsync刷新到磁盘。尽管实际上对性能的冲击是比较小的。通常只有几个百分点。肯定没有一半那么多。这个开销在固态硬盘上更明显。这个策略允许日日文件更加高效。因为双写缓冲给了innodb一个非常牢固的保障。数据页不会损坏，innodb日志记录没必要包含整个页，它们更像是页面的二进制变化量。</p>
+<p>如果有一个不完整的页写到了双写缓冲。原始的页依然会在磁盘上它的真实位置。当innodb回复时，他用原始页面替换了双鞋缓冲中的损坏页面。然而，如果双写缓冲成功写入，但写到页的真实位置失败了，innodb在恢复时将使用双写缓冲中的拷贝来替换。innodb知道什么时候页面损坏了，因为每个页面在末尾都有校验值，限值是最后写到页面的东西。如果应用的内容和校验值不匹配，说明这个页面是损坏的。因此在恢复的时候，innodb只需要读取双鞋缓冲中每个页面，并且验证校验值，如果一个页面的校验值不对，就从它的原始位置读取这个页面。</p>
+<p>有些场景下，双写缓冲确实没必要。例如，你也许想在备库上禁止双写缓冲。此外一些文件系统（ZFS）做了同样的事，所以没有必要再让innodb做一遍。可以通过设置innodb_doublewrite为0来关闭双写缓冲。</p>
+<h4><span id="其他的io配置项">其他的IO配置项</span></h4><p><strong><em>sync_binlog</em></strong>选项控制MySQL怎么刷新二进制日志到磁盘。默认值是0，意味着MySQL并不刷新，有操作系统自己决定什么时候刷新缓存到持久化设备。如果这个值比0大，他指定了两次刷新到磁盘的动作之间间隔多少次二进制日志写操作（如果autocommit被设置了，每个独立的语句都是一次写，否则就是一个事务一次写）。把它设置为0和1以外的值是很罕见的。</p>
+<p>如果没有知识sync_binlog为1，那么崩溃以后可能导致二进制日志没有同步事务数据。这可以轻易地导致复制终端，并且使得及时回复变得不可能。无论如何，可以把这个值设置为1来获得安全的报账。这样就会要求MySQL同步把二进制日志和事务日志这两个文件刷新到两个不同的位置。这坑你需要磁盘寻道，相对来说是个很慢的操作。</p>
+<p>像innodb日志文件一样，把二进制日志放到一个带有电池保护的写缓存的RAID卷，可以极大地提升性能。事实上，写和刷新二进制缓存其实比innodb事务日志要昂贵多了，因为不像innodb事务日志，每次写二进制日志都会增加它们的大小。这需要me次写入文件系统都更新元信息。所以，设置sync_binlog=1可能比innodb+flush_log_at_trx_commit=1对性能的孙海要大得多，尤其是网络文件系统弄个，例如NFS。</p>
+<p>一个跟性能无感的提示，关于二进制文件。如果需要哪个expire_logs_day选项来自定清理旧的二进制日志，就不要用rm命令去删。服务器会感到困惑并且拒绝自动删除它们，并且purge master logs也将停止工作。解决的办法是，如果发现了这种情况，就手动重新同步“主机名-bin.index”文件，可以用磁盘上现有日志文件的列表来更新。</p>
+<p>把带有电池保护写缓存的高质量RAID控制器设置为使用写回策略，可以支持每秒数千的写入，并且依然会保证写到持久化存储，数据写到了带有电池的高速缓存。所以即使系统断电它也能存在，但电源恢复时，RAID控制器将会在磁盘被设置为可用前,把数据从缓存中写到磁盘。因此，一个带有电池保护写缓存的RAID控制器可以显著地提升性能。这是非常值得的投资当然固态硬盘也是另一个选择</p>
+<h3><span id="myisam的io配置">myisam的IO配置</span></h3><hr>
+<p>myisam通常每次写操作之后就把索引变更刷新到磁盘。如果你打算在一张表上做很多修改，那么毫无疑问批量，操作操作会更快一些。一种办法是用lock tables延迟写入，直到解锁这些表。这是个提升性能的很有价值的技巧。因为它使得你精确控制哪些写被延迟，以及什么时候把它们刷到磁盘。可以精确延迟那些希望延迟的语句。</p>
+<p>通过设置delay_key_write变量，也可以延迟索引的写入。如果这么做，修改的键缓冲块知道表被关闭才会刷新。可能的配置如下：</p>
+<ul>
+<li><p>off</p>
+<p>  myisam每次写操作后刷新键缓冲（键缓存，key buffer）中的脏块到磁盘，除非表被lock tables锁定了</p>
+</li>
+<li><p>on</p>
+<p>  打开延迟键写入，但是只对用delay_key_write选项创建的表有效。</p>
+</li>
+<li><p>all</p>
+<p>  所有的myisam表都会使用延迟键写入。</p>
+</li>
+</ul>
+<p>延迟键写入在某些场景下可能很有帮助，但是通常不会带来很大的性能提升。当键缓冲的读命中很好但写命中不好时，数据有比较小，这可能很有用。当然也有一小部分缺点：</p>
+<ul>
+<li>如果服务器并且块没有刷到磁盘，索引可能会损坏。</li>
+<li>如果很多写被延迟了，MySQL可能需要花费更长时间去关闭表，因为必须等待缓冲刷新到磁盘。在MySQL 5这可能引起很长的表缓存锁</li>
+<li>由于上面提到的原因，flush tables可能需要很长时间。如果为了做逻辑卷快照或者其他备份操作，而执行flush tables with read lock，那可能增加操作的时间。</li>
+<li>键缓冲中没有刷回去的脏块可能占用空间，导致从磁盘上读取的新块没有空间存放。因此，查询语句可能需要等待myisam释放一些键缓存的空间</li>
+</ul>
+<p>另外，除了配置myisam的索引IO可以配置myisam怎样尝试从损坏中恢复。myisam_recover选项控制myisam怎样寻找和修复错误。需要在配置文件或者命令行中设置这个选项。可以通过下面的sql语句查看选项的值，但是不能修改</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">variables</span> <span class="keyword">like</span> <span class="string">'myisam_recover_options'</span></span><br></pre></td></tr></table></figure>
+<p>打开这个选项通知MySQL在表打开时，检查是否损坏，并且在找到问题的时候进行修复。可以设置的值如下</p>
+<ul>
+<li><p>default</p>
+<p>  使MySQL尝试修复任何被标记为崩溃或者没有标记为完全关闭的表。默认值不要求在恢复时执行其他动作。跟大多数变量不同，这里default值不是充值变量的值为编译值，本质上意味着没有值。</p>
+</li>
+<li><p>backup</p>
+<p>  让MySQL将数据文件的备份写到.BAK文件，以便随后进行检查。</p>
+</li>
+<li><p>force </p>
+<p>  即使.MYD文件中丢失的数据可能超过一行，也让恢复继续。</p>
+</li>
+<li><p>quick</p>
+<p>  除非有删除快，否则跳过恢复。块中有已经删除的行也依然会占用空间，但是可以被后面的insert语句重用。这可能比较有用，因为myisam大表的恢复可能花费相当长的时间。</p>
+</li>
+</ul>
+<p>可以使用多个配置，用逗号分隔，例如，backup,force 会强制恢复并且创建备份。</p>
+<p>建议打开这个选项，尤其是只有一些小的myisam表时。服务器运行着一些损坏的myisam表时很危险的，因为它们有时可以导致更多数据损坏，甚至服务器崩溃。然而， 如果有很大的表，原子恢复是不切实际的：它导致服务器打开所有的myisam表时都会检查和修复，这是低效的做法。在这段时间，MySQL会阻止连接做任何工作。如果有一大堆的myisam表，比较好的主意还是启动后用check tables 和 repair table命令来做，这样对服务器影响比较小。不管哪种方式，检查和修复表都是很重要的。</p>
+<p>打开数据文件的内存映射访问是另一个有用的myisam选项，内存映射使得myisam直接通过操作系统的页面缓存访问.myd文件，表面系统调用的开销。在MySQL5.1和更新的版本中，可以通过myisam_use_mmap选项打开内存映射。</p>
+]]></content>
+      <categories>
+        <category>MySQL</category>
+      </categories>
+      <tags>
+        <tag>MySQL</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>MySQL架构与历史，基础</title>
+    <url>/2020/12/23/Book%20Nodes/%E9%AB%98%E6%80%A7%E8%83%BDMySQL/6-MySQL%E6%9E%B6%E6%9E%84%E4%B8%8E%E5%8E%86%E5%8F%B2/</url>
+    <content><![CDATA[<p><strong>InnoDB</strong></p><p>innodb使用MVCC来支持高并发，并且实现了四个标准的隔离级别。默认级别是Repeatable read，并且通过间隙锁策略防止欢度的出现。间隙锁使得innodb不仅仅锁定查询涉及的行，还会对索引中的间隙进行锁定，以防止幻影行的插入。</p><a id="more"></a>
+
+<p>innodb表是基于聚簇索引建立的。聚簇索引对主键查询有很高的性能。不过它的二级索引中必须包含主键列，所以如果主键列很大的话，其他的所有索引都会很大。因此，若表上的索引较多的话，主键应当尽可能的小。innodb的存储格式是平台独立的，也就是说可以将数据和索引文件从intel平台复制到其他平台。</p>
+<p><strong>MyISAM</strong></p>
+<p>MyISAM支持全文索引，压缩、空间函数。但是myisam不支持事务和行级锁，而且有个缺陷就是崩溃后无法安全恢复。但是，对于只读的数据，或者表比较小，可以忍受repair操作，依然可以使用myisam。</p>
+<p>myisam会将表存储在两个文件中，数据文件和索引文件，分别以.MYD和.MYI为扩展名。myisam表可以包含动态或者静态行。MySQL会根据标的定义来决定采用何种行格式。myisam表可以存储的行的记录数，一般受限于可用的磁盘空间，或者操作系统中单个文件的最大尺寸。</p>
+<p>MySQL 5.0中，myisam表如所示变长行，则默认配置只能处理256T的数据，因为指向数据记录的指针长度是六个字节。更早的版本中，指针长度是4字节，所以只能处理4G的数据，而所有的MySQL版本都支持8字节的指针。要改变myisam表指针的长度，可以通过修改表的MAX_ROWS和AVG_ROW_LENGTH选项的值来实现，两者相乘就是表可能达到的最大大小。修改这两个参数将会导致重建整个表和表的所有索引，这可能需要很长的时间才能完成。</p>
+<p>myisam的特性有下面的这些</p>
+<ul>
+<li><p>加锁与并发</p>
+<p>  myisam对整张表加锁，而不是针对行。读取时会对需要读到的所有表加共享锁，写入时则对表加排他锁。但是在表有读取查询的同事，也可以往表中插入新的记录，成为并发插入</p>
+</li>
+<li><p>修复</p>
+<p>  对于myisam表，MySQL可以手工或者自动执行检查和修复操作，但这里说的修复和食物恢复以及崩溃恢复是不同的概念。执行标的修复可能导致一些数据丢失，而且修复操作是很慢的。可以通过check table mytable检查标的错误，如果有错误可以通过执行repair table mysql进行修复。</p>
+</li>
+<li><p>索引特性</p>
+<p>  对于myisam表，即使是blob和text字段，也可以基于其前500个字符传建索引，myisam也支持全文索引，基于分词创建，可以支持复杂的查询</p>
+</li>
+<li><p>延迟更新索引键</p>
+<p>  创建myisam表的时候，如果制定了delay_key_write选项，在每次修改执行完成时，不会立刻将修改的索引数据写入磁盘，而是回写到内存中的键缓冲区，只有在清理键缓冲区或者关闭表的时候，才对将对应的索引快写入到磁盘。这种方式可以极大地提升写入心梗，但是在数据库或者主机崩溃时会造成索引损坏，需要执行修复操作。延迟更新索引键的特性，可以在全局设置，也可以为单个表设置</p>
+</li>
+</ul>
+<p>如果表在创建并导入数据以后，不会再进行修改操作，那么这样的表或许适合采用myisam压缩表。</p>
+<p>可以使用myisampack对myisam表进行压缩，压缩表示不能进行修改的。压缩表可以极大地减少磁盘占用，因此也可以减少磁盘IO，从而提升查询性能。压缩表也支持索引，但是索引也是只读的。</p>
+<p>读取压缩表数据的解压带来的开销影响不大，而减少IO带来的好处则要大很多.压缩时表中的记录是独立压缩的,所以读取单行的时候不需要去解压整个表，甚至也不解压行所在的整个页面。</p>
+<p><strong>多版本并发控制</strong></p>
+<p>可以认为MVCC是行级锁的一个变种，它在很多情况下避免了枷锁操作，因此开销更低。虽然实现机制有所不同，但大都实现了非阻塞的读操作，写操作也只锁定必要的行。</p>
+<p>MVCC的实现，是通过保存数据在某个时间点的快照来实现的。也就是说，不管需要执行多长时间，每个事务看到的数据都是一致的。根据事务开始的时间不同，每个事务对同一张表，同一个时刻看到的数据可能是不一样的。</p>
+<p>不同存储引擎的MVCC实现是不同的，典型的有乐观并发控制和悲观并发控制</p>
+<p>innodb的MVCC，是通过在每行记录后面保存两个隐藏的列来实现的。这两个列，一个保存了行的创建时间，一个保存行的过期时间。当然存储的并不是实际的时间值，而是系统版本号。每开始一个新的事务，系统版本号都会自动递增。事务开始时刻的系统版本号会作为事务的版本号，用来和查询到的每行记录的版本号作比较，下面是在repeatable read隔离级别下，MVCC具体是如何操作的</p>
+<ul>
+<li><p>SELECT</p>
+<p>  InnoDB会根据下面两个条件检查每行记录</p>
+<ul>
+<li>InnoDB只查找版本早于当前事务版本的数据行（也就是，行的系统版本号小于或等于事务的系统版本号），这样可以确保事务读取的行，要么是在事务开始前已经存在的，要么是事务自身插入或者修改过的。</li>
+<li>行的删除版本要么未定义，需要大于当前事务版本号。这可以确保事务读取到的行，在事务开始之前未被删除</li>
+<li>只有符合上面两个条件的记录，才能返回作为查询结果</li>
+</ul>
+</li>
+<li><p>INSERT</p>
+<p>  InnoDB为新插入的每一行保存当前系统版本号作为行版本号</p>
+</li>
+<li><p>delete</p>
+<p>  InnoDB为删除的每一行保存当前系统版本号作为行删除标识。</p>
+</li>
+<li><p>update</p>
+<p>  InnoDB为插入一条新纪录，保存当前系统版本号作为行版本号，同时保存当前系统版本号到原来的行作为行删除标识。</p>
+</li>
+</ul>
+<p>保存这两个额外系统版本号，使大多数读操作都可以不用枷锁。这样设计使得读数据操作简单，性能很好，而且也能保证只会读到符合标准的行。不足之处是每行记录都需要额外的存储空间，需要做更多的行检查工作以及一些额外的维护操作。</p>
+<p>MVCC只在repeatable read和 read committed两个隔离级别下工作。其他两个隔离级别和MVCC不兼容。因为read uncommitted总是读取最新的数据行，而不是符合当前事务版本的数据行。而serializable则会对所有读取的行都加锁。</p>
+]]></content>
+      <categories>
+        <category>MySQL</category>
+      </categories>
+      <tags>
+        <tag>MySQL</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>MySQL查询性能的优化</title>
     <url>/2020/12/18/Book%20Nodes/%E9%AB%98%E6%80%A7%E8%83%BDMySQL/4-%E6%9F%A5%E8%AF%A2%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/</url>
-    <content><![CDATA[<p>查询的生命周期大致可以按照顺序来看：<strong>客户端，服务器，在服务器上进行解析，生成执行计划，执行，返回结果给客户端，执行可以认为是整个生性周期中最重要的阶段，这其中包括了大量为了检索数据到存储引擎的调用以及调用后的数据处理，包括排序、分组</strong>。在完成这些任务的时候，查询需要在不同的地方花费时间，包括网络，CPU计算，生成统计信息和执行计划、锁等待（互斥等待）等操作，尤其是向底层存储引擎检索数据的调用操作，这些调用需要在内存操作、CPU操作和内存不足时导致的IO操作上消耗时间，根据存储引擎不同，可能还会产生大量的上下文切换以及系统调用。</p><a id="more"></a>
-<p>| 慢查询基础：优化数据访问</p>
+    <content><![CDATA[<p>| 1.简介</p><p>查询的生命周期大致可以按照顺序来看：<strong>客户端，服务器，在服务器上进行解析，生成执行计划，执行，返回结果给客户端，执行可以认为是整个生性周期中最重要的阶段，这其中包括了大量为了检索数据到存储引擎的调用以及调用后的数据处理，包括排序、分组</strong>。在完成这些任务的时候，查询需要在不同的地方花费时间，包括网络，CPU计算，生成统计信息和执行计划、锁等待（互斥等待）等操作，尤其是向底层存储引擎检索数据的调用操作，这些调用需要在内存操作、CPU操作和内存不足时导致的IO操作上消耗时间，根据存储引擎不同，可能还会产生大量的上下文切换以及系统调用。</p><a id="more"></a>
+
+<p>| 2.慢查询基础：优化数据访问</p>
 <p>查询性能低下最根本的原因是访问的数据太多。大部分性能低下的查询都可以通过减少访问的数据量的方式进行优化。两个步骤：<strong>1.确认应用程序是否在检索大量超过需要的数据。这通常意味着访问了太多的航，但有时候也可能是访问了太多的列。2.确认MySQL服务器层是否在分析大量超过需要的数据行。</strong></p>
+<p>| 2.1 是否想数据库请求了不需要的数据</p>
+<ol>
+<li><p>查询不需要的记录</p>
+<p> 比如说，JDBC的结果集是缓存的查询语句的所有结果，获取前几行，关闭之后，剩余的数据就会被抛弃，这种情况应当加上limit</p>
+</li>
+<li><p>多表关联时返回全部列</p>
+<p> 只选择需要的列</p>
+</li>
+<li><p>总是取出全部列</p>
+<p> 也就是说，避免<code>select *</code>，这种查询，优化器无法完成覆盖扫描这类优化，还会带来额外的IO，内存和CPU的消耗。如果表设计不完善，比如所有字段都在一张表（包括大字段），那么<code>select*</code>就是灾难</p>
+</li>
+<li><p>重复查询相同的数据</p>
+<p> 缓存热点数据，避免重复查询</p>
+</li>
+</ol>
+<p>| 2.2 MySQL是否在扫描额外的记录</p>
+<p>最简单的三个指标：<strong><em>响应时间，扫描的行数，返回的行数</em></strong>。这三个指标会记录到MySQL的慢日志中。</p>
+<p><strong>响应时间</strong></p>
+<p>响应时间是两个部分之和：服务时间和排队时间。服务时间是指数据库处理这个查询真正花了多长时间。排队时间是指服务器因为等待某些资源而没有真正执行查询的时间—可能是等待IO，也可能是行锁，很难做到逐个测量，一般常见的是IO和锁等地啊.</p>
+<p><strong>扫描的行数和返回的行数</strong></p>
+<p>较短的行访问速度更快，内存中的行也比磁盘中的行的访问速度要快。理想情况下，扫描多少行返回多少行，但是实际上不可能发生，比如关联查询，需要扫描多行才能生成结果集中的一行，比率一般在1：1和10：1之间，也有可能非常大。</p>
+<p>在explain语句中的type列反应了访问类型。访问类型有很多种，从<strong>全表扫描到索引扫描、范围扫描、唯一索引扫描、常数引用等。这里列的这些，速度是从慢到快，扫描的行数也是从小到大（感觉书里写错了）。</strong></p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> * <span class="keyword">from</span> film_actor <span class="keyword">where</span> film_id = <span class="number">1</span>;</span><br><span class="line"><span class="comment"># +--+-----------+----------+----------+----+--------------+--------------+-------+-----+----+--------+-----+</span></span><br><span class="line"><span class="comment"># |id|select_type|table     |partitions|type|possible_keys |key           |key_len|ref  |rows|filtered|Extra|</span></span><br><span class="line"><span class="comment"># +--+-----------+----------+----------+----+--------------+--------------+-------+-----+----+--------+-----+</span></span><br><span class="line"><span class="comment"># |1 |SIMPLE     |film_actor|NULL      |ref |idx_fk_film_id|idx_fk_film_id|2      |const|10  |100     |NULL |</span></span><br><span class="line"><span class="comment"># +--+-----------+----------+----------+----+--------------+--------------+-------+-----+----+--------+-----+</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 这里能看到，在索引idx_fk_film_id上使用了ref访问类型来执行查询。explain的结果也显示MySQL预估需要访问10行数据。换句话说，查询优化器认为这种访问类型可以高效地完成查询。</span></span><br><span class="line"><span class="comment"># 但是如果没有索引话，MySQL就不得不使用一种更糟糕的访问类型。</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> film_actor <span class="keyword">drop</span> <span class="keyword">foreign</span> <span class="keyword">key</span> fk_film_actor_film;</span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> film_actor <span class="keyword">drop</span> <span class="keyword">key</span> idx_fk_film_id;</span><br><span class="line"></span><br><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> * <span class="keyword">from</span> film_actor <span class="keyword">where</span> film_id = <span class="number">1</span>;</span><br><span class="line"><span class="comment"># +--+-----------+----------+----------+----+-------------+----+-------+----+----+--------+-----------+</span></span><br><span class="line"><span class="comment"># |id|select_type|table     |partitions|type|possible_keys|key |key_len|ref |rows|filtered|Extra      |</span></span><br><span class="line"><span class="comment"># +--+-----------+----------+----------+----+-------------+----+-------+----+----+--------+-----------+</span></span><br><span class="line"><span class="comment"># |1 |SIMPLE     |film_actor|NULL      |ALL |NULL         |NULL|NULL   |NULL|5462|10      |Using where|</span></span><br><span class="line"><span class="comment"># +--+-----------+----------+----------+----+-------------+----+-------+----+----+--------+-----------+</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 这时候再看，访问类型变成了一个全表扫描，这里的using where 标识MySQL将通过where条件来筛选存储引擎返回的记录。</span></span><br></pre></td></tr></table></figure>
+<p>一般MySQL能使用下面三种方式应用where条件，从好到坏依次为：</p>
+<ol>
+<li><p>在索引中使用where条件来过滤不匹配的记录。这是在存储引擎完成的。</p>
+</li>
+<li><p>使用索引覆盖扫描（在Extra列中出现了Using index）来返回记录，直接从索引中过滤不需要的记录并返回命中的结果。这是在MySQL服务器层完成的，但无需再回表查询记录。</p>
+</li>
+<li><p>从数据表中返回数据，然后过滤不满足条件的记录（在Extra列中出现Using where）。这在MySQL服务器层完成，MySQL需要先从数据表读出记录然后过滤。</p>
+</li>
+</ol>
+<p>不过，MySQL不会告诉我们生成结果实际上需要扫描多少行数据，而只会告诉我们生成结果时一共扫描了多少行数据。扫描的行数中的大部分都很可能是被where条件过滤掉的，对最终的结果集没有贡献。上面的例子中，删除索引后，看到MySQL需要扫描所有记录然后根据where条件过滤，最终只返回10行结果。可以尝试以下技巧进行优化</p>
+<ol>
+<li><p>使用索引覆盖扫描，把所有需要用到的列都放到索引中，这样存储引擎无需回表获取对应行就可以返回结果</p>
+</li>
+<li><p>改变库表结构，比如使用单独的汇总表</p>
+</li>
+<li><p>重写复杂查询，让MySQL优化器能够以更有花的方式执行这个查询。</p>
+</li>
+</ol>
+<p>| 3.1 一个复杂查询还是多个简单查询</p>
+<p>首先，个人观点，尽量避免复杂查询，外包公司可能是从oracle遗传下来的习惯，很喜欢各种复杂sql处理，因为以前的网络通信，查询解析和优化代价很高，但是这样，会导致数据库层成为瓶颈，而且，都2020年了，不思进取的老人也该被淘汰了。</p>
+<p>MySQL从设计上让连接和断开都很轻量级，在返回一个小的查询结果方面很高效。MySQL内部每秒能够扫描内存中上百万行数据，相比之下，MySQL相应数据给客户端就慢很多。相同条件下，使用尽可能少的查询当然是好的。但是，很多时候，将一个大查询分解为多个小查询是很有必要的。</p>
+<p>| 3.2 切分查询</p>
+<p>分治，将大查询切分成小查询，每个查询功能完全一样，只完成一小部分，每次只返回一小部分查询结果。<strong>删除旧的数据就是一个很好的例子：如果用一个大的语句一次性完成的话，则可能需要一次锁住很多数据，占满整个事务日志，耗尽系统资源、阻塞很多小的但是很重要的查询。将一个大的delete语句分割成多个较小的查询可以尽可能小的影响MySQL性能，还可以减少MySQL复制的延迟。</strong>例子如下：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">delete</span> <span class="keyword">from</span> messages <span class="keyword">where</span> created &lt; <span class="keyword">date_sub</span>(<span class="keyword">now</span>(),<span class="built_in">interval</span> <span class="number">3</span> <span class="keyword">month</span> )</span><br></pre></td></tr></table></figure>
+<p>可以改用下面的方法完成</p>
+<figure class="highlight php"><table><tr><td class="code"><pre><span class="line">rows_affected = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">do</span>&#123;</span><br><span class="line">  rows_affected = do_query(<span class="string">"delete from messages where created &lt; date_sub(now(),interval 3 month ) limit </span></span><br><span class="line"><span class="string">10000"</span>)</span><br><span class="line">&#125;<span class="keyword">while</span> rows_affected&gt;<span class="number">0</span></span><br></pre></td></tr></table></figure>
+<p>一次删除一万行数据一般来说是一个比较高效而且对服务器影响也最小的做法（如果是事务性引擎，很多时候小事务能够更高效）。同时需要注意的是，如果每次删除数据后，都暂停一会再做下一次删除，这样也可以将服务器上原本一次性的压力分散到一个很长的时间段中，就可以大大降低对服务器的影响，还可以大大减少删除时锁的持有时间。</p>
+<p>| 3.3 分解关联查询</p>
+<p>很多高性能的应用都会对关联查询进行分解。简单地，可以对每一个表都进行一次单表查询，然后将结果在应用程序中进行关联，比如说：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> *</span><br><span class="line"><span class="keyword">from</span> tag</span><br><span class="line">         <span class="keyword">join</span> tag_post <span class="keyword">on</span> tag_post.tab_id = tag.id</span><br><span class="line">         <span class="keyword">join</span> post <span class="keyword">on</span> tag_post.post_id = post.id</span><br><span class="line"><span class="keyword">where</span> tag.tag = <span class="string">'mysql'</span>;</span><br><span class="line"><span class="comment"># 可以分解为下面的查询：</span></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> tag <span class="keyword">where</span> tag=<span class="string">'mysql'</span>;</span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> tag_post <span class="keyword">where</span> tag_id=<span class="number">1234</span>;</span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> post <span class="keyword">where</span> post.id <span class="keyword">in</span> (<span class="number">123</span>,<span class="number">46</span>,<span class="number">456</span>,<span class="number">9992</span>,<span class="number">9998</span>);</span><br></pre></td></tr></table></figure>
+<p>看起来可能会说，这有什么好处，结果不一样么，但是，用这种方式，有下面这些优势：</p>
+<ul>
+<li>让缓存的效率更高。许多应用程序可以方便地缓存单边查询对应的结果对象。例如，上面查询的tag已经被缓存了，那么应用就可以跳过第一个查询。再例如，应用中已经缓存了ID为123,46,456,的内容，那么第三个查询的in中，就能少几个ID。另外，对MySQL的查询缓存来说，如果关联中的某个表发生了变化，那么就无法使用查询缓存了，而拆分后，如果某个表很少改变，那么基于该表的查询就可以重复利用查询缓存结果了。</li>
+<li>将查询分解后，执行单个查询可以减少锁的竞争</li>
+<li>在应用层做关联，可以更容易对数据库进行拆分，更容易做到高性能和可扩展</li>
+<li>查询本身效率也可能会有所提升。例子中，用in代替关联查询，可以让MySQL按照ID顺序进行查询,这可能比随机的关联更高效</li>
+<li>可以减少冗余记录的查询。在应用层做关联查询，意味着对于某条记录，应用只需要查询一次，而在数据库中做关联查询，则可能需要重复地访问一部分数据。从这点看，这样的重构还可能会减少网络和内存的消耗</li>
+<li>更进一步，这样做相当于在应用中实现了hash关联，而不是使用MySQL的嵌套循环关联。某些场景hash关联的效率要高很多。</li>
+</ul>
+<p>| 4.执行查询的基础</p>
+<p>图例在这里</p>
+<p>| 4.1 MySQL客户端/服务器通信协议</p>
+<p>MySQL客户端和服务器之间的通信协议是<strong>半双工</strong>的，这意味着，在任何一个时刻，要么是服务器向客户端发送数据，要么是客户端向服务器发送数据，两个动作不能同时发生。所以也无法将一个消息切成小块独立来发送。</p>
+<p>这种协议让MySQL同心简单快速，但是也从很多地方限制了MySQL。一个明显的限制是，这意味着没法进行流量控制。一旦一端开始发生消息，另一端要接收完整个消息才能响应它。就像扔沙包。</p>
+<p>客户端用一个单独的数据包将查询传给服务器。这也是为什么当查询的语句很长的时候，参数max_allowed_packet就特别重要了。一旦客户端发送了请求，它能做的事情就只是等待结果。</p>
+<p>相反的，一般服务器响应给用户的数据通常很多，由多个数据包组成。当服务器开始响应客户端请求时，客户端必须完整地接收整个返回结果，而不能简单地只取前面几条结果，然后让服务器停止发送数据。这种情况下，客户端若接收完整的结果，然后取前面几条需要的结果，或者接收完几条结果后就粗暴地断开连接，都不是好主意。这也就是在要的时候，一定要在查询中加limit的原因。</p>
+<p>多数链接MySQL的库函数都可以获得全部结果集并缓存到内存里，还可以逐行获取需要的数据。默认一般是获得全部结果集并缓存到内存中。MySQL通常需要等所有的数据都已经发送给客户端才能释放这条查询所占用的资源，所以接收全部结果并缓存通常可以减少服务器的压力，让查询能够早点结束、早点释放相应的资源。</p>
+<p>| 4.2 查询缓存</p>
+<p>在解析一个查询语句之前，如果查询缓存是打开的，那么MySQL会</p>
+<p>| 4.3 查询优化</p>
+<p>太多，不写了</p>
+<p><strong>MySQL如何执行关联查询</strong></p>
+<p>总的来说，MySQL认为任何一个查询都是一次关联，并不仅仅是一个查询需要到两个表匹配才叫关联，所以在MySQL中，每一个查询，每一个片段（包括子查询，甚至于单表的select）都可能是关联。</p>
+<p>比如union查询的例子。对于union查询，MySQL先将一系列的单个查询结果放到一个临时表中，然后再重新读出临时表数据来完成union查询。在MySQL的概念中，每个查询都是一次关联，所以读取结果临时表也是一次关联。</p>
+<p>当前MySQL关联执行的策略很简单：MySQL对任何关联都执行嵌套循环关联操作，即MySQL现在一个表中循环取出单条数据，然后再嵌套循环到下一个表中寻找匹配的航，依次下去，直到找到所有表中匹配的行位置。然后根据各个表匹配的行，返回查询中需要的各个列。MySQL会尝试在最后一个关联表中找到所有匹配的行，如果最后一个关联表无法找到更多的行以后，MySQL返回到上一层次关联表，看是否能找到更多的匹配记录，以此类推迭代执行。</p>
+<p>按照这样的方式查找第一个表记录，再嵌套查询下一个关联表，然后回溯到上一个表，在MySQL中是通过嵌套循环的方式实现——<strong>嵌套循环关联</strong>。</p>
+<p><strong>执行计划</strong></p>
+<p>MySQL执行计划是一颗左侧深度优先的树。</p>
+<p><strong>关联查询优化器</strong></p>
+<p>MySQL优化器最重要的一部分就是关联查询优化，它决定了多个表关联时的顺序。通常多表关联的时候，可以有多种不同的管理按顺序来获得相同的执行结果。关联查询优化器则通过评估不同顺序时的成本来选择一个代价最小的关联查询。</p>
+<p>下面的查询可以通过不同顺序的关联最后都获得相同的结果：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> film.film_id, film.title, film.release_year, actor.actor_id, actor.first_name, actor.last_name</span><br><span class="line"><span class="keyword">from</span> film</span><br><span class="line">         <span class="keyword">inner</span> <span class="keyword">join</span> film_actor <span class="keyword">using</span> (film_id)</span><br><span class="line">         <span class="keyword">inner</span> <span class="keyword">join</span> actor <span class="keyword">using</span> (actor_id)</span><br><span class="line"><span class="comment"># explain 结果如下</span></span><br><span class="line">+<span class="comment">--+-----------+----------+----------+------+-------------+-------+-------+-------------------------+----+--------+-----------+</span></span><br><span class="line">|<span class="keyword">id</span>|select_type|<span class="keyword">table</span>     |<span class="keyword">partitions</span>|<span class="keyword">type</span>  |possible_keys|<span class="keyword">key</span>    |key_len|<span class="keyword">ref</span>                      |<span class="keyword">rows</span>|filtered|Extra      |</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+------+-------------+-------+-------+-------------------------+----+--------+-----------+</span></span><br><span class="line">|<span class="number">1</span> |SIMPLE     |actor     |<span class="literal">NULL</span>      |<span class="keyword">ALL</span>   |PRIMARY      |<span class="literal">NULL</span>   |<span class="literal">NULL</span>   |<span class="literal">NULL</span>                     |<span class="number">200</span> |<span class="number">100</span>     |<span class="literal">NULL</span>       |</span><br><span class="line">|<span class="number">1</span> |SIMPLE     |film_actor|<span class="literal">NULL</span>      |<span class="keyword">ref</span>   |PRIMARY      |PRIMARY|<span class="number">2</span>      |sakila.actor.actor_id    |<span class="number">27</span>  |<span class="number">100</span>     |<span class="keyword">Using</span> <span class="keyword">index</span>|</span><br><span class="line">|<span class="number">1</span> |SIMPLE     |film      |<span class="literal">NULL</span>      |eq_ref|PRIMARY      |PRIMARY|<span class="number">2</span>      |sakila.film_actor.film_id|<span class="number">1</span>   |<span class="number">100</span>     |<span class="literal">NULL</span>       |</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+------+-------------+-------+-------+-------------------------+----+--------+-----------+</span></span><br></pre></td></tr></table></figure>
+<p>从上面看到，MySQL与我们前面的计划按照相反的顺序进行关联，这样效率是否更高？使用straight_join关键字，按照之前的顺序执行看看。</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> <span class="keyword">straight_join</span> film.film_id, film.title, film.release_year, actor.actor_id, actor.first_name, actor.last_name</span><br><span class="line"><span class="keyword">from</span> film</span><br><span class="line">         <span class="keyword">inner</span> <span class="keyword">join</span> film_actor <span class="keyword">using</span> (film_id)</span><br><span class="line">         <span class="keyword">inner</span> <span class="keyword">join</span> actor <span class="keyword">using</span> (actor_id);</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+------+-------------+-------+-------+--------------------------+----+--------+-------------------------------------------------------+</span></span><br><span class="line">|id|select_type|table     |partitions|type  |possible_keys|key    |key_len|ref                       |rows|filtered|Extra                                                  |</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+------+-------------+-------+-------+--------------------------+----+--------+-------------------------------------------------------+</span></span><br><span class="line">|1 |SIMPLE     |film      |NULL      |ALL   |PRIMARY      |NULL   |NULL   |NULL                      |1000|100     |NULL                                                   |</span><br><span class="line">|1 |SIMPLE     |film_actor|NULL      |index |PRIMARY      |PRIMARY|4      |NULL                      |5462|10      |Using where; Using index; Using join buffer (hash join)|</span><br><span class="line">|1 |SIMPLE     |actor     |NULL      |eq_ref|PRIMARY      |PRIMARY|2      |sakila.film_actor.actor_id|1   |100     |NULL                                                   |</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+------+-------------+-------+-------+--------------------------+----+--------+-------------------------------------------------------+</span></span><br></pre></td></tr></table></figure>
+<p>可以看到，关联顺序到转后，扫描的行数减少的不是一点，速度很快。也就是倒转的关联顺序会让查询进行更少的嵌套循环和回溯操作。为了验证优化器的选择是否正确，单独执行这两个查询，并且看看对应的Last_Query_Cost状态，能看到，倒转的预估成本为：2529.432367，原来的查询的预估成本为：601068.477855。</p>
+<p>上面的栗子说明MySQL是如何选择合适的管理按顺序让查询执行的成本尽可能低的。重新定义关联的顺序是优化器非常重要的一部分功能。不过有的时候，优化器给出的并不是最优的关联顺序。这时可以使用<strong>straight_join</strong>关键字重写查询。不过大多数时候，选择器做出的选择都比普通人的判断更准确。</p>
+<p>有时，各个查询的顺序并不能随意安排，这时关联优化器可以根据这些规则大大减少搜索空间，比如，左连接，相关子查询。这是因为，后面的表的查询需要依赖前面表的查询结果。这种依赖关系通常可以帮助优化器大大减少需要扫描的执行计划数量。</p>
+<p><strong>排序优化</strong></p>
+<p>从性能角度，应当尽可能避免排序或者尽可能避免对大量数据进行排序。</p>
+<p>当不能使用索引生成排序结果的时候，MySQL需要自己进行排序，如果数据量小则在内存中进行，如果数据量大则需要使用磁盘，不过MySQL将这个过程统一称为<strong>文件排序（filesort）</strong>，即使完全是内存排序不需要任何磁盘文件时也是如此。</p>
+<p>如果需要排序的数据量小于”排序缓冲区“，MySQL使用内存进行快速排序操作。如果内存不够排序，那么MySQL会现将数据分块，对每个独立的块使用快排，然后将各个块的排序结果存放在磁盘上，然后将各个排好序的块进行合并，最后返回排序结果。</p>
+<p>两种排序算法：</p>
+<ul>
+<li>两次传输排序（旧版本）</li>
+<li>单词传输排序（新版本）</li>
+</ul>
+<p>MySQL在进行文件排序的时候需要时候的临时存储空间可能会比想象的要大得多。原因在于MySQL在排序时，对每一个排序记录都会分配一个足够长的定长空间来存放。这个定长空间必须足够长以容纳其中最长的字符串。例如，如果是varchar列则需要分配其完整长度；如果是UTF-8字符集，那么MySQL将会为每个字符预留三个字节。</p>
+<p>在关联的时候如果需要排序，MySQL会分两种情况来处理这样的文件排序。如果order by 子句中的所有列都来自关联的第一个表，那么MySQL在关联处理第一个表的时候就进行文件排序。如果是这样，那么在MySQL的explain结果中可以看到extra字段会有<strong>Using filesort</strong>。除此之外的所有情况，MySQL都会先将关联的结果存放到一个临时表中，然后在所有的关联都结束后，再进行文件排序。这种情况下，在MySQL的explain结果的extra列字段可以看到<strong>Using temporary; Using filesort</strong>。如果查询中有limit的话，limit也会在排序之后应用，所以即使需要返回较少的数据，临时表和需要排序的数据量仍然会非常大。</p>
+<p>随着MySQL的升级，当只需要返回部分排序结果的时候，例如使用了LIMIT子句，MySQL不再对所有的结果进行排序，而是根据实际情况，选择抛弃不满足条件的结果，然后再进行排序。</p>
+<p>| 4.4 查询执行引擎</p>
+<p>查询执行引擎根据执行计划完成整个查询。调用存储引擎实现的接口，也就是handler api，来完成。</p>
+<p>| 4.5 返回结果给客户端</p>
+<p>即使查询不需要返回结果集给客户端，MySQL仍然会返回这个查询的一些信息，如该查询影响到的行数。如果查询可以被缓存，那么MySQL也会在这个阶段将结果存到查询缓存中。</p>
+<p>MySQL将结果集返回客户端是一个增量、逐步返回的过程。一旦服务器处理完最后一个关联表，开始生层第一条结果时，MySQL就可以开始向客户端逐步返回结果集了。</p>
+<p>这样有两个好处：服务端无需存储太多的结果，也就不会因为要返回太多结果而消耗太多内存。另外，MySQL客户端也能第一时间获得返回的结果。</p>
+<p>| 5. MySQL查询优化器的局限性</p>
+<p>5.6之后，很多限制都会消除，更多的查询效率会变得更高。</p>
+<p>| 5.1 关联子查询</p>
+<p><strong><em>很重要的一点，MySQL8.x之后，得到了优化。下面说的，全部都是基于5.6版本。</em></strong></p>
+<p>MySQL的子查询实现非常差。最糟糕的一类查询是where条件中包含IN()的子查询。比如：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"> <span class="keyword">select</span> * <span class="keyword">from</span> film <span class="keyword">where</span> film_id <span class="keyword">in</span> (</span><br><span class="line">    <span class="keyword">select</span> film_id <span class="keyword">from</span> film_actor <span class="keyword">where</span> actor_id = <span class="number">1</span></span><br><span class="line">    );</span><br><span class="line"><span class="comment"># 这是8.x 之后的执行计划</span></span><br><span class="line">+<span class="comment">--+-----------+----------+----------+------+-------------+-------+-------+-------------------------+----+--------+-----------+</span></span><br><span class="line">|id|select_type|table     |partitions|type  |possible_keys|key    |key_len|ref                      |rows|filtered|Extra      |</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+------+-------------+-------+-------+-------------------------+----+--------+-----------+</span></span><br><span class="line">|1 |SIMPLE     |film_actor|NULL      |ref   |PRIMARY      |PRIMARY|2      |const                    |19  |100     |Using index|</span><br><span class="line">|1 |SIMPLE     |film      |NULL      |eq_ref|PRIMARY      |PRIMARY|2      |sakila.film_actor.film_id|1   |100     |NULL       |</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+------+-------------+-------+-------+-------------------------+----+--------+-----------+</span></span><br></pre></td></tr></table></figure>
+<p>因为MySQL对IN()列表中的选项有专门的优化策略，一般会认为MySQL会先执行子查询返回所有包含actor_id为1的film_id。一般来说，IN()列表查询速度很快，所以我们以为的查询的执行：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> film <span class="keyword">where</span> film_id <span class="keyword">in</span> (<span class="number">1</span>,<span class="number">23</span>,<span class="number">25</span>,<span class="number">106</span>,<span class="number">140</span>,<span class="number">166</span>,<span class="number">277</span>,<span class="number">361</span>,<span class="number">438</span>,<span class="number">499</span>,<span class="number">506</span>,<span class="number">509</span>,<span class="number">605</span>,<span class="number">635</span>,<span class="number">749</span>,<span class="number">832</span>,<span class="number">939</span>,<span class="number">970</span>,<span class="number">980</span>);</span><br></pre></td></tr></table></figure>
+<p>但是，MySQL不是这么做的。MySQL会将相关的外层表压到子查询中，他认为这样可以更高效率地找到数据行，也就是说，会被改写为：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> *</span><br><span class="line"><span class="keyword">from</span> film</span><br><span class="line"><span class="keyword">where</span> <span class="keyword">exists</span>(</span><br><span class="line">              <span class="keyword">select</span> *</span><br><span class="line">              <span class="keyword">from</span> film_actor</span><br><span class="line">              <span class="keyword">where</span> actor_id = <span class="number">1</span></span><br><span class="line">                <span class="keyword">and</span> film_actor.film_id = film.film_id</span><br><span class="line">          )</span><br></pre></td></tr></table></figure>
+<p>这时，子查询需要根据film_id来关联外部表film，因为需要film_id字段，所以MySQL认为无法先执行这个子查询。</p>
+<p>通过explain可以看到，MySQL先选择对file表进行全表扫描，然后根据返回的film_id逐个执行子查询。如果是一个很小的表，这个查询糟糕的性能可能还不会引起注意，但是如果外层的表是一个非常大的表，那么这个查询性能会非常糟糕。所以。可以用下面的办法重写查询</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> film.*</span><br><span class="line"><span class="keyword">from</span> film</span><br><span class="line">         <span class="keyword">inner</span> <span class="keyword">join</span> film_actor <span class="keyword">using</span> (film_id)</span><br><span class="line"><span class="keyword">where</span> actor_id = <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+<p>另一个优化的办法是使用group_concat在in中构造一个由分号分割的列表。有时候这比上面使用关联改写更快。因为使用IN加子查询，性能经常会非常糟糕，所以通常建议使用EXISTS等效的改写查询来获取更好的效率。比如：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> film <span class="keyword">where</span> <span class="keyword">exists</span>(</span><br><span class="line">    <span class="keyword">select</span> * <span class="keyword">from</span> film_actor <span class="keyword">where</span> actor_id = <span class="number">1</span></span><br><span class="line">    <span class="keyword">and</span> film_actor.film_id = film.film_id</span><br><span class="line">                             )</span><br></pre></td></tr></table></figure>
+<p>其他的不写了，MySQL推出了Materialization这个特性用于子查询。上面的都没用了。</p>
+<p>| 5.2 union的限制</p>
+<p>有时，MySQL无法将限制条件从外层下推到内层，这使得能够限制不拿分返回结果的条件无法应用到内层查询的优化上。</p>
+<p>如果希望UNION的各个子句能够根据LIMIT只取部分结果集，或者希望能够先排好序再合并结果集的话，就需要在UNION的各个子句中分别使用这些子句。例如，想将两个子查询联合起来，然后再取前20条记录，那么MySQL会将两个表都存放到同一个临时表中，然后再取出前20行记录：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">(<span class="keyword">select</span> first_name, last_name <span class="keyword">from</span> actor <span class="keyword">order</span> <span class="keyword">by</span> last_name)</span><br><span class="line"><span class="keyword">union</span> <span class="keyword">all</span></span><br><span class="line">(<span class="keyword">select</span> first_name, last_name <span class="keyword">from</span> customer <span class="keyword">order</span> <span class="keyword">by</span> last_name)</span><br><span class="line"><span class="keyword">limit</span> <span class="number">20</span>;</span><br></pre></td></tr></table></figure>
+<p>这条查询将会把actor中的200条记录和customer表中的599条记录存放在一个临时表中，然后再从临时表中取出前20条。可以通过在UNION的两个子查询中分别加上一个LIMIT 20来减少临时表中的数据：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">(<span class="keyword">select</span> first_name,last_name <span class="keyword">from</span> actor <span class="keyword">order</span> <span class="keyword">by</span> last_name <span class="keyword">limit</span> <span class="number">20</span>)</span><br><span class="line"><span class="keyword">union</span></span><br><span class="line">(<span class="keyword">select</span> first_name,last_name <span class="keyword">from</span> customer <span class="keyword">order</span> <span class="keyword">by</span> last_name  <span class="keyword">limit</span> <span class="number">20</span>) <span class="keyword">limit</span> <span class="number">20</span>;</span><br></pre></td></tr></table></figure>
+<p>现在的话，中间的临时表只会包含40条记录了，除了性能考虑之外，这里还需要注意，从临时表中取出数据的顺序并不一定是一定的，所以如果想获得正确的顺序，还需要加上一个全局的order by 和 limit 操作。</p>
+<p>| 5.3 索引合并优化</p>
+<p>在5.0以后，当where子句中包含多个复杂条件的时候，MySQL能够访问单个表的多个索引以合并和交叉过滤的方式来定位需要查找的行。</p>
+<p>| 5.4 等值传递</p>
+<p>某些时候，等值传递会带来一些意想不到的额外消耗。例如，有一个非常大的IN列表,而MySQL优化器发现存在where、on或者using的子句，将这个列表的值和另外一个表的某个列相关联。</p>
+<p>那么优化器会将IN的列表都复制应用到关联的各个表中。通常，因为各个表新增了过滤条件，优化器可以更高效的从存储引擎过滤记录。但是如果这个列表非常大，泽会导致优化和执行都会变慢。</p>
+<p>| 5.5 并行执行</p>
+<p>MySQL无法利用多核特性来并行执行查询。</p>
+<p>| 5.6 哈希关联</p>
+<p>MySQL并不支持哈希关联，MySQL的所有关联都是嵌套循环关联。</p>
+<p>| 5.7 松散索引扫描</p>
+<p>MySQL并不支持松散索引扫描，5.0之后，某些特殊的场景可以使用松散索引扫描，比如：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> actor_id,<span class="keyword">max</span>(film_id) <span class="keyword">from</span> film_actor <span class="keyword">group</span> <span class="keyword">by</span> actor_id;</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+-----+----------------------+-------+-------+----+----+--------+------------------------+</span></span><br><span class="line">|id|select_type|table     |partitions|type |possible_keys         |key    |key_len|ref |rows|filtered|Extra                   |</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+-----+----------------------+-------+-------+----+----+--------+------------------------+</span></span><br><span class="line">|1 |SIMPLE     |film_actor|NULL      |range|PRIMARY,idx_fk_film_id|PRIMARY|2      |NULL|201 |100     |Using index for group-by|</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+-----+----------------------+-------+-------+----+----+--------+------------------------+</span></span><br></pre></td></tr></table></figure>
+<p>在explain的extra字段显示“Using index for gruop-by”，表示这样将使用松散索引扫描</p>
+<p>| 5.8 MySQL的最大值和最小值优化并不好</p>
+<p>| 5.9 在同一表上查询和更新</p>
+<p>MySQL不允许对同一张表同时进行查询和更新。但是其实并不是优化器的限制，改用JOIN可以解决</p>
+<p>| 6 查询优化器的提示</p>
+<ul>
+<li>HIGI_PRIORITY 和 LOW_PRIORITY</li>
+<li>DELAYED</li>
+<li>STRAIGHT_JOIN</li>
+<li>SQL_SMALL_RESULT 和 SQL_BIG_RESULT</li>
+<li>SQL_BUFFER_RESULT</li>
+<li>SQL_CACHE  和 SQL_NO_CACHE</li>
+<li>SQL_CALC_FOUND_ROWS</li>
+<li>FOR UPDATE 和 LOCK IN SHARE MODE</li>
+<li>USE INDEX 、 IGNORE INDEX 和 FORCE INDEX</li>
+<li>optimizer_search_depth</li>
+<li>optimizer_prune_level</li>
+<li>optimizer_switch</li>
+</ul>
+<p>| 7 优化特性类型的查询</p>
+<p>| 7.1 优化count()查询</p>
+<p>count是一个特殊的函数，有两种非常不同的作用：<strong>可以用来统计某个列值的数量，也可以统计行数</strong>。在统计列值时，要求列值是非空的（不能为null）。如果在count()的括号中指定了列或者列的表达式，则统计的就是这个表达式有值的结果数。</p>
+<p>另一个作用是统计结果集的行数。当MySQL确认括号内的表达式值不可能为空时，实际上就是在统计行数。最简单的就是当我们使用count(<em>)的时候，这种情况下通配符</em>并不会向我们猜想的那样扩展城所有的列，实际上，它会忽略所有的列而直接统计所有的行数。</p>
+<p>通常来说，count()都需要扫描大量的行才能活着精确的结果，因此是很难有花的。在MySQL层面还能做的就是覆盖索引扫描了。如果还不够，就需要考虑修改应用的架构，增加汇总表，或者memcached这样的外部缓存系统</p>
+<p>| 7.2 优化关联查询</p>
+<ul>
+<li>确保on或者using子句中的列上有索引。在创建索引的时候就要考虑到关联的顺序。当表A和表B用列C关联的时候，如果有花期的管理按顺序是B、A，那么就不需要在B表的对应列建上索引。没有用到的索引只会带来额外的附带。一般来说，除非有其他理由，否则只需要在管理按顺序中的第二个表的相应列上创建索引。</li>
+<li>确保确保任何的group by 和 order by 中的表达式只涉及到一个表中的列，这样MySQL才有可能使用索引来优化这个过程。</li>
+<li>当升级MySQL的时候需要注意：关联语法、运算符优先级等其他可能会发生变化的地方。因为以前是普通关联的地方可能会变成笛卡尔积，不同类型的关联可能会生成不同的结果等。</li>
+</ul>
+<p>| 7.3 子查询优化，MySQL5.6之后不用管</p>
+<p>| 7.4 优化group by 和 distinct</p>
+<p>这两类都可以使用索引来优化，这也是最有效的优化办法。</p>
+<p>在MySQL中，当无法使用所以你的时候，group by使用相中策略来完成：使用临时表或者文件排序来做分组。对于任何查询语句，这两种策略的性能都有可以提神的地方。可以通过使用提示SQL_BIG_RESULT和SQL_SMALL_RESULT来让优化器按照你希望的方式运行。</p>
+<p>如果需要对关联查询做分组，并且是按照查找表中的某个列进行分组，那么通常采用查找表的标识列分组的效率会比其他列更高。例如下面的查询效率不会很好</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> actor.first_name,actor.last_name,<span class="keyword">count</span>(*) <span class="keyword">from</span> film_actor <span class="keyword">inner</span> <span class="keyword">join</span> actor <span class="keyword">using</span>(actor_id) <span class="keyword">group</span> <span class="keyword">by</span>  actor.first_name, actor.last_name;</span><br></pre></td></tr></table></figure>
+<p>但是如果查询按照下面的写法效率则会更高：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> actor.first_name,actor.last_name,<span class="keyword">count</span>(*) <span class="keyword">from</span> film_actor <span class="keyword">inner</span> <span class="keyword">join</span> actor <span class="keyword">using</span>(actor_id) <span class="keyword">group</span> <span class="keyword">by</span> actor.actor_id;</span><br></pre></td></tr></table></figure>
+<p>虽然效率更高，但显然不是所有的关联语句的分组都可以改写成在select中使用非分祖列的形式。如果sql_mode禁用，可以使用min或者max来跳过。但是一定要清楚，select后面出现的非分祖列一定是直接依赖分组列，并且在每个组内的值是唯一的，</p>
+<p><strong>优化GROUP BY WITH ROLLUP</strong></p>
+<p>最好的办法是尽可能的将WITH ROLLUP功能转移到应用程序中处理</p>
+<p>| 7.5 limit分页优化</p>
+<p>偏移量很大的时候，代价非常高，想要优化这种查询，要么是在页面中限制分页的数量，要么是优化大偏移量的性能。</p>
+<p>一个组简单的办法就是尽可能地使用索引覆盖扫描，而不是查询所有的列。然后根据需要做一次关联操作再返回所需的咧。对于偏移量很大的时候，这样做的效率会提升非常大。</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> film_id,description <span class="keyword">from</span> film <span class="keyword">order</span> <span class="keyword">by</span> title <span class="keyword">limit</span> <span class="number">50</span>,<span class="number">5</span>;</span><br><span class="line"><span class="comment"># 如果这个表非常大，查询最好改写为：</span></span><br><span class="line"><span class="keyword">select</span> film_id,description <span class="keyword">from</span> film <span class="keyword">inner</span> <span class="keyword">join</span> (</span><br><span class="line">    <span class="keyword">select</span> film_id <span class="keyword">from</span> film <span class="keyword">order</span> <span class="keyword">by</span> title <span class="keyword">limit</span> <span class="number">50</span>,<span class="number">5</span></span><br><span class="line">    ) <span class="keyword">as</span> lim <span class="keyword">using</span> (film_id)</span><br></pre></td></tr></table></figure>
+<p>这里的延迟关联将大大提升查询效率，它让MySQL扫描尽可能少的页面，获取需要访问的记录后再根据关联列返回原表查询需要的所有列。这个技术也可以用于优化关联查询中的limit子句。</p>
+<p>有时候也可以将limit转换查询为已知位置的查询，让MySQL通过范围扫描获得对应的结果，例如：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> film <span class="keyword">where</span> <span class="keyword">position</span> <span class="keyword">between</span> <span class="number">50</span> <span class="keyword">and</span> <span class="number">54</span> <span class="keyword">order</span> <span class="keyword">by</span> <span class="keyword">position</span>;</span><br></pre></td></tr></table></figure>
+<p>limit和offset的问题，其实是offset的问题，会导致MySQL查询大量不需要的行然后再抛弃掉，如果可以使用数钱记录上次取数据的位置，那么下次就可以直接从概述前记录的位置开始扫描，遮掩的话就可以避免使用offset。例如：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> rental <span class="keyword">order</span> <span class="keyword">by</span> rental_id <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">20</span>;</span><br><span class="line"><span class="comment"># 假设上面的查询返回的是主键为16049到16030的租借记录，那么下一页的查询就可以从16030这个点开始</span></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> rental <span class="keyword">where</span> rental_id &lt; <span class="number">16030</span> <span class="keyword">order</span> <span class="keyword">by</span> rental_id <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">20</span>;</span><br></pre></td></tr></table></figure>
+<p>这样的话，不管翻页到多么后面，新跟那个都会很好。</p>
+<p>| 7.7 优化union查询</p>
+<p>需要经常手工地将where，limit，order by等子句下推到union的各个子查询中，以便于优化器优化。</p>
+<p>除非确实需要服务器消除重复的行，否则就一定要使用union all，如果没有all关键字，MySQL会给临时表加上distinct选项，这会导致对整个临时表的数据做唯一性检查，代价很高。</p>
+<p>| 7.8 用户自定义变量</p>
+<p>大部分时候，普通开发用不到</p>
+<p>| 8.2 计算两点之间的距离</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> locations(</span><br><span class="line">    <span class="keyword">id</span> <span class="built_in">int</span> <span class="keyword">not</span> <span class="literal">null</span> primary <span class="keyword">key</span> auto_increment,</span><br><span class="line">    <span class="keyword">name</span> <span class="built_in">varchar</span>(<span class="number">30</span>),</span><br><span class="line">    lat <span class="built_in">float</span> <span class="keyword">not</span> <span class="literal">null</span>,</span><br><span class="line">    lon <span class="built_in">float</span> <span class="keyword">not</span> <span class="literal">null</span></span><br><span class="line">);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> locations(<span class="keyword">name</span>, lat, lon)</span><br><span class="line"><span class="keyword">values</span></span><br><span class="line">       (<span class="string">'Charlottesville'</span>,<span class="number">38.03</span>,<span class="number">-78.48</span>) ,</span><br><span class="line">       (<span class="string">'Chicago'</span>,<span class="number">41.85</span>,<span class="number">-87.65</span>),</span><br><span class="line">       (<span class="string">'Washington，DC'</span>,<span class="number">38.89</span>,<span class="number">-77.04</span>);</span><br><span class="line"><span class="comment"># 单位是度，假设地球是原的，然后使用连点所在最大圆公式来计算两点之间的距离</span></span><br><span class="line"><span class="comment"># 计算出来是一个弧度，如果需要转换为英里或者千米，需要乘以地球的半径，也就是3959英里或者6371千米</span></span><br><span class="line"><span class="comment"># ACOS (</span></span><br><span class="line"><span class="comment">#     COS(latA) * COS(latB) * COS(lonA - lonB) + SIN(latA) * Sin(latB)</span></span><br><span class="line"><span class="comment"># )</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> locations <span class="keyword">where</span> <span class="number">6371</span> * <span class="keyword">ACOS</span>(</span><br><span class="line">    <span class="keyword">COS</span>(<span class="keyword">RADIANS</span>(lat)) * <span class="keyword">COS</span>(<span class="keyword">RADIANS</span>(<span class="number">38.03</span>)) * <span class="keyword">COS</span>(<span class="keyword">RADIANS</span>(lon)-<span class="keyword">RADIANS</span>(<span class="number">-78.48</span>))</span><br><span class="line">        + <span class="keyword">SIN</span>(<span class="keyword">RADIANS</span>(lat)) * <span class="keyword">SIN</span>(<span class="keyword">RADIANS</span>(<span class="number">38.03</span>))</span><br><span class="line">    )&lt;=<span class="number">100</span>;</span><br></pre></td></tr></table></figure>
+<p>这类查询无法使用索引，还会非常消耗CPU时间,给服务器带来很大的压力，还得重复计算。一般情况不推荐在MySQL中进行地理位置信息的计算。</p>
+<p>| 8.3 用户自定义函数</p>
+<p>使用C或者C++自定义</p>
 ]]></content>
       <categories>
         <category>MySQL</category>
@@ -505,31 +1915,6 @@
       <tags>
         <tag>React</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>CMS的一些记录</title>
-    <url>/2020/09/22/Essay/2020/CMS%E8%AE%B0%E5%BD%95/</url>
-    <content><![CDATA[<p>想要的一些功能点记录：</p><ol>
-<li><p>WebSite站点配置，主要用来进行静态资源判断定位（完成）</p>
-</li>
-<li><p>使Organization绑定WebSite，一个机构可以绑定多个站点（完成）</p>
-</li>
-<li><p>使User绑定Organization，一个用户可绑定多个机构（完成）</p>
-</li>
-<li><p>Channel和WebSite进行绑定，Content和WebSite进行绑定（完成）</p>
-</li>
-<li><p>数据隔离，数据权限（完成）</p>
-</li>
-<li><p>前端必须得手写一个list页面（完成）</p>
-</li>
-<li><p>子账户进行分配权限，只能分配自己所拥有的权限（完成）</p>
-</li>
-<li><p>Hibernate validator 添加（完成）</p>
-</li>
-</ol>]]></content>
-      <categories>
-        <category>随笔</category>
-      </categories>
   </entry>
   <entry>
     <title></title>
@@ -2983,107 +4368,6 @@
       </tags>
   </entry>
   <entry>
-    <title>计算机网络-标准化</title>
-    <url>/2020/06/21/Network/Step2-StandardAndInsist1.1.2/</url>
-    <content><![CDATA[<p>网络标准化分类：</p><ul>
-<li>法定标准<ul>
-<li>权威机构指定的正式的，合法的标准</li>
-</ul>
-</li>
-<li>事实标准<ul>
-<li>某些公司产品竞争中占据了主流，这些协议和技术就成了标准</li>
-</ul>
-</li>
-</ul>]]></content>
-      <categories>
-        <category>计算机网络</category>
-      </categories>
-      <tags>
-        <tag>网络</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>计算机网络-概述</title>
-    <url>/2020/06/21/Network/Step1-concept1.1.1/</url>
-    <content><![CDATA[<p>计算机网络：是一个将分散的，具有独立功能的<strong>计算机系统</strong>，通过<strong>通信设备</strong>与<strong>线路</strong>连接起来，由功能完善的<strong>软件</strong>实现<strong>资源共享</strong>和<strong>信息传递</strong>的系统。</p><a id="more"></a>
-<p>计算机网络是<strong>互联的，自治的</strong>计算机集合。</p>
-<p>计算机网络的功能：</p>
-<ul>
-<li>数据通信(连通性)</li>
-<li>资源共享(硬件，软件，数据)</li>
-<li><p>分布式处理(多台计算机各自承担统一工作任务的不同部分)</p>
-</li>
-<li><p>提高可靠性</p>
-</li>
-<li>负载均衡</li>
-<li>等等</li>
-</ul>
-<p>计算机网络组成：</p>
-<ul>
-<li>组成部分<ul>
-<li>硬件</li>
-<li>软件</li>
-<li>协议</li>
-</ul>
-</li>
-<li>工作方式<ul>
-<li>边缘部分，用户直接使用<ul>
-<li>C/S方式</li>
-<li>P2P方式</li>
-</ul>
-</li>
-<li>核心部分，为边缘部分服务</li>
-</ul>
-</li>
-<li>功能组成<ul>
-<li>通信子网，实现数据通信</li>
-<li>资源子网，实现资源共享/数据处理</li>
-<li>TODO 这里需要张图</li>
-</ul>
-</li>
-</ul>
-<p>计算机网络的分类</p>
-<ul>
-<li>按分布范围<ul>
-<li>广域网WAN</li>
-<li>城域网MAN</li>
-<li>局域网WAN</li>
-<li>个人区域网PAN</li>
-</ul>
-</li>
-<li>按使用者区分<ul>
-<li>公用网</li>
-<li>专用网</li>
-</ul>
-</li>
-<li>按交换技术分<ul>
-<li>电路交换</li>
-<li>报文交换</li>
-<li>分组交换</li>
-</ul>
-</li>
-<li>按拓扑结构分<ul>
-<li>总线型</li>
-<li>星型</li>
-<li>环形</li>
-<li>网状型-常用语广域网</li>
-</ul>
-</li>
-<li>按传输技术分<ul>
-<li>广播式网络——共享公共通信信道</li>
-<li>点对点网络——使用<strong>分组存储转发</strong>和<strong>路由选择</strong>机制</li>
-</ul>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>计算机网络</category>
-      </categories>
-      <tags>
-        <tag>概述</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>新概念1 35</title>
     <url>/2020/06/18/Language/English/New%20Concept/Chapter1/lesson35/</url>
     <content><![CDATA[<blockquote>
@@ -3237,7 +4521,7 @@
       </tags>
   </entry>
   <entry>
-    <title>新概念1 31</title>
+    <title>新概念1 33</title>
     <url>/2020/06/14/Language/English/New%20Concept/Chapter1/lesson33/</url>
     <content><![CDATA[<blockquote>
 <p>单词</p>
@@ -13344,85 +14628,17 @@
       </categories>
   </entry>
   <entry>
-    <title>回京</title>
-    <url>/2020/03/24/Essay/2020/%E5%9B%9E%E4%BA%AC/</url>
-    <content><![CDATA[<p>出发前，我妈非拉着我们拍了个抖音，配合着音乐又是哭又是唱，在我哥我爸的捣乱下，拍了两遍才杀青。等我到了车站候车的时候，手机响了，我以为是问我火车到了没。我猜对了，问了问我：火车到了么？还没到？你赶紧出来，你妈的抖音不小心删了，出来再补拍一个。。。拉着我拍完之后，挥了挥手，你走吧。。。我想，家里人应该是故意的吧，故意这样做，让离别的情景不那么伤感。</p><a id="more"></a>
-<p>出发。看着故乡，不知道自己为了什么，要去远方。自己真的是有那么努力么？可能只是在随波逐流罢了。</p>
-<p>听说高铁是隔开坐，我想，绿皮火车应该也是。上车才发现，只是不卖上铺的票了。卧铺差不多是满载。途中，人人都带着口罩，还有带着防护手套的，感觉一个个精神都很紧张，我只是口罩不舒服抽了几下鼻子，周围人们的脑袋刷的一下全扭过来了，至于么。。。</p>
-<p>一晚未眠。</p>
-<p>霍营下车的时候，看到日出了，想到一句诗：日出江花红胜火。</p>
-<p>回到住处，二房东直接把门从外面反锁。。。看来14天连外卖都不能点。</p>
-<p>一路回答问题，处理问题。本来想休息会，结果，事情压着，还是工作吧，工作完了睡得才能更香不是么。困啊，困怎么办，早晨7点到晚上7点，抽了半盒的烟，我觉得我应该买个保险。</p>
-<p>想家。</p>
-<p>睡前看了会今日头条，有篇文章叫做：我们没有见过市面的父母。看的我一把鼻涕一把泪。得好好规划一下，未来几年的路怎么走。未来，何去何从？</p>
-<p>希望时光，你能慢点走。</p>
-]]></content>
-      <categories>
-        <category>随笔</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>Emmmm.......</title>
-    <url>/2020/03/13/Essay/2020/Emmm/</url>
-    <content><![CDATA[<p>很烦躁</p><p>工作的活实在是太多了，在家里上班，比在公司996都累，咖啡都喝完一罐了</p><p>不过，就算这样，领导应该还是会觉得进度慢，怎么写的这么慢，问题还这么多，交代下去就不能尽快弄完么？</p><a id="more"></a>
-
-
-<p>这时候就感觉很郁闷了，我应该再懒一点</p>
-<p>不想好，绝不动手</p>
-<p>然后，能抽离的组件，方法，全部抽离出来，重复的代码，尽量不写第二遍</p>
-<p>不过想得多了，写的就少了，然后再次开始这个循环</p>
-<p>纠结</p>
-<p>今天得好好睡一觉</p>
-]]></content>
-      <categories>
-        <category>随笔</category>
-      </categories>
-  </entry>
-  <entry>
     <title>docker部署jar包</title>
     <url>/2020/03/11/Work%20Record/CAAS/JDK8withDocker/</url>
     <content><![CDATA[<p>首先先docker search openjdk8，寻找到要使用的image。我使用的是adoptopenjdk/openjdk8这个。</p><a id="more"></a>
 <p>然后基于该镜像构建容器。</p>
-<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">docker <span class="keyword">run</span><span class="bash"> -dit --name XXX -w /root  -v /etc/timezone:/etc/timezone:ro -v /etc/localtime:/etc/localtime -v /XXX:/root  -p 8888:8080 adoptopenjdk/openjdk8 sh -c <span class="string">"java -jar api.jar"</span></span></span><br></pre></td></tr></table></figure>]]></content>
+<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">docker <span class="keyword">run</span> -dit --name XXX -w /root  -v /etc/timezone:/etc/timezone:ro -v /etc/localtime:/etc/localtime -v /XXX:/root  -p 8888:8080 adoptopenjdk/openjdk8 sh -c "java -jar api.jar"</span><br></pre></td></tr></table></figure>]]></content>
       <categories>
         <category>工作日常记录</category>
       </categories>
       <tags>
         <tag>工作</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>2020年的todo list</title>
-    <url>/2020/01/01/Essay/2020/TODO/</url>
-    <content><![CDATA[<p>2020年的计划，一年之后再来看，看完成了多少。</p><ul>
-<li>[x] 购买一台自己的MacBook Pro</li>
-<li>[x] 每月一本书的阅读</li>
-<li>[x] <del>每天英语单词打卡</del>  每天保持学习</li>
-<li>[x] <del>新概念三册学完</del>  新概念一册学完</li>
-<li>[x] 自己的Github每<del>周</del>月提交不少于<del>五</del>10次</li>
-<li>[x] 每周一篇博客（平均）</li>
-<li>[x] <del>和媳妇去看海</del>    看看七佛山算了</li>
-<li>[x] <del>送媳妇一个她喜欢的东西</del>   喜欢钱</li>
-<li>[x] <del>不睡懒觉</del>   不可能做得到</li>
-<li>[x] <del>坚持锻炼，在忙，也得20个卷腹或者10个俯卧撑</del>  快乐的胖着不好么</li>
-</ul>]]></content>
-      <categories>
-        <category>随笔</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>婚后复工第一天</title>
-    <url>/2019/11/25/Essay/2019/%E5%A9%9A%E5%90%8E%E5%A4%8D%E5%B7%A5%E7%AC%AC%E4%B8%80%E5%A4%A9/</url>
-    <content><![CDATA[<p>今天是婚后第一天上班，怕地铁人太多，领着一袋子喜糖，提早很多去了公司。十天的假期眨眼即过，恍如昨日。只不过昨日的我还有女朋友，今日的我已为人夫，明日，可能为人父？</p><a id="more"></a>
-<p>结婚的感觉，有紧张，有喜悦，有激动，有害怕。婚礼都结束了，都回来上班了，为什么是这种感觉？婚礼当天都不害怕，现在害怕什么？想了想，可能是自己太过于小心翼翼了，怕自己哪句话不小心伤害到别人或者别人伤害到自己，怕自己并不是自己想象中的那个样子，怕自己会在周围人的恭喜下惊慌失措。喜糖准备了60包，宁多不少，别人那里出问题没办法，但是我这里不能说这里不行那里不对，不是么？</p>
-<p>同事，领导的一句句新婚快乐现在仿佛还萦绕耳旁，恭喜恭喜，这么小就结婚了啊，啥时候要孩子呢？是啊，啥时候要孩子呢？过两年吧。人总得扮演好生命中每个时期的角色，现在，还没有做好心理准备去当一个父亲，经济上也不允许。先扮演好自己一个丈夫的角色，扮演好一个男人的角色。</p>
-<p>2009年，十年前，还在上高中，那会正是非主流横行的时候，许嵩，汪苏泷，徐良霸占了QQ音乐的前几名，现在距离那会已经十年了？都十年了？都结婚了，都复工了，还想什么呢。再想，时间也不会倒流回去，过去的已经过去，永远的停留在回忆里。之前很喜欢一句话，当然现在也喜欢：不乱于心，不困于情，不念过去，不畏将来。都结婚了，肩膀上可不是只有自己了，以前一个吃饱全家不饿，现在，还是要多考虑考虑自己的家人，未来的孩子，和一天天老去的父母，自己还是和以前一样的话，这些事情，会全部由他们扛起来，我舍不得，舍不得他们替我受苦受累，我想把他们肩上的东西转移到我的肩膀上，让他们休息休息，替我少操一点心。既然这么想，又何必故作古时候的文人骚客的状态呢。努力努力再努力，让家人不替自己操心，让自己给家里更多地帮助，生活才会更好。</p>
-<p>工作，照常是不喜欢的，他日之因今日之果，可是在不喜欢，还是得做，还得做好。不然的话，循环一环一环，永远也跳不出去这个怪圈，优秀的越来越优秀，水平菜的越来越菜，直至被淘汰，去面对程序员的35岁危机。唯有解放自己生产力，投入更多的时间和精力，才可能在两年半之后，和别人站在同一个起跑线上。那时，再说休息，也不迟。</p>
-<p>好几个同事，领导，说我变了，我想，应该不只是变胖吧。</p>
-]]></content>
-      <categories>
-        <category>随笔</category>
-      </categories>
   </entry>
   <entry>
     <title>Nexus打包碰到的问题</title>
@@ -13639,25 +14855,6 @@
       </tags>
   </entry>
   <entry>
-    <title>アイネクライネ (Eine kleine)</title>
-    <url>/2019/08/11/Essay/2019/%E3%82%A2%E3%82%A4%E3%83%8D%E3%82%AF%E3%83%A9%E3%82%A4%E3%83%8D%20(Eine%20kleine)/</url>
-    <content><![CDATA[<p>第一次听这首歌是赶来北京的时候，一个日本小姑娘翻唱的，最近重新听，发展越听越上瘾，听到这首歌，会有一种初恋般的感觉，于是乎自己也想学一学怎么唱。</p><a id="more"></a>
-<p>不过外语歌都比较费劲，原因就是说，不会外语，哈哈。英语好歹还勉强能看看，日语这就尴尬了，看看不懂，听听不懂，但是想学这首歌怎么办？两种办法吧</p>
-<ol>
-<li>跟着罗马音学</li>
-<li>学五十音</li>
-</ol>
-<p>罗马音，那就纯粹是记旋律，然后哼着自己也不知道什么意思的歌词，学完这首，等到了下一首，再次重来，这样的话，感觉太费劲。不如说学五十音，万丈高楼平地起，到时候再想学Lemon这些的话，应该相对来说会简单一点，不知道意思就不知道意思呗，知道怎么读了，能说得出来，就还行。</p>
-<p>于此开始，等到完了之后，再上传一份，估计催吐功能会比较强。</p>
-]]></content>
-      <categories>
-        <category>随笔</category>
-      </categories>
-      <tags>
-        <tag>生活</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>LinkedHashMap源码</title>
     <url>/2019/07/18/Source%20code%20reading/JDK/Collection/LinkedHashMap/</url>
     <content><![CDATA[<p>写在前面</p>
@@ -13793,17 +14990,6 @@
       </categories>
       <tags>
         <tag>JDK源码</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>换工作的一些思考</title>
-    <url>/2019/05/23/Essay/2019/Thinking%20of%20change%20job/</url>
-    <content><![CDATA[<p>新入职了一个公司</p><p>外派</p><p>时间是2019-05-15</p><p>身为一个打工的，最看重的可能就是三件事：成长性，钱，环境。新单位外派，不知道到底会怎么样，不过钱的稳定性应该是有保证，成长性应该就是为0了吧。可能也会比较好？但是就之前在太原工作的经历来看，高成长性的可能微乎其微。环境，就朋友极力阻止我这件事上来看，估计也很一般。不过答应了的事情，还是要做的。先待一段时间看看。</p>]]></content>
-      <categories>
-        <category>随笔</category>
-      </categories>
-      <tags>
-        <tag>生活</tag>
       </tags>
   </entry>
   <entry>
@@ -14228,138 +15414,6 @@
       </tags>
   </entry>
   <entry>
-    <title>目前系统中的问题</title>
-    <url>/2019/04/17/Essay/2019/Some%20Error%20in%20APlus%20System/</url>
-    <content><![CDATA[<p>项目有如下几个（后端）：</p><ul>
-<li>jx</li>
-<li>yx</li>
-<li>yy</li>
-</ul><p>问题如下：</p><ol>
-<li><p>项目名称</p>
-<ul>
-<li><p>如果有新项目，缩写也是yy，则会有冲突，就会变成yy1或者yy-sfdsf，无法见名知意，影响效率。</p>
-</li>
-<li><p>沟通之间难以顺畅交流。</p>
-</li>
-</ul>
-</li>
-<li><p>数据字典</p>
-<ul>
-<li>无法见名知意，影响开发，维护的效率，比如说：ZYYWZC006-TF003，谁能看得懂。</li>
-<li>网络IO消耗较大，于jx,yx之前的旧代码中(前期代码风格来源于yx)，一个列表20个字段，其中5个是字典项，则一行数据会走5次数据字典的请求，一页20行，则会走20<em>5=100次请求。假设一次耗时100ms，100 </em> 100ms=10000ms=10s。后期代码，加了统一的JSON转译，编写复杂度有所下降，且一行数据只请求一次，网络IO耗时下降。</li>
-<li>一些代码(前端 or 后端)，直接将字典值写死与项目中，后期维护难度加大，效率降低。</li>
-<li>查看测试环境，107和108和yx三个库，每个都有数据字典的表，用的哪个，还是说全部都在用？若数据字典修改，产品可能只修改yx的，但是其他的没有修改，开发，维护，沟通都会受到阻碍。效率降低。</li>
-<li>省市区存在于数据字典中，且取的是ID，若想去国家统一区域代码，需要统一（前后端）进行二次处理。耗费性能耗费时间耗费精力。</li>
-</ul>
-</li>
-<li><p>服务划分边界</p>
-<ul>
-<li>服务划分是按照产品的模块进行划分，不合理，如A &amp; B，应该为一个服务才对，但是技术却按照产品原型划分，不考虑后期，不考虑前期，外包风格。由于A &amp; B不应分开，导致开发，维护，效率低下。</li>
-<li>服务边界随意制定，没有进行充分考虑。如，X 应属于A服务，但是产品将其放置于B服务，然后不进行考虑，随着产品原型放入B。后期产品意识到了这个问题，将其改回去A服务，技术由于相关原因，知道不合理，却无法迁移回去。</li>
-<li>目前虽然是所谓的微服务，但是由于设计原因，却是将服务当成service来用。代码之间耦合性极大，没有起到微服务高内聚低耦合的效果。服务界限非常模糊。</li>
-</ul>
-</li>
-<li><p>使用MyBatis存在的问题</p>
-<ul>
-<li>项目中很多都是like %%，索引无法应用，查询速度会降低非常多。</li>
-<li>sql全部手写，且大部分都是单表操作，开发效率极低</li>
-<li>产品经常修改，导致mapper,entity,resultmap,wiki,db，全都都需要修改，效率极低，BUG率极高</li>
-<li>微服务，但是MyBatis不进行多表查询，且没有DBA，无法发挥出MyBatis的优势</li>
-</ul>
-</li>
-<li><p>安全问题</p>
-<ul>
-<li>各个服务之间，目前仅仅能限制登录访问。更细粒度的访问控制，目前没有</li>
-<li>所谓的菜单权限，只是前端无法看见而已，如果浏览器地址栏直接输入，基本什么数据都能返回的回去，菜单安全只是假安全</li>
-<li>用户体系混乱，这个大部分是产品设计问题</li>
-<li>密码为MD5加密且无盐，基本等同于没有加密，且浏览器地址栏直接调用用户查询的话，所有用户用密码什么的全部都会返回回去</li>
-</ul>
-</li>
-<li><p>注释问题(也可以说复杂度的问题)</p>
-<ul>
-<li>实体的注释，wiki的注释，db的注释，swagger的注释，改一个，所有地方都要改，效率低下</li>
-<li>由于用的数据字典，entity用的String，根本不知道什么意思</li>
-</ul>
-</li>
-<li><p>项目测试问题</p>
-<ul>
-<li>无单元测试，导致，随便一个问题，比如说加了个字段，都需要整体回归测试一遍</li>
-<li>test环境无法使用，且uat环境构建极慢，测试及其困难，压力变相集中在测试人员身上。加大测试人员工作量，增加沟通成本。</li>
-</ul>
-</li>
-<li><p>产品存在的问题(重点问题)</p>
-<ul>
-<li>先说一下，说白了，开发人员都是搬砖的，只是其中有技术员，建造师，首席建造师，可能还有科学家等等。而产品是设计师，是艺术家，是乔布斯。设计的不好，考虑的不周，根源就很难改变。</li>
-<li>列表页<ul>
-<li>假设有A，其中有id,name,phone,address三个字段，有B，其中有,orderedTime,orderCode,content三个字段。</li>
-<li>A的列表页，只展示A的属性，B的列表页，除了B的属性之外，还展示了A的name,phone属性。但是另一个地方，又有一个C，这个地方不仅展示了A的name和phone，还展示了address。又有一个D，展示的更多。</li>
-<li>微服务架构（现在勉强算）下，都是单表操作，因此会冗余字段在表里，如果设计不统一，冗余字段越来越多，难以维护（这其中有MyBatis的锅）。如果不冗余，每次都查询其他表，封装DTO，则会导致工作量的加大。同时，参考对数据字典的描述，对性能影响也会很大。</li>
-</ul>
-</li>
-<li>详情页<ul>
-<li>详情页很多其他页面的列表页嵌套。</li>
-<li>列表页统计项很多，且统计项加入查询。</li>
-<li>有专门的统计页面可以干，何必每个地方都放一份</li>
-<li>权限不好弄，而且，界面模糊，用的人不知道从哪到底能看，只记得哪都能看，极大的可能就会每个详情都点进去看有没有。</li>
-</ul>
-</li>
-<li>固定条件项(数据字典)<ul>
-<li>比如说，准驾车型。众所周知，中国准驾车型包含有——A1,A2,A3,B1,B2,C1,C2,C3,C4,C5,D,E,F,M。这些应该只有一套在系统里，这些都是通用的，如果说，A页面只想用A1,A2，B页面只想用C1,C2，产品要求只显示这么几个，就会导致数据字典(或者说枚举)里存在多个字典项，一个为最全的，一个为A1,A2，一个为C1,C2。开发，维护复杂度激增。且代码无法复用，效率影响很大。不应该觉得说我这就只能C1或者C2，不现实。太原市电动车执行新国标，如果说，电动车速到了25KM每小时，视为机动车辆，这时候，如果没有增加E或者F驾照的话，视为违章处理，直接扣车。以至于，太原市驾校报考摩托车驾照的人数激增。</li>
-<li>能通用的条件应尽量通用，如：培训科目有四个：科目一，科目二，科目三，科目四。所有用到科目这个字段的地方，应当也是这四个科目，而不应该说，只有科目一或者科目二等等。</li>
-</ul>
-</li>
-<li>修改所导致的问题，事故的预判<ul>
-<li>比如，A服务修改，但是使用到A服务的，可能有B,C,D,E等等，极端情况下，这些地方都需要修改一次。产品应做好预判。同时，技术也应该做好预判。</li>
-</ul>
-</li>
-</ul>
-</li>
-</ol><a id="more"></a>
-
-
-
-<p>建议解决办法如下：</p>
-<ol>
-<li>项目名称用统一代表标识(比如说，eclipse前年的版本号为Oxygen，一看就知道是什么版本，什么时候发布的)，不推荐每个release过程都一个代号，但是每个项目应该有一个代号来代称。</li>
-<li>全面抛弃数据字典，统一使用枚举进行相关工作。随之而来的就是一堆问题：<ol>
-<li>MyBatis对枚举支持不友好。如果换成枚举，则ORM框架应当变更为Spring Data JPA。</li>
-<li>yx,jx所有列表页，详情页等等，后端代码需要重写，同时，前端代码，需要重新联调，耗时很长。有些地方，甚至需要产品层面进行相应变更。</li>
-<li>地区，应按照国标进行存储，数据库只存code，提供统一接口进行处理，而非code以及含义全部入库，如学员，现在更简单，全部存到address这个字段上，如有变化或者新的需求，效率太低。</li>
-<li>合库合表</li>
-</ol>
-</li>
-<li>抛弃微服务，业务不了解，技术不了解，边界区分不了，且目前微服务是当成service来用，发挥不出优势，应抛弃，整合，然后资源足够，业务成熟的情况，进行微服务拆分。</li>
-<li>需与产品进行沟通，按照产品的风格，选择MyBatis or Spring Data JPA。</li>
-<li>应当根据现在的情况，以后以后的可能性，重新设计Security系统，需要产品同时进行规划RBAC。</li>
-<li>面向对象，而不面向数据库，注释只存在一份即可，wiki能自动生成最好。</li>
-<li>单元测试添加，环境隔离。</li>
-</ol>
-]]></content>
-      <categories>
-        <category>随笔</category>
-      </categories>
-      <tags>
-        <tag>问题记录</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>清静经</title>
-    <url>/2019/04/17/Essay/2019/%E6%B8%85%E9%9D%99%E7%BB%8F/</url>
-    <content><![CDATA[<p><strong>老君曰：</strong>大<a href="http://www.zxuew.cn/daodejing/" target="_blank" rel="noopener">道</a>无形，生育天地；大道无情，运行日月；大道无名，长养万物；吾不知其名，强名曰道。夫道者：有清有浊，有动有静；天清地浊，天动地静；男清女浊，男动女静；降本流末，而生万物。清者浊之源，动者静之基；人能常清静，天地悉皆归。</p><a id="more"></a>
-<p>夫，人神好清，而心扰之；人心好静，而欲牵之。常能遣其欲，而心自静；澄其心，而神自清；自然六欲不生，三毒消灭。所以不能者，为心未澄，欲未遣也，能遣之者：内观其心，心无其心；外观其形，形无其形；远观其物，物无其物；三者既无，唯见於空。观空亦空，空无所空；所空既无，无无亦无；无无既无，湛然常寂。寂无所寂，欲岂能生；欲既不生，即是真静。真常应物，真常得性；常应常静，常清静矣。如此清静，渐入真道；既入真道，名为得道；虽名得道，实无所得；为化众生，名为得道；能悟之者，可传圣道。</p>
-<p><strong>老君曰：</strong>上士无争，下士好争。上<a href="http://www.zxuew.cn/daodejing/" target="_blank" rel="noopener">德</a>不德，下德执德，执著之者，不明道德。众生所以不得真道者，为有妄心，既有妄心，即惊其神，既惊其神，即著万物，既著万物，即生贪求，既生贪求，即是烦恼，烦恼妄想，忧苦身心，便遭浊辱，流浪生死，常沉苦海，永失真道。真常之道，悟者自得；得悟道者，常清静矣！</p>
-<p><strong>仙人葛翁曰：</strong>吾得真道，曾诵此经万遍。此经是天人所习，不传下士。吾昔受之於东华帝君，东华帝君受之於金阙帝君，金阙帝君受之於西王母。西王母乃口口相传，不记文字。吾今於世，书而录之。上士悟之，升为天官；中士修之，南宫列仙；下士得之，在世长年。游行三界，升入金门。</p>
-<p><strong>左玄真人曰：</strong>学道之士，持诵此经者，即得十天善神，拥护其身。然後玉符保神，金液炼形。形神俱妙，与道合真。</p>
-<p><strong>正一真人曰：</strong>人家有此经，悟解之者，灾障不干，众圣护门。神升上界，朝拜高真。功满德就，相感帝君。诵持不退，身腾紫云。</p>
-]]></content>
-      <categories>
-        <category>别人写的</category>
-      </categories>
-      <tags>
-        <tag>静心</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>图</title>
     <url>/2019/04/16/Data%20Struct/Graph/</url>
     <content><![CDATA[<ol>
@@ -14552,28 +15606,6 @@
       </categories>
       <tags>
         <tag>树</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>MyBatis VS Hibernate</title>
-    <url>/2019/04/11/Essay/2019/MyBatis%20VS%20Hibernate/</url>
-    <content><![CDATA[<p>&emsp;&emsp;很多公司招聘的时候都会说，掌握SSH/SSM其中一种。H指的就是Hibernate，M就是MyBatis。现在大部分的选择其实就是这两种。但是这两种框架有什么优缺点？选型的时候该如何进行选择？这其实是一个比较值得深究一下的问题。</p><a id="more"></a>
-<p>&emsp;&emsp;从几个角度来对比一下他们之间的区别，先从<strong>开发效率</strong>的角度来说说。</p>
-<p>&emsp;&emsp;如果数据库频繁改动，比如说某张表加字段了，需要自己去alter table修改，加一个字段改一次，如果创业初期，业务不明确，那么，修改字段的情况，是经常可能会发生的，那就意味着，需要在维护上付出很多的成本，而Hibernate在这方面，自动管理，手动维护的情况比较少，因此，<strong>数据库表频繁改动的情况下，Hibernate完胜</strong>。如果数据库表不频繁改动，比如说接项目的，或者说外包，合同里已经把所有的可能的字段都给描述清楚了，<strong>在项目周期比较长的话，且不考虑二期甚至更后的情况下，Hibernate和MyBatis五五开吧</strong>。但是说，没有哪个程序员，愿意把时间花费在这些琐碎的事情上（建表，加字段，加数据库字段注释）吧，至少说我不愿意，时间是有限的，精力也是有限的，这些无意义或者意义比较小的事情，对精力损耗非常大，因此，<strong>我个人倾向于Hibernate</strong>。</p>
-<p>&emsp;&emsp;日常开发中，MyBatis的优点就是：<strong>SQL全都都是手写，定制型极强，非常能体现出使用者的SQL水平</strong>；写起来非常自由，各种表关联随心所欲，各种查询条件组合随心所欲；如果公司配置的有DBA的话，查询效率能够得到很大的保障。但是缺点的话也比较明显：参数返回一般就是两种，ResultMap和ResultType，前者返回一个map，使用者从map中取自己想要的数据，后者返回一个DTO，使用者需要自己定义Bean，同时，mapper.xml中也需要定义map映射，相对来说，比较费劲，工作量会比较大一点。<strong>Hibernate在复杂查询方面，被MyBatis完爆；不过Hibernate在单表操作的话，完胜MyBatis。</strong>虽然说MyBatis也有插件(Mybatis Plus ，MyBatis Plugin)等来生成对应的简单CURD，但是，还是上面说的，一旦字段改动频繁，那就是一个噩梦。</p>
-<p>&emsp;&emsp;再从<strong>执行效率</strong>上对比一下。</p>
-<p>&emsp;&emsp;MyBatis的天花板很高，地板也很低。天花板的话，就是DBA甚至更高。能够对每一个字段的效率控制到极致；地板的话，就是各种CV，直接select *的这种，各种嵌套查询，慢SQL。其实和数据库了解程度有点关系，但是说MyBatis里写SQL有两种方式，第一种写mapper.xml里，第二种就是写注解里，项目小而简单的话还好，一旦有了点复杂度，写的还不规范，估计没人想看，间接会导致成本增加。</p>
-<p>&emsp;&emsp;Hibernate的话，如果不做配置，每次查询，都是所有字段全部查询出来，如果表里有大字段(TEXT)，那速度和MyBatis只查某些具体字段，压根没得比。也就是说，Hibernate需要了解的东西更多，如果不了解，只单纯最基本的用的话，执行效率和MyBAtis差不多，但是随着字段变大变多，如果不做配置，肯定不如说按需查询所来的速度快。当然，如果有足够的知识储备的话，Hierbnate速度并不慢。</p>
-<p>&emsp;&emsp;再从<strong>学习成本</strong>对比一下。</p>
-<p>&emsp;&emsp;MyBatis的一大特点就是：上手速度极快，看几眼，就能够直接上手，门槛极低。而Hibernate相对来说，难一点。但是并不是说Hibernate就死难学，只是有一定的曲线而已，毕竟Hibernate是全自动ORM，而MyBatis是半自动ORM。</p>
-<p>&emsp;&emsp;我的结论是：如果是外包这种，查询，插入数据量大，表关联复杂，MyBatis来的合适。如果是微服务这种，单表操作比较多，Hibernate来的合适。如果说数据库确定不会迁移，需要用到数据库底层功能，那么MyBatis来的合适，就比如说Oracle。如果说屏蔽数据库底层细节，那么Hibernate来的合适。</p>
-<p>&emsp;&emsp;不过两者有个共同点，那就是数据库相关只是得熟。从零开始的项目的话，我会选择Hibernate(JPA)，如果说遗留项目，用的MyBatis，那就继续用吧，写的好的话，后来人写的也舒服。有DBA的话，用MyBatis不要太爽，没有的话，就只能看开发人员水平。</p>
-]]></content>
-      <categories>
-        <category>随笔</category>
-      </categories>
-      <tags>
-        <tag>ORM</tag>
       </tags>
   </entry>
   <entry>
@@ -14772,33 +15804,6 @@
       </categories>
       <tags>
         <tag>前言</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Hello World</title>
-    <url>/2019/04/05/hello-world/</url>
-    <content><![CDATA[<p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p><a id="more"></a>
-<h2><span id="quick-start">Quick Start</span></h2><h3><span id="create-a-new-post">Create a new post</span></h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3><span id="run-server">Run server</span></h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3><span id="generate-static-files">Generate static files</span></h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3><span id="deploy-to-remote-sites">Deploy to remote sites</span></h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>
-]]></content>
-  </entry>
-  <entry>
-    <title>Spring Security记录1</title>
-    <url>/2019/04/05/Spring%20Security/Step1/</url>
-    <content><![CDATA[<blockquote>
-<p>Spring Security 官方推荐的安全控制框架</p>
-</blockquote>]]></content>
-      <categories>
-        <category>Spring Security</category>
-      </categories>
-      <tags>
-        <tag>Security</tag>
       </tags>
   </entry>
 </search>

@@ -52,18 +52,18 @@
   };
 </script>
 
-  <meta name="description" content="首先先docker search openjdk8，寻找到要使用的image。我使用的是adoptopenjdk/openjdk8这个。">
+  <meta name="description" content="docker部署jar包">
 <meta name="keywords" content="工作">
 <meta property="og:type" content="article">
 <meta property="og:title" content="docker部署jar包">
 <meta property="og:url" content="https://wenslo.github.io/2020/03/11/Work Record/CAAS/JDK8withDocker/index.html">
 <meta property="og:site_name" content="温海林的博客">
-<meta property="og:description" content="首先先docker search openjdk8，寻找到要使用的image。我使用的是adoptopenjdk/openjdk8这个。">
+<meta property="og:description" content="docker部署jar包">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-06-20T16:51:23.179Z">
+<meta property="og:updated_time" content="2020-12-31T13:03:04.801Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="docker部署jar包">
-<meta name="twitter:description" content="首先先docker search openjdk8，寻找到要使用的image。我使用的是adoptopenjdk/openjdk8这个。">
+<meta name="twitter:description" content="docker部署jar包">
 
 <link rel="canonical" href="https://wenslo.github.io/2020/03/11/Work Record/CAAS/JDK8withDocker/">
 
@@ -251,7 +251,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-06-21 00:51:23" itemprop="dateModified" datetime="2020-06-21T00:51:23+08:00">2020-06-21</time>
+                <time title="修改时间：2020-12-31 21:03:04" itemprop="dateModified" datetime="2020-12-31T21:03:04+08:00">2020-12-31</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -266,6 +266,7 @@
             </span>
 
           
+            <div class="post-description">docker部署jar包</div>
 
         </div>
       </header>
@@ -278,7 +279,7 @@
       
         <p>首先先docker search openjdk8，寻找到要使用的image。我使用的是adoptopenjdk/openjdk8这个。</p><a id="more"></a>
 <p>然后基于该镜像构建容器。</p>
-<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="keyword">run</span><span class="bash"> -dit --name XXX -w /root  -v /etc/timezone:/etc/timezone:ro -v /etc/localtime:/etc/localtime -v /XXX:/root  -p 8888:8080 adoptopenjdk/openjdk8 sh -c <span class="string">"java -jar api.jar"</span></span></span><br></pre></td></tr></table></figure>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="keyword">run</span> -dit --name XXX -w /root  -v /etc/timezone:/etc/timezone:ro -v /etc/localtime:/etc/localtime -v /XXX:/root  -p 8888:8080 adoptopenjdk/openjdk8 sh -c "java -jar api.jar"</span><br></pre></td></tr></table></figure>
     </div>
 
     
@@ -294,16 +295,16 @@
 
           <div class="post-nav">
             <div class="post-nav-next post-nav-item">
-                <a href="/2020/01/01/Essay/2020/TODO/" rel="next" title="2020年的todo list">
-                  <i class="fa fa-chevron-left"></i> 2020年的todo list
+                <a href="/2019/11/01/Work Record/CAAS/Nexus/" rel="next" title="Nexus打包碰到的问题">
+                  <i class="fa fa-chevron-left"></i> Nexus打包碰到的问题
                 </a>
             </div>
 
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
-                <a href="/2020/03/13/Essay/2020/Emmm/" rel="prev" title="Emmmm.......">
-                  Emmmm....... <i class="fa fa-chevron-right"></i>
+                <a href="/2020/04/01/Language/English/New Concept/Word/Noun/Animals/" rel="prev" title="名词-动物">
+                  名词-动物 <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>
@@ -358,20 +359,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">98</span>
+          <span class="site-state-item-count">89</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">11</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-count">20</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -407,7 +408,7 @@
 <div class="copyright">
   
   &copy; 2019 – 
-  <span itemprop="copyrightYear">2020</span>
+  <span itemprop="copyrightYear">2021</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>

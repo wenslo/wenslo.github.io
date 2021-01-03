@@ -52,18 +52,18 @@
   };
 </script>
 
-  <meta name="description" content="写在前面 HashMap是无序的，那么说，Map接口有没有说有序的实现？有，两种，一种LinkedHashMap，一种就是TreeMap，先来看看LinkedHashMap。">
+  <meta name="description" content="HashMap是无序的，那么说，Map接口有没有说有序的实现？有，两种，一种LinkedHashMap，一种就是TreeMap，先来看看LinkedHashMap。">
 <meta name="keywords" content="JDK源码">
 <meta property="og:type" content="article">
 <meta property="og:title" content="LinkedHashMap源码">
 <meta property="og:url" content="https://wenslo.github.io/2019/07/18/Source code reading/JDK/Collection/LinkedHashMap/index.html">
 <meta property="og:site_name" content="温海林的博客">
-<meta property="og:description" content="写在前面 HashMap是无序的，那么说，Map接口有没有说有序的实现？有，两种，一种LinkedHashMap，一种就是TreeMap，先来看看LinkedHashMap。">
+<meta property="og:description" content="HashMap是无序的，那么说，Map接口有没有说有序的实现？有，两种，一种LinkedHashMap，一种就是TreeMap，先来看看LinkedHashMap。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-06-20T16:51:23.177Z">
+<meta property="og:updated_time" content="2020-12-31T13:03:04.798Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="LinkedHashMap源码">
-<meta name="twitter:description" content="写在前面 HashMap是无序的，那么说，Map接口有没有说有序的实现？有，两种，一种LinkedHashMap，一种就是TreeMap，先来看看LinkedHashMap。">
+<meta name="twitter:description" content="HashMap是无序的，那么说，Map接口有没有说有序的实现？有，两种，一种LinkedHashMap，一种就是TreeMap，先来看看LinkedHashMap。">
 
 <link rel="canonical" href="https://wenslo.github.io/2019/07/18/Source code reading/JDK/Collection/LinkedHashMap/">
 
@@ -251,7 +251,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-06-21 00:51:23" itemprop="dateModified" datetime="2020-06-21T00:51:23+08:00">2020-06-21</time>
+                <time title="修改时间：2020-12-31 21:03:04" itemprop="dateModified" datetime="2020-12-31T21:03:04+08:00">2020-12-31</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -266,6 +266,7 @@
             </span>
 
           
+            <div class="post-description">HashMap是无序的，那么说，Map接口有没有说有序的实现？有，两种，一种LinkedHashMap，一种就是TreeMap，先来看看LinkedHashMap。</div>
 
         </div>
       </header>
@@ -306,8 +307,8 @@
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
-                <a href="/2019/08/11/Essay/2019/アイネクライネ (Eine kleine)/" rel="prev" title="アイネクライネ (Eine kleine)">
-                  アイネクライネ (Eine kleine) <i class="fa fa-chevron-right"></i>
+                <a href="/2019/08/19/Source code reading/JDK/Collection/TreeMap/" rel="prev" title="TreeMap源码">
+                  TreeMap源码 <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>
@@ -362,20 +363,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">98</span>
+          <span class="site-state-item-count">89</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">11</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-count">20</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -411,7 +412,7 @@
 <div class="copyright">
   
   &copy; 2019 – 
-  <span itemprop="copyrightYear">2020</span>
+  <span itemprop="copyrightYear">2021</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>

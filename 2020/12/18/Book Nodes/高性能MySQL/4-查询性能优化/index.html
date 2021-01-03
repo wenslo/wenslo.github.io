@@ -52,18 +52,18 @@
   };
 </script>
 
-  <meta name="description" content="查询的生命周期大致可以按照顺序来看：客户端，服务器，在服务器上进行解析，生成执行计划，执行，返回结果给客户端，执行可以认为是整个生性周期中最重要的阶段，这其中包括了大量为了检索数据到存储引擎的调用以及调用后的数据处理，包括排序、分组。在完成这些任务的时候，查询需要在不同的地方花费时间，包括网络，CPU计算，生成统计信息和执行计划、锁等待（互斥等待）等操作，尤其是向底层存储引擎检索数据的调用操作，这">
+  <meta name="description" content="MySQL创建高性能索引">
 <meta name="keywords" content="MySQL">
 <meta property="og:type" content="article">
 <meta property="og:title" content="MySQL查询性能的优化">
 <meta property="og:url" content="https://wenslo.github.io/2020/12/18/Book Nodes/高性能MySQL/4-查询性能优化/index.html">
 <meta property="og:site_name" content="温海林的博客">
-<meta property="og:description" content="查询的生命周期大致可以按照顺序来看：客户端，服务器，在服务器上进行解析，生成执行计划，执行，返回结果给客户端，执行可以认为是整个生性周期中最重要的阶段，这其中包括了大量为了检索数据到存储引擎的调用以及调用后的数据处理，包括排序、分组。在完成这些任务的时候，查询需要在不同的地方花费时间，包括网络，CPU计算，生成统计信息和执行计划、锁等待（互斥等待）等操作，尤其是向底层存储引擎检索数据的调用操作，这">
+<meta property="og:description" content="MySQL创建高性能索引">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-12-18T15:33:26.968Z">
+<meta property="og:updated_time" content="2020-12-31T13:03:04.756Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="MySQL查询性能的优化">
-<meta name="twitter:description" content="查询的生命周期大致可以按照顺序来看：客户端，服务器，在服务器上进行解析，生成执行计划，执行，返回结果给客户端，执行可以认为是整个生性周期中最重要的阶段，这其中包括了大量为了检索数据到存储引擎的调用以及调用后的数据处理，包括排序、分组。在完成这些任务的时候，查询需要在不同的地方花费时间，包括网络，CPU计算，生成统计信息和执行计划、锁等待（互斥等待）等操作，尤其是向底层存储引擎检索数据的调用操作，这">
+<meta name="twitter:description" content="MySQL创建高性能索引">
 
 <link rel="canonical" href="https://wenslo.github.io/2020/12/18/Book Nodes/高性能MySQL/4-查询性能优化/">
 
@@ -251,7 +251,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-12-18 23:33:26" itemprop="dateModified" datetime="2020-12-18T23:33:26+08:00">2020-12-18</time>
+                <time title="修改时间：2020-12-31 21:03:04" itemprop="dateModified" datetime="2020-12-31T21:03:04+08:00">2020-12-31</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -266,6 +266,7 @@
             </span>
 
           
+            <div class="post-description">MySQL创建高性能索引</div>
 
         </div>
       </header>
@@ -276,9 +277,214 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>查询的生命周期大致可以按照顺序来看：<strong>客户端，服务器，在服务器上进行解析，生成执行计划，执行，返回结果给客户端，执行可以认为是整个生性周期中最重要的阶段，这其中包括了大量为了检索数据到存储引擎的调用以及调用后的数据处理，包括排序、分组</strong>。在完成这些任务的时候，查询需要在不同的地方花费时间，包括网络，CPU计算，生成统计信息和执行计划、锁等待（互斥等待）等操作，尤其是向底层存储引擎检索数据的调用操作，这些调用需要在内存操作、CPU操作和内存不足时导致的IO操作上消耗时间，根据存储引擎不同，可能还会产生大量的上下文切换以及系统调用。</p><a id="more"></a>
-<p>| 慢查询基础：优化数据访问</p>
+        <p>| 1.简介</p><p>查询的生命周期大致可以按照顺序来看：<strong>客户端，服务器，在服务器上进行解析，生成执行计划，执行，返回结果给客户端，执行可以认为是整个生性周期中最重要的阶段，这其中包括了大量为了检索数据到存储引擎的调用以及调用后的数据处理，包括排序、分组</strong>。在完成这些任务的时候，查询需要在不同的地方花费时间，包括网络，CPU计算，生成统计信息和执行计划、锁等待（互斥等待）等操作，尤其是向底层存储引擎检索数据的调用操作，这些调用需要在内存操作、CPU操作和内存不足时导致的IO操作上消耗时间，根据存储引擎不同，可能还会产生大量的上下文切换以及系统调用。</p><a id="more"></a>
+
+<p>| 2.慢查询基础：优化数据访问</p>
 <p>查询性能低下最根本的原因是访问的数据太多。大部分性能低下的查询都可以通过减少访问的数据量的方式进行优化。两个步骤：<strong>1.确认应用程序是否在检索大量超过需要的数据。这通常意味着访问了太多的航，但有时候也可能是访问了太多的列。2.确认MySQL服务器层是否在分析大量超过需要的数据行。</strong></p>
+<p>| 2.1 是否想数据库请求了不需要的数据</p>
+<ol>
+<li><p>查询不需要的记录</p>
+<p> 比如说，JDBC的结果集是缓存的查询语句的所有结果，获取前几行，关闭之后，剩余的数据就会被抛弃，这种情况应当加上limit</p>
+</li>
+<li><p>多表关联时返回全部列</p>
+<p> 只选择需要的列</p>
+</li>
+<li><p>总是取出全部列</p>
+<p> 也就是说，避免<code>select *</code>，这种查询，优化器无法完成覆盖扫描这类优化，还会带来额外的IO，内存和CPU的消耗。如果表设计不完善，比如所有字段都在一张表（包括大字段），那么<code>select*</code>就是灾难</p>
+</li>
+<li><p>重复查询相同的数据</p>
+<p> 缓存热点数据，避免重复查询</p>
+</li>
+</ol>
+<p>| 2.2 MySQL是否在扫描额外的记录</p>
+<p>最简单的三个指标：<strong><em>响应时间，扫描的行数，返回的行数</em></strong>。这三个指标会记录到MySQL的慢日志中。</p>
+<p><strong>响应时间</strong></p>
+<p>响应时间是两个部分之和：服务时间和排队时间。服务时间是指数据库处理这个查询真正花了多长时间。排队时间是指服务器因为等待某些资源而没有真正执行查询的时间—可能是等待IO，也可能是行锁，很难做到逐个测量，一般常见的是IO和锁等地啊.</p>
+<p><strong>扫描的行数和返回的行数</strong></p>
+<p>较短的行访问速度更快，内存中的行也比磁盘中的行的访问速度要快。理想情况下，扫描多少行返回多少行，但是实际上不可能发生，比如关联查询，需要扫描多行才能生成结果集中的一行，比率一般在1：1和10：1之间，也有可能非常大。</p>
+<p>在explain语句中的type列反应了访问类型。访问类型有很多种，从<strong>全表扫描到索引扫描、范围扫描、唯一索引扫描、常数引用等。这里列的这些，速度是从慢到快，扫描的行数也是从小到大（感觉书里写错了）。</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> * <span class="keyword">from</span> film_actor <span class="keyword">where</span> film_id = <span class="number">1</span>;</span><br><span class="line"><span class="comment"># +--+-----------+----------+----------+----+--------------+--------------+-------+-----+----+--------+-----+</span></span><br><span class="line"><span class="comment"># |id|select_type|table     |partitions|type|possible_keys |key           |key_len|ref  |rows|filtered|Extra|</span></span><br><span class="line"><span class="comment"># +--+-----------+----------+----------+----+--------------+--------------+-------+-----+----+--------+-----+</span></span><br><span class="line"><span class="comment"># |1 |SIMPLE     |film_actor|NULL      |ref |idx_fk_film_id|idx_fk_film_id|2      |const|10  |100     |NULL |</span></span><br><span class="line"><span class="comment"># +--+-----------+----------+----------+----+--------------+--------------+-------+-----+----+--------+-----+</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 这里能看到，在索引idx_fk_film_id上使用了ref访问类型来执行查询。explain的结果也显示MySQL预估需要访问10行数据。换句话说，查询优化器认为这种访问类型可以高效地完成查询。</span></span><br><span class="line"><span class="comment"># 但是如果没有索引话，MySQL就不得不使用一种更糟糕的访问类型。</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> film_actor <span class="keyword">drop</span> <span class="keyword">foreign</span> <span class="keyword">key</span> fk_film_actor_film;</span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> film_actor <span class="keyword">drop</span> <span class="keyword">key</span> idx_fk_film_id;</span><br><span class="line"></span><br><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> * <span class="keyword">from</span> film_actor <span class="keyword">where</span> film_id = <span class="number">1</span>;</span><br><span class="line"><span class="comment"># +--+-----------+----------+----------+----+-------------+----+-------+----+----+--------+-----------+</span></span><br><span class="line"><span class="comment"># |id|select_type|table     |partitions|type|possible_keys|key |key_len|ref |rows|filtered|Extra      |</span></span><br><span class="line"><span class="comment"># +--+-----------+----------+----------+----+-------------+----+-------+----+----+--------+-----------+</span></span><br><span class="line"><span class="comment"># |1 |SIMPLE     |film_actor|NULL      |ALL |NULL         |NULL|NULL   |NULL|5462|10      |Using where|</span></span><br><span class="line"><span class="comment"># +--+-----------+----------+----------+----+-------------+----+-------+----+----+--------+-----------+</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 这时候再看，访问类型变成了一个全表扫描，这里的using where 标识MySQL将通过where条件来筛选存储引擎返回的记录。</span></span><br></pre></td></tr></table></figure>
+<p>一般MySQL能使用下面三种方式应用where条件，从好到坏依次为：</p>
+<ol>
+<li><p>在索引中使用where条件来过滤不匹配的记录。这是在存储引擎完成的。</p>
+</li>
+<li><p>使用索引覆盖扫描（在Extra列中出现了Using index）来返回记录，直接从索引中过滤不需要的记录并返回命中的结果。这是在MySQL服务器层完成的，但无需再回表查询记录。</p>
+</li>
+<li><p>从数据表中返回数据，然后过滤不满足条件的记录（在Extra列中出现Using where）。这在MySQL服务器层完成，MySQL需要先从数据表读出记录然后过滤。</p>
+</li>
+</ol>
+<p>不过，MySQL不会告诉我们生成结果实际上需要扫描多少行数据，而只会告诉我们生成结果时一共扫描了多少行数据。扫描的行数中的大部分都很可能是被where条件过滤掉的，对最终的结果集没有贡献。上面的例子中，删除索引后，看到MySQL需要扫描所有记录然后根据where条件过滤，最终只返回10行结果。可以尝试以下技巧进行优化</p>
+<ol>
+<li><p>使用索引覆盖扫描，把所有需要用到的列都放到索引中，这样存储引擎无需回表获取对应行就可以返回结果</p>
+</li>
+<li><p>改变库表结构，比如使用单独的汇总表</p>
+</li>
+<li><p>重写复杂查询，让MySQL优化器能够以更有花的方式执行这个查询。</p>
+</li>
+</ol>
+<p>| 3.1 一个复杂查询还是多个简单查询</p>
+<p>首先，个人观点，尽量避免复杂查询，外包公司可能是从oracle遗传下来的习惯，很喜欢各种复杂sql处理，因为以前的网络通信，查询解析和优化代价很高，但是这样，会导致数据库层成为瓶颈，而且，都2020年了，不思进取的老人也该被淘汰了。</p>
+<p>MySQL从设计上让连接和断开都很轻量级，在返回一个小的查询结果方面很高效。MySQL内部每秒能够扫描内存中上百万行数据，相比之下，MySQL相应数据给客户端就慢很多。相同条件下，使用尽可能少的查询当然是好的。但是，很多时候，将一个大查询分解为多个小查询是很有必要的。</p>
+<p>| 3.2 切分查询</p>
+<p>分治，将大查询切分成小查询，每个查询功能完全一样，只完成一小部分，每次只返回一小部分查询结果。<strong>删除旧的数据就是一个很好的例子：如果用一个大的语句一次性完成的话，则可能需要一次锁住很多数据，占满整个事务日志，耗尽系统资源、阻塞很多小的但是很重要的查询。将一个大的delete语句分割成多个较小的查询可以尽可能小的影响MySQL性能，还可以减少MySQL复制的延迟。</strong>例子如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">delete</span> <span class="keyword">from</span> messages <span class="keyword">where</span> created &lt; <span class="keyword">date_sub</span>(<span class="keyword">now</span>(),<span class="built_in">interval</span> <span class="number">3</span> <span class="keyword">month</span> )</span><br></pre></td></tr></table></figure>
+<p>可以改用下面的方法完成</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">rows_affected = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">do</span>&#123;</span><br><span class="line">  rows_affected = do_query(<span class="string">"delete from messages where created &lt; date_sub(now(),interval 3 month ) limit </span></span><br><span class="line"><span class="string">10000"</span>)</span><br><span class="line">&#125;<span class="keyword">while</span> rows_affected&gt;<span class="number">0</span></span><br></pre></td></tr></table></figure>
+<p>一次删除一万行数据一般来说是一个比较高效而且对服务器影响也最小的做法（如果是事务性引擎，很多时候小事务能够更高效）。同时需要注意的是，如果每次删除数据后，都暂停一会再做下一次删除，这样也可以将服务器上原本一次性的压力分散到一个很长的时间段中，就可以大大降低对服务器的影响，还可以大大减少删除时锁的持有时间。</p>
+<p>| 3.3 分解关联查询</p>
+<p>很多高性能的应用都会对关联查询进行分解。简单地，可以对每一个表都进行一次单表查询，然后将结果在应用程序中进行关联，比如说：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> *</span><br><span class="line"><span class="keyword">from</span> tag</span><br><span class="line">         <span class="keyword">join</span> tag_post <span class="keyword">on</span> tag_post.tab_id = tag.id</span><br><span class="line">         <span class="keyword">join</span> post <span class="keyword">on</span> tag_post.post_id = post.id</span><br><span class="line"><span class="keyword">where</span> tag.tag = <span class="string">'mysql'</span>;</span><br><span class="line"><span class="comment"># 可以分解为下面的查询：</span></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> tag <span class="keyword">where</span> tag=<span class="string">'mysql'</span>;</span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> tag_post <span class="keyword">where</span> tag_id=<span class="number">1234</span>;</span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> post <span class="keyword">where</span> post.id <span class="keyword">in</span> (<span class="number">123</span>,<span class="number">46</span>,<span class="number">456</span>,<span class="number">9992</span>,<span class="number">9998</span>);</span><br></pre></td></tr></table></figure>
+<p>看起来可能会说，这有什么好处，结果不一样么，但是，用这种方式，有下面这些优势：</p>
+<ul>
+<li>让缓存的效率更高。许多应用程序可以方便地缓存单边查询对应的结果对象。例如，上面查询的tag已经被缓存了，那么应用就可以跳过第一个查询。再例如，应用中已经缓存了ID为123,46,456,的内容，那么第三个查询的in中，就能少几个ID。另外，对MySQL的查询缓存来说，如果关联中的某个表发生了变化，那么就无法使用查询缓存了，而拆分后，如果某个表很少改变，那么基于该表的查询就可以重复利用查询缓存结果了。</li>
+<li>将查询分解后，执行单个查询可以减少锁的竞争</li>
+<li>在应用层做关联，可以更容易对数据库进行拆分，更容易做到高性能和可扩展</li>
+<li>查询本身效率也可能会有所提升。例子中，用in代替关联查询，可以让MySQL按照ID顺序进行查询,这可能比随机的关联更高效</li>
+<li>可以减少冗余记录的查询。在应用层做关联查询，意味着对于某条记录，应用只需要查询一次，而在数据库中做关联查询，则可能需要重复地访问一部分数据。从这点看，这样的重构还可能会减少网络和内存的消耗</li>
+<li>更进一步，这样做相当于在应用中实现了hash关联，而不是使用MySQL的嵌套循环关联。某些场景hash关联的效率要高很多。</li>
+</ul>
+<p>| 4.执行查询的基础</p>
+<p>图例在这里</p>
+<p>| 4.1 MySQL客户端/服务器通信协议</p>
+<p>MySQL客户端和服务器之间的通信协议是<strong>半双工</strong>的，这意味着，在任何一个时刻，要么是服务器向客户端发送数据，要么是客户端向服务器发送数据，两个动作不能同时发生。所以也无法将一个消息切成小块独立来发送。</p>
+<p>这种协议让MySQL同心简单快速，但是也从很多地方限制了MySQL。一个明显的限制是，这意味着没法进行流量控制。一旦一端开始发生消息，另一端要接收完整个消息才能响应它。就像扔沙包。</p>
+<p>客户端用一个单独的数据包将查询传给服务器。这也是为什么当查询的语句很长的时候，参数max_allowed_packet就特别重要了。一旦客户端发送了请求，它能做的事情就只是等待结果。</p>
+<p>相反的，一般服务器响应给用户的数据通常很多，由多个数据包组成。当服务器开始响应客户端请求时，客户端必须完整地接收整个返回结果，而不能简单地只取前面几条结果，然后让服务器停止发送数据。这种情况下，客户端若接收完整的结果，然后取前面几条需要的结果，或者接收完几条结果后就粗暴地断开连接，都不是好主意。这也就是在要的时候，一定要在查询中加limit的原因。</p>
+<p>多数链接MySQL的库函数都可以获得全部结果集并缓存到内存里，还可以逐行获取需要的数据。默认一般是获得全部结果集并缓存到内存中。MySQL通常需要等所有的数据都已经发送给客户端才能释放这条查询所占用的资源，所以接收全部结果并缓存通常可以减少服务器的压力，让查询能够早点结束、早点释放相应的资源。</p>
+<p>| 4.2 查询缓存</p>
+<p>在解析一个查询语句之前，如果查询缓存是打开的，那么MySQL会</p>
+<p>| 4.3 查询优化</p>
+<p>太多，不写了</p>
+<p><strong>MySQL如何执行关联查询</strong></p>
+<p>总的来说，MySQL认为任何一个查询都是一次关联，并不仅仅是一个查询需要到两个表匹配才叫关联，所以在MySQL中，每一个查询，每一个片段（包括子查询，甚至于单表的select）都可能是关联。</p>
+<p>比如union查询的例子。对于union查询，MySQL先将一系列的单个查询结果放到一个临时表中，然后再重新读出临时表数据来完成union查询。在MySQL的概念中，每个查询都是一次关联，所以读取结果临时表也是一次关联。</p>
+<p>当前MySQL关联执行的策略很简单：MySQL对任何关联都执行嵌套循环关联操作，即MySQL现在一个表中循环取出单条数据，然后再嵌套循环到下一个表中寻找匹配的航，依次下去，直到找到所有表中匹配的行位置。然后根据各个表匹配的行，返回查询中需要的各个列。MySQL会尝试在最后一个关联表中找到所有匹配的行，如果最后一个关联表无法找到更多的行以后，MySQL返回到上一层次关联表，看是否能找到更多的匹配记录，以此类推迭代执行。</p>
+<p>按照这样的方式查找第一个表记录，再嵌套查询下一个关联表，然后回溯到上一个表，在MySQL中是通过嵌套循环的方式实现——<strong>嵌套循环关联</strong>。</p>
+<p><strong>执行计划</strong></p>
+<p>MySQL执行计划是一颗左侧深度优先的树。</p>
+<p><strong>关联查询优化器</strong></p>
+<p>MySQL优化器最重要的一部分就是关联查询优化，它决定了多个表关联时的顺序。通常多表关联的时候，可以有多种不同的管理按顺序来获得相同的执行结果。关联查询优化器则通过评估不同顺序时的成本来选择一个代价最小的关联查询。</p>
+<p>下面的查询可以通过不同顺序的关联最后都获得相同的结果：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> film.film_id, film.title, film.release_year, actor.actor_id, actor.first_name, actor.last_name</span><br><span class="line"><span class="keyword">from</span> film</span><br><span class="line">         <span class="keyword">inner</span> <span class="keyword">join</span> film_actor <span class="keyword">using</span> (film_id)</span><br><span class="line">         <span class="keyword">inner</span> <span class="keyword">join</span> actor <span class="keyword">using</span> (actor_id)</span><br><span class="line"><span class="comment"># explain 结果如下</span></span><br><span class="line">+<span class="comment">--+-----------+----------+----------+------+-------------+-------+-------+-------------------------+----+--------+-----------+</span></span><br><span class="line">|<span class="keyword">id</span>|select_type|<span class="keyword">table</span>     |<span class="keyword">partitions</span>|<span class="keyword">type</span>  |possible_keys|<span class="keyword">key</span>    |key_len|<span class="keyword">ref</span>                      |<span class="keyword">rows</span>|filtered|Extra      |</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+------+-------------+-------+-------+-------------------------+----+--------+-----------+</span></span><br><span class="line">|<span class="number">1</span> |SIMPLE     |actor     |<span class="literal">NULL</span>      |<span class="keyword">ALL</span>   |PRIMARY      |<span class="literal">NULL</span>   |<span class="literal">NULL</span>   |<span class="literal">NULL</span>                     |<span class="number">200</span> |<span class="number">100</span>     |<span class="literal">NULL</span>       |</span><br><span class="line">|<span class="number">1</span> |SIMPLE     |film_actor|<span class="literal">NULL</span>      |<span class="keyword">ref</span>   |PRIMARY      |PRIMARY|<span class="number">2</span>      |sakila.actor.actor_id    |<span class="number">27</span>  |<span class="number">100</span>     |<span class="keyword">Using</span> <span class="keyword">index</span>|</span><br><span class="line">|<span class="number">1</span> |SIMPLE     |film      |<span class="literal">NULL</span>      |eq_ref|PRIMARY      |PRIMARY|<span class="number">2</span>      |sakila.film_actor.film_id|<span class="number">1</span>   |<span class="number">100</span>     |<span class="literal">NULL</span>       |</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+------+-------------+-------+-------+-------------------------+----+--------+-----------+</span></span><br></pre></td></tr></table></figure>
+<p>从上面看到，MySQL与我们前面的计划按照相反的顺序进行关联，这样效率是否更高？使用straight_join关键字，按照之前的顺序执行看看。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> <span class="keyword">straight_join</span> film.film_id, film.title, film.release_year, actor.actor_id, actor.first_name, actor.last_name</span><br><span class="line"><span class="keyword">from</span> film</span><br><span class="line">         <span class="keyword">inner</span> <span class="keyword">join</span> film_actor <span class="keyword">using</span> (film_id)</span><br><span class="line">         <span class="keyword">inner</span> <span class="keyword">join</span> actor <span class="keyword">using</span> (actor_id);</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+------+-------------+-------+-------+--------------------------+----+--------+-------------------------------------------------------+</span></span><br><span class="line">|id|select_type|table     |partitions|type  |possible_keys|key    |key_len|ref                       |rows|filtered|Extra                                                  |</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+------+-------------+-------+-------+--------------------------+----+--------+-------------------------------------------------------+</span></span><br><span class="line">|1 |SIMPLE     |film      |NULL      |ALL   |PRIMARY      |NULL   |NULL   |NULL                      |1000|100     |NULL                                                   |</span><br><span class="line">|1 |SIMPLE     |film_actor|NULL      |index |PRIMARY      |PRIMARY|4      |NULL                      |5462|10      |Using where; Using index; Using join buffer (hash join)|</span><br><span class="line">|1 |SIMPLE     |actor     |NULL      |eq_ref|PRIMARY      |PRIMARY|2      |sakila.film_actor.actor_id|1   |100     |NULL                                                   |</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+------+-------------+-------+-------+--------------------------+----+--------+-------------------------------------------------------+</span></span><br></pre></td></tr></table></figure>
+<p>可以看到，关联顺序到转后，扫描的行数减少的不是一点，速度很快。也就是倒转的关联顺序会让查询进行更少的嵌套循环和回溯操作。为了验证优化器的选择是否正确，单独执行这两个查询，并且看看对应的Last_Query_Cost状态，能看到，倒转的预估成本为：2529.432367，原来的查询的预估成本为：601068.477855。</p>
+<p>上面的栗子说明MySQL是如何选择合适的管理按顺序让查询执行的成本尽可能低的。重新定义关联的顺序是优化器非常重要的一部分功能。不过有的时候，优化器给出的并不是最优的关联顺序。这时可以使用<strong>straight_join</strong>关键字重写查询。不过大多数时候，选择器做出的选择都比普通人的判断更准确。</p>
+<p>有时，各个查询的顺序并不能随意安排，这时关联优化器可以根据这些规则大大减少搜索空间，比如，左连接，相关子查询。这是因为，后面的表的查询需要依赖前面表的查询结果。这种依赖关系通常可以帮助优化器大大减少需要扫描的执行计划数量。</p>
+<p><strong>排序优化</strong></p>
+<p>从性能角度，应当尽可能避免排序或者尽可能避免对大量数据进行排序。</p>
+<p>当不能使用索引生成排序结果的时候，MySQL需要自己进行排序，如果数据量小则在内存中进行，如果数据量大则需要使用磁盘，不过MySQL将这个过程统一称为<strong>文件排序（filesort）</strong>，即使完全是内存排序不需要任何磁盘文件时也是如此。</p>
+<p>如果需要排序的数据量小于”排序缓冲区“，MySQL使用内存进行快速排序操作。如果内存不够排序，那么MySQL会现将数据分块，对每个独立的块使用快排，然后将各个块的排序结果存放在磁盘上，然后将各个排好序的块进行合并，最后返回排序结果。</p>
+<p>两种排序算法：</p>
+<ul>
+<li>两次传输排序（旧版本）</li>
+<li>单词传输排序（新版本）</li>
+</ul>
+<p>MySQL在进行文件排序的时候需要时候的临时存储空间可能会比想象的要大得多。原因在于MySQL在排序时，对每一个排序记录都会分配一个足够长的定长空间来存放。这个定长空间必须足够长以容纳其中最长的字符串。例如，如果是varchar列则需要分配其完整长度；如果是UTF-8字符集，那么MySQL将会为每个字符预留三个字节。</p>
+<p>在关联的时候如果需要排序，MySQL会分两种情况来处理这样的文件排序。如果order by 子句中的所有列都来自关联的第一个表，那么MySQL在关联处理第一个表的时候就进行文件排序。如果是这样，那么在MySQL的explain结果中可以看到extra字段会有<strong>Using filesort</strong>。除此之外的所有情况，MySQL都会先将关联的结果存放到一个临时表中，然后在所有的关联都结束后，再进行文件排序。这种情况下，在MySQL的explain结果的extra列字段可以看到<strong>Using temporary; Using filesort</strong>。如果查询中有limit的话，limit也会在排序之后应用，所以即使需要返回较少的数据，临时表和需要排序的数据量仍然会非常大。</p>
+<p>随着MySQL的升级，当只需要返回部分排序结果的时候，例如使用了LIMIT子句，MySQL不再对所有的结果进行排序，而是根据实际情况，选择抛弃不满足条件的结果，然后再进行排序。</p>
+<p>| 4.4 查询执行引擎</p>
+<p>查询执行引擎根据执行计划完成整个查询。调用存储引擎实现的接口，也就是handler api，来完成。</p>
+<p>| 4.5 返回结果给客户端</p>
+<p>即使查询不需要返回结果集给客户端，MySQL仍然会返回这个查询的一些信息，如该查询影响到的行数。如果查询可以被缓存，那么MySQL也会在这个阶段将结果存到查询缓存中。</p>
+<p>MySQL将结果集返回客户端是一个增量、逐步返回的过程。一旦服务器处理完最后一个关联表，开始生层第一条结果时，MySQL就可以开始向客户端逐步返回结果集了。</p>
+<p>这样有两个好处：服务端无需存储太多的结果，也就不会因为要返回太多结果而消耗太多内存。另外，MySQL客户端也能第一时间获得返回的结果。</p>
+<p>| 5. MySQL查询优化器的局限性</p>
+<p>5.6之后，很多限制都会消除，更多的查询效率会变得更高。</p>
+<p>| 5.1 关联子查询</p>
+<p><strong><em>很重要的一点，MySQL8.x之后，得到了优化。下面说的，全部都是基于5.6版本。</em></strong></p>
+<p>MySQL的子查询实现非常差。最糟糕的一类查询是where条件中包含IN()的子查询。比如：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">select</span> * <span class="keyword">from</span> film <span class="keyword">where</span> film_id <span class="keyword">in</span> (</span><br><span class="line">    <span class="keyword">select</span> film_id <span class="keyword">from</span> film_actor <span class="keyword">where</span> actor_id = <span class="number">1</span></span><br><span class="line">    );</span><br><span class="line"><span class="comment"># 这是8.x 之后的执行计划</span></span><br><span class="line">+<span class="comment">--+-----------+----------+----------+------+-------------+-------+-------+-------------------------+----+--------+-----------+</span></span><br><span class="line">|id|select_type|table     |partitions|type  |possible_keys|key    |key_len|ref                      |rows|filtered|Extra      |</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+------+-------------+-------+-------+-------------------------+----+--------+-----------+</span></span><br><span class="line">|1 |SIMPLE     |film_actor|NULL      |ref   |PRIMARY      |PRIMARY|2      |const                    |19  |100     |Using index|</span><br><span class="line">|1 |SIMPLE     |film      |NULL      |eq_ref|PRIMARY      |PRIMARY|2      |sakila.film_actor.film_id|1   |100     |NULL       |</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+------+-------------+-------+-------+-------------------------+----+--------+-----------+</span></span><br></pre></td></tr></table></figure>
+<p>因为MySQL对IN()列表中的选项有专门的优化策略，一般会认为MySQL会先执行子查询返回所有包含actor_id为1的film_id。一般来说，IN()列表查询速度很快，所以我们以为的查询的执行：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> film <span class="keyword">where</span> film_id <span class="keyword">in</span> (<span class="number">1</span>,<span class="number">23</span>,<span class="number">25</span>,<span class="number">106</span>,<span class="number">140</span>,<span class="number">166</span>,<span class="number">277</span>,<span class="number">361</span>,<span class="number">438</span>,<span class="number">499</span>,<span class="number">506</span>,<span class="number">509</span>,<span class="number">605</span>,<span class="number">635</span>,<span class="number">749</span>,<span class="number">832</span>,<span class="number">939</span>,<span class="number">970</span>,<span class="number">980</span>);</span><br></pre></td></tr></table></figure>
+<p>但是，MySQL不是这么做的。MySQL会将相关的外层表压到子查询中，他认为这样可以更高效率地找到数据行，也就是说，会被改写为：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> *</span><br><span class="line"><span class="keyword">from</span> film</span><br><span class="line"><span class="keyword">where</span> <span class="keyword">exists</span>(</span><br><span class="line">              <span class="keyword">select</span> *</span><br><span class="line">              <span class="keyword">from</span> film_actor</span><br><span class="line">              <span class="keyword">where</span> actor_id = <span class="number">1</span></span><br><span class="line">                <span class="keyword">and</span> film_actor.film_id = film.film_id</span><br><span class="line">          )</span><br></pre></td></tr></table></figure>
+<p>这时，子查询需要根据film_id来关联外部表film，因为需要film_id字段，所以MySQL认为无法先执行这个子查询。</p>
+<p>通过explain可以看到，MySQL先选择对file表进行全表扫描，然后根据返回的film_id逐个执行子查询。如果是一个很小的表，这个查询糟糕的性能可能还不会引起注意，但是如果外层的表是一个非常大的表，那么这个查询性能会非常糟糕。所以。可以用下面的办法重写查询</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> film.*</span><br><span class="line"><span class="keyword">from</span> film</span><br><span class="line">         <span class="keyword">inner</span> <span class="keyword">join</span> film_actor <span class="keyword">using</span> (film_id)</span><br><span class="line"><span class="keyword">where</span> actor_id = <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+<p>另一个优化的办法是使用group_concat在in中构造一个由分号分割的列表。有时候这比上面使用关联改写更快。因为使用IN加子查询，性能经常会非常糟糕，所以通常建议使用EXISTS等效的改写查询来获取更好的效率。比如：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> film <span class="keyword">where</span> <span class="keyword">exists</span>(</span><br><span class="line">    <span class="keyword">select</span> * <span class="keyword">from</span> film_actor <span class="keyword">where</span> actor_id = <span class="number">1</span></span><br><span class="line">    <span class="keyword">and</span> film_actor.film_id = film.film_id</span><br><span class="line">                             )</span><br></pre></td></tr></table></figure>
+<p>其他的不写了，MySQL推出了Materialization这个特性用于子查询。上面的都没用了。</p>
+<p>| 5.2 union的限制</p>
+<p>有时，MySQL无法将限制条件从外层下推到内层，这使得能够限制不拿分返回结果的条件无法应用到内层查询的优化上。</p>
+<p>如果希望UNION的各个子句能够根据LIMIT只取部分结果集，或者希望能够先排好序再合并结果集的话，就需要在UNION的各个子句中分别使用这些子句。例如，想将两个子查询联合起来，然后再取前20条记录，那么MySQL会将两个表都存放到同一个临时表中，然后再取出前20行记录：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(<span class="keyword">select</span> first_name, last_name <span class="keyword">from</span> actor <span class="keyword">order</span> <span class="keyword">by</span> last_name)</span><br><span class="line"><span class="keyword">union</span> <span class="keyword">all</span></span><br><span class="line">(<span class="keyword">select</span> first_name, last_name <span class="keyword">from</span> customer <span class="keyword">order</span> <span class="keyword">by</span> last_name)</span><br><span class="line"><span class="keyword">limit</span> <span class="number">20</span>;</span><br></pre></td></tr></table></figure>
+<p>这条查询将会把actor中的200条记录和customer表中的599条记录存放在一个临时表中，然后再从临时表中取出前20条。可以通过在UNION的两个子查询中分别加上一个LIMIT 20来减少临时表中的数据：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">(<span class="keyword">select</span> first_name,last_name <span class="keyword">from</span> actor <span class="keyword">order</span> <span class="keyword">by</span> last_name <span class="keyword">limit</span> <span class="number">20</span>)</span><br><span class="line"><span class="keyword">union</span></span><br><span class="line">(<span class="keyword">select</span> first_name,last_name <span class="keyword">from</span> customer <span class="keyword">order</span> <span class="keyword">by</span> last_name  <span class="keyword">limit</span> <span class="number">20</span>) <span class="keyword">limit</span> <span class="number">20</span>;</span><br></pre></td></tr></table></figure>
+<p>现在的话，中间的临时表只会包含40条记录了，除了性能考虑之外，这里还需要注意，从临时表中取出数据的顺序并不一定是一定的，所以如果想获得正确的顺序，还需要加上一个全局的order by 和 limit 操作。</p>
+<p>| 5.3 索引合并优化</p>
+<p>在5.0以后，当where子句中包含多个复杂条件的时候，MySQL能够访问单个表的多个索引以合并和交叉过滤的方式来定位需要查找的行。</p>
+<p>| 5.4 等值传递</p>
+<p>某些时候，等值传递会带来一些意想不到的额外消耗。例如，有一个非常大的IN列表,而MySQL优化器发现存在where、on或者using的子句，将这个列表的值和另外一个表的某个列相关联。</p>
+<p>那么优化器会将IN的列表都复制应用到关联的各个表中。通常，因为各个表新增了过滤条件，优化器可以更高效的从存储引擎过滤记录。但是如果这个列表非常大，泽会导致优化和执行都会变慢。</p>
+<p>| 5.5 并行执行</p>
+<p>MySQL无法利用多核特性来并行执行查询。</p>
+<p>| 5.6 哈希关联</p>
+<p>MySQL并不支持哈希关联，MySQL的所有关联都是嵌套循环关联。</p>
+<p>| 5.7 松散索引扫描</p>
+<p>MySQL并不支持松散索引扫描，5.0之后，某些特殊的场景可以使用松散索引扫描，比如：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">explain</span> <span class="keyword">select</span> actor_id,<span class="keyword">max</span>(film_id) <span class="keyword">from</span> film_actor <span class="keyword">group</span> <span class="keyword">by</span> actor_id;</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+-----+----------------------+-------+-------+----+----+--------+------------------------+</span></span><br><span class="line">|id|select_type|table     |partitions|type |possible_keys         |key    |key_len|ref |rows|filtered|Extra                   |</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+-----+----------------------+-------+-------+----+----+--------+------------------------+</span></span><br><span class="line">|1 |SIMPLE     |film_actor|NULL      |range|PRIMARY,idx_fk_film_id|PRIMARY|2      |NULL|201 |100     |Using index for group-by|</span><br><span class="line">+<span class="comment">--+-----------+----------+----------+-----+----------------------+-------+-------+----+----+--------+------------------------+</span></span><br></pre></td></tr></table></figure>
+<p>在explain的extra字段显示“Using index for gruop-by”，表示这样将使用松散索引扫描</p>
+<p>| 5.8 MySQL的最大值和最小值优化并不好</p>
+<p>| 5.9 在同一表上查询和更新</p>
+<p>MySQL不允许对同一张表同时进行查询和更新。但是其实并不是优化器的限制，改用JOIN可以解决</p>
+<p>| 6 查询优化器的提示</p>
+<ul>
+<li>HIGI_PRIORITY 和 LOW_PRIORITY</li>
+<li>DELAYED</li>
+<li>STRAIGHT_JOIN</li>
+<li>SQL_SMALL_RESULT 和 SQL_BIG_RESULT</li>
+<li>SQL_BUFFER_RESULT</li>
+<li>SQL_CACHE  和 SQL_NO_CACHE</li>
+<li>SQL_CALC_FOUND_ROWS</li>
+<li>FOR UPDATE 和 LOCK IN SHARE MODE</li>
+<li>USE INDEX 、 IGNORE INDEX 和 FORCE INDEX</li>
+<li>optimizer_search_depth</li>
+<li>optimizer_prune_level</li>
+<li>optimizer_switch</li>
+</ul>
+<p>| 7 优化特性类型的查询</p>
+<p>| 7.1 优化count()查询</p>
+<p>count是一个特殊的函数，有两种非常不同的作用：<strong>可以用来统计某个列值的数量，也可以统计行数</strong>。在统计列值时，要求列值是非空的（不能为null）。如果在count()的括号中指定了列或者列的表达式，则统计的就是这个表达式有值的结果数。</p>
+<p>另一个作用是统计结果集的行数。当MySQL确认括号内的表达式值不可能为空时，实际上就是在统计行数。最简单的就是当我们使用count(<em>)的时候，这种情况下通配符</em>并不会向我们猜想的那样扩展城所有的列，实际上，它会忽略所有的列而直接统计所有的行数。</p>
+<p>通常来说，count()都需要扫描大量的行才能活着精确的结果，因此是很难有花的。在MySQL层面还能做的就是覆盖索引扫描了。如果还不够，就需要考虑修改应用的架构，增加汇总表，或者memcached这样的外部缓存系统</p>
+<p>| 7.2 优化关联查询</p>
+<ul>
+<li>确保on或者using子句中的列上有索引。在创建索引的时候就要考虑到关联的顺序。当表A和表B用列C关联的时候，如果有花期的管理按顺序是B、A，那么就不需要在B表的对应列建上索引。没有用到的索引只会带来额外的附带。一般来说，除非有其他理由，否则只需要在管理按顺序中的第二个表的相应列上创建索引。</li>
+<li>确保确保任何的group by 和 order by 中的表达式只涉及到一个表中的列，这样MySQL才有可能使用索引来优化这个过程。</li>
+<li>当升级MySQL的时候需要注意：关联语法、运算符优先级等其他可能会发生变化的地方。因为以前是普通关联的地方可能会变成笛卡尔积，不同类型的关联可能会生成不同的结果等。</li>
+</ul>
+<p>| 7.3 子查询优化，MySQL5.6之后不用管</p>
+<p>| 7.4 优化group by 和 distinct</p>
+<p>这两类都可以使用索引来优化，这也是最有效的优化办法。</p>
+<p>在MySQL中，当无法使用所以你的时候，group by使用相中策略来完成：使用临时表或者文件排序来做分组。对于任何查询语句，这两种策略的性能都有可以提神的地方。可以通过使用提示SQL_BIG_RESULT和SQL_SMALL_RESULT来让优化器按照你希望的方式运行。</p>
+<p>如果需要对关联查询做分组，并且是按照查找表中的某个列进行分组，那么通常采用查找表的标识列分组的效率会比其他列更高。例如下面的查询效率不会很好</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> actor.first_name,actor.last_name,<span class="keyword">count</span>(*) <span class="keyword">from</span> film_actor <span class="keyword">inner</span> <span class="keyword">join</span> actor <span class="keyword">using</span>(actor_id) <span class="keyword">group</span> <span class="keyword">by</span>  actor.first_name, actor.last_name;</span><br></pre></td></tr></table></figure>
+<p>但是如果查询按照下面的写法效率则会更高：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> actor.first_name,actor.last_name,<span class="keyword">count</span>(*) <span class="keyword">from</span> film_actor <span class="keyword">inner</span> <span class="keyword">join</span> actor <span class="keyword">using</span>(actor_id) <span class="keyword">group</span> <span class="keyword">by</span> actor.actor_id;</span><br></pre></td></tr></table></figure>
+<p>虽然效率更高，但显然不是所有的关联语句的分组都可以改写成在select中使用非分祖列的形式。如果sql_mode禁用，可以使用min或者max来跳过。但是一定要清楚，select后面出现的非分祖列一定是直接依赖分组列，并且在每个组内的值是唯一的，</p>
+<p><strong>优化GROUP BY WITH ROLLUP</strong></p>
+<p>最好的办法是尽可能的将WITH ROLLUP功能转移到应用程序中处理</p>
+<p>| 7.5 limit分页优化</p>
+<p>偏移量很大的时候，代价非常高，想要优化这种查询，要么是在页面中限制分页的数量，要么是优化大偏移量的性能。</p>
+<p>一个组简单的办法就是尽可能地使用索引覆盖扫描，而不是查询所有的列。然后根据需要做一次关联操作再返回所需的咧。对于偏移量很大的时候，这样做的效率会提升非常大。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> film_id,description <span class="keyword">from</span> film <span class="keyword">order</span> <span class="keyword">by</span> title <span class="keyword">limit</span> <span class="number">50</span>,<span class="number">5</span>;</span><br><span class="line"><span class="comment"># 如果这个表非常大，查询最好改写为：</span></span><br><span class="line"><span class="keyword">select</span> film_id,description <span class="keyword">from</span> film <span class="keyword">inner</span> <span class="keyword">join</span> (</span><br><span class="line">    <span class="keyword">select</span> film_id <span class="keyword">from</span> film <span class="keyword">order</span> <span class="keyword">by</span> title <span class="keyword">limit</span> <span class="number">50</span>,<span class="number">5</span></span><br><span class="line">    ) <span class="keyword">as</span> lim <span class="keyword">using</span> (film_id)</span><br></pre></td></tr></table></figure>
+<p>这里的延迟关联将大大提升查询效率，它让MySQL扫描尽可能少的页面，获取需要访问的记录后再根据关联列返回原表查询需要的所有列。这个技术也可以用于优化关联查询中的limit子句。</p>
+<p>有时候也可以将limit转换查询为已知位置的查询，让MySQL通过范围扫描获得对应的结果，例如：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> film <span class="keyword">where</span> <span class="keyword">position</span> <span class="keyword">between</span> <span class="number">50</span> <span class="keyword">and</span> <span class="number">54</span> <span class="keyword">order</span> <span class="keyword">by</span> <span class="keyword">position</span>;</span><br></pre></td></tr></table></figure>
+<p>limit和offset的问题，其实是offset的问题，会导致MySQL查询大量不需要的行然后再抛弃掉，如果可以使用数钱记录上次取数据的位置，那么下次就可以直接从概述前记录的位置开始扫描，遮掩的话就可以避免使用offset。例如：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> rental <span class="keyword">order</span> <span class="keyword">by</span> rental_id <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">20</span>;</span><br><span class="line"><span class="comment"># 假设上面的查询返回的是主键为16049到16030的租借记录，那么下一页的查询就可以从16030这个点开始</span></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> rental <span class="keyword">where</span> rental_id &lt; <span class="number">16030</span> <span class="keyword">order</span> <span class="keyword">by</span> rental_id <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">20</span>;</span><br></pre></td></tr></table></figure>
+<p>这样的话，不管翻页到多么后面，新跟那个都会很好。</p>
+<p>| 7.7 优化union查询</p>
+<p>需要经常手工地将where，limit，order by等子句下推到union的各个子查询中，以便于优化器优化。</p>
+<p>除非确实需要服务器消除重复的行，否则就一定要使用union all，如果没有all关键字，MySQL会给临时表加上distinct选项，这会导致对整个临时表的数据做唯一性检查，代价很高。</p>
+<p>| 7.8 用户自定义变量</p>
+<p>大部分时候，普通开发用不到</p>
+<p>| 8.2 计算两点之间的距离</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> locations(</span><br><span class="line">    <span class="keyword">id</span> <span class="built_in">int</span> <span class="keyword">not</span> <span class="literal">null</span> primary <span class="keyword">key</span> auto_increment,</span><br><span class="line">    <span class="keyword">name</span> <span class="built_in">varchar</span>(<span class="number">30</span>),</span><br><span class="line">    lat <span class="built_in">float</span> <span class="keyword">not</span> <span class="literal">null</span>,</span><br><span class="line">    lon <span class="built_in">float</span> <span class="keyword">not</span> <span class="literal">null</span></span><br><span class="line">);</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> locations(<span class="keyword">name</span>, lat, lon)</span><br><span class="line"><span class="keyword">values</span></span><br><span class="line">       (<span class="string">'Charlottesville'</span>,<span class="number">38.03</span>,<span class="number">-78.48</span>) ,</span><br><span class="line">       (<span class="string">'Chicago'</span>,<span class="number">41.85</span>,<span class="number">-87.65</span>),</span><br><span class="line">       (<span class="string">'Washington，DC'</span>,<span class="number">38.89</span>,<span class="number">-77.04</span>);</span><br><span class="line"><span class="comment"># 单位是度，假设地球是原的，然后使用连点所在最大圆公式来计算两点之间的距离</span></span><br><span class="line"><span class="comment"># 计算出来是一个弧度，如果需要转换为英里或者千米，需要乘以地球的半径，也就是3959英里或者6371千米</span></span><br><span class="line"><span class="comment"># ACOS (</span></span><br><span class="line"><span class="comment">#     COS(latA) * COS(latB) * COS(lonA - lonB) + SIN(latA) * Sin(latB)</span></span><br><span class="line"><span class="comment"># )</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> locations <span class="keyword">where</span> <span class="number">6371</span> * <span class="keyword">ACOS</span>(</span><br><span class="line">    <span class="keyword">COS</span>(<span class="keyword">RADIANS</span>(lat)) * <span class="keyword">COS</span>(<span class="keyword">RADIANS</span>(<span class="number">38.03</span>)) * <span class="keyword">COS</span>(<span class="keyword">RADIANS</span>(lon)-<span class="keyword">RADIANS</span>(<span class="number">-78.48</span>))</span><br><span class="line">        + <span class="keyword">SIN</span>(<span class="keyword">RADIANS</span>(lat)) * <span class="keyword">SIN</span>(<span class="keyword">RADIANS</span>(<span class="number">38.03</span>))</span><br><span class="line">    )&lt;=<span class="number">100</span>;</span><br></pre></td></tr></table></figure>
+<p>这类查询无法使用索引，还会非常消耗CPU时间,给服务器带来很大的压力，还得重复计算。一般情况不推荐在MySQL中进行地理位置信息的计算。</p>
+<p>| 8.3 用户自定义函数</p>
+<p>使用C或者C++自定义</p>
 
     </div>
 
@@ -303,6 +509,9 @@
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
+                <a href="/2020/12/23/Book Nodes/高性能MySQL/6-MySQL架构与历史/" rel="prev" title="MySQL架构与历史，基础">
+                  MySQL架构与历史，基础 <i class="fa fa-chevron-right"></i>
+                </a>
             </div>
           </div>
       </footer>
@@ -356,20 +565,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">98</span>
+          <span class="site-state-item-count">89</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">11</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-count">20</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -405,7 +614,7 @@
 <div class="copyright">
   
   &copy; 2019 – 
-  <span itemprop="copyrightYear">2020</span>
+  <span itemprop="copyrightYear">2021</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>

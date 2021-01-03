@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.4.2',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="MySQL的复制">
+<meta name="keywords" content="MySQL">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL的复制">
+<meta property="og:url" content="https://wenslo.github.io/2020/12/30/Book Nodes/高性能MySQL/9-MySQL的复制/index.html">
+<meta property="og:site_name" content="温海林的博客">
+<meta property="og:description" content="MySQL的复制">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2021-01-03T15:37:33.757Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL的复制">
+<meta name="twitter:description" content="MySQL的复制">
+
+<link rel="canonical" href="https://wenslo.github.io/2020/12/30/Book Nodes/高性能MySQL/9-MySQL的复制/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>MySQL的复制 | 温海林的博客</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">温海林的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">技术，工作，生活，随笔</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://wenslo.github.io/2020/12/30/Book Nodes/高性能MySQL/9-MySQL的复制/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
+      <meta itemprop="name" content="温海林">
+      <meta itemprop="description" content="Fake it, make it!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温海林的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL的复制
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-12-30 22:48:46" itemprop="dateCreated datePublished" datetime="2020-12-30T22:48:46+08:00">2020-12-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-01-03 23:37:33" itemprop="dateModified" datetime="2021-01-03T23:37:33+08:00">2021-01-03</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index">
+                    <span itemprop="name">MySQL</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">MySQL的复制</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h4><span id="1-概述">1 概述</span></h4><hr><p>MySQL可以是一主一备，一主多备，双主，多主，等不同的组合方式。</p><p>支持两种复制方式：基于行的复制方式和基于语句的复制。这两种方式都是通过在主库上记录二进制日志、在备库重放日志的方式来实现异步的数据复制。这意味着，在同一时间点上，备库的数据可能与主库存在不一致，并且无法保证主备之间的延迟。一些大的语句可能导致备库产生几秒，几分钟甚至几小时的延迟。</p><a id="more"></a>
+
+
+<p>MySQL复制大部分是向后兼容的，新版本的服务器可以作为老版本的备库。但相反不行。</p>
+<p>复制通常不会增加主库的开销，主要是启用二进制日志带来的开销，但出于备份或及时从崩溃中恢复的目的，这点开销也是必要的。除此之外，每个备库也会对主库增加一些负载（网络IO等），尤其当备库请求从主库读取旧的二进制文件时，可能会造成更高的IO开销。另外锁竞争也可能阻碍事务的提交。最后，如果是从一个高吞吐量的主库上复制到多个备库，唤醒多个复制线程发送事件的开销将会累加。</p>
+<p>通过复制可以将读操作指向备库来获得更好的读扩展，但对于写操作，除非设计的当，否则并不适合通过复制来扩展写操作。在一主库多备库的架构中，写操作会被执行多次，这时候整个系统的性能取决于写入最慢的地方。</p>
+<p>当使用一主库多备库的架构时，可能会造成一些浪费，因为本质上它会复制大量不必要的重复数据，例如，对于1台主库和10台备库，会有11份的数据拷贝，并且这11台的缓存中存储了大部分相同的数据。这和在服务器上有11录RAID1类似。</p>
+<h5><span id="11-复制解决的问题">1.1 复制解决的问题</span></h5><hr>
+<ul>
+<li><p>数据分布</p>
+<p>  MySQL复制通常不会对带宽造成很大的压力，但是<strong>基于行的复制会比基于语句的复制的带宽压力更大</strong>。你可以随意地停止或开始复制，并在不同的地理位置来分布数据备份，例如不同的数据中心。即使在不稳定的网络环境下，远程复制也可以工作。但如果为了保持很低的延迟复制，最好有一个稳定的、低延迟链接。</p>
+</li>
+<li><p>负载均衡</p>
+<p>  通过MySQL复制可以将读操作分布到多个服务器上，实现对读密集型应用的优化，并且实现很方便，通过简单的代码修改就能实现基本的负载均衡。对于小规模的应用，可以简单地对机器名做硬编码或者使用dn轮训。也可使用更复杂的方法，例如网络负载均衡<br>  这一类的标准负载均衡解决方案，能够很好地将负载分配到不同的MySQL服务器上。linux虚拟服务器也能够很好地工作。</p>
+</li>
+<li><p>备份</p>
+<p>  对于备份来说，复制是一项很有意义的技术补充，但是复制既不是备份也不能够取代备份。</p>
+</li>
+<li><p>高可用性和故障切换</p>
+<p>  复制能够帮助应用程序避免MySQL单点失败，一个包含复制的设计良好的故障切换系统能够显著地缩短宕机时间</p>
+</li>
+<li><p>MySQL升级测试</p>
+<p>  使用更高版本的MySQL作为备库，保证在升级全部实例前，查询能够在备库按照预期执行。</p>
+</li>
+</ul>
+<h5><span id="12-复制如何工作">1.2 复制如何工作</span></h5><hr>
+<ul>
+<li>在主库上把数据更改记录到二进制日志（bin log）中</li>
+<li>备库将主库上的日志复制到自己的中继日志中(retry log)</li>
+<li>备库读取中继日志中的事件，将其冲放到备库数据之上。</li>
+</ul>
+<p>第一步是在主库上记录二进制日志。在每次准备提交事务完成数据更新前，主库将数据更新的事件记录到二进制日志中。MySQL会按事务提交的顺序而非每条语句的执行顺序来记录二进制日志。在记录二进制日志后，主库会告诉存储引擎可以提交事务了。</p>
+<p>下一步，备库将主库的二进制日志复制到其本地的中继日志中。首先，备库会启动一个工作线程，称为IO线程，IO线程跟主库建立一个普通的客户端连接，然后再朱哭丧启动一个特殊的二进制（binlog dump）线程，这个二进制转储线程会读取主库上二进制日志中的时间。它不会对事件进行轮训。如果该线程追赶上了主库，它将进入睡眠状态，直到主库发送信号通知其有新的事件产生时才会被环境，备库IO线程会将接收到的事件记录到中继日志中.</p>
+<p>备库的SQL线程执行最后一步，该线程从中继日志中读取事件并在备库执行，从而实现备库数据的更新。当SQL线程追赶上IO线程时，中继日志通常已经在系统缓存中，所以中继日志的开销很低。SQL线程执行的事件也可以通过配置选项来决定是否写入其自己的二进制日志中，它对后面的场景非常有用。</p>
+<p>这种复制架构实现了获取事件和重放事件的解耦，允许这两个过程异步进行。也就是说IO线程能够独立于SQL线程之外进行工作.但这种架构也限制了复制的过程，其中最重要的一点是在主库上并发运行的查询在备库只能串行化执行，因为只有一个SQL线程来重放中继日志中的事件。这是很多工作负载的性能瓶颈所在。虽然有一些解决方案，但大多数用户仍然受制于单线程。</p>
+<h4><span id="2-配置复制">2 配置复制</span></h4><hr>
+<ol>
+<li>在每台服务器上创建复制账号</li>
+<li>配置主库和备库</li>
+<li>通知备库连接到主库并从主库复制数据。</li>
+</ol>
+<h5><span id="21-创建复制账号">2.1 创建复制账号</span></h5><hr>
+<p>MySQL会赋予一些特殊的权限给复制线程。在备库运行的IO线程会建立一个到主库的TCP/IP链接，这意味着必须在主库创建一个用户，并赋予其合适的权限。备库IO线程以该用户名连接到主库并读取其二进制文件。通过以下语句创建用户账号：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">grant</span> <span class="keyword">replication</span> <span class="keyword">slave</span>,<span class="keyword">replication</span> <span class="keyword">client</span> <span class="keyword">on</span> *.* <span class="keyword">to</span> repl@<span class="string">'127.0.0.1'</span> <span class="keyword">identified</span> <span class="keyword">by</span> <span class="string">'p4ssword'</span>;</span><br><span class="line"><span class="comment"># 这个在新版本中不适用，只适合5.5之前的版本，新版本对这两条语句做了拆分</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#3解决办法:</span></span><br><span class="line"><span class="comment">#创建账户:create user ‘用户名’@’访问主机’ identified by ‘密码’;</span></span><br><span class="line"><span class="comment">#赋予权限:grant 权限列表 on 数据库 to ‘用户名’@’访问主机’ ;(修改权限时在后面加with grant option)</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">create</span> <span class="keyword">user</span> <span class="string">'slave'</span>@<span class="string">'%'</span> <span class="keyword">identified</span> <span class="keyword">by</span> <span class="string">'slave1234'</span>;</span><br><span class="line"><span class="keyword">grant</span> <span class="keyword">replication</span> <span class="keyword">slave</span> <span class="keyword">on</span> *.* <span class="keyword">to</span> <span class="string">'slave'</span>@<span class="string">'%'</span>;</span><br><span class="line"><span class="keyword">flush</span> <span class="keyword">privileges</span>;</span><br></pre></td></tr></table></figure>
+<h5><span id="22-配置主库和备库">2.2 配置主库和备库</span></h5><hr>
+<p>下一步需要在主库上开启一些设置，需要打开二进制文件并指定一个独一无二的服务器ID（server ID），在主库的my.conf文件中增加或修改如下内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">log_bin = mysql-bin</span><br><span class="line">server_id = 10</span><br></pre></td></tr></table></figure>
+<p>必须明确地指定一个唯一的服务器ID，默认服务器ID通常为1，因此一定要自定义一个，通常做法是选择服务器IP地址的后八位，但是要保证是唯一不变的。最好选择一些有意义的约定并遵守。</p>
+<p>如果之前没有在MySQL的配置文件中指定log-bin选项，就需要重新启动MySQL。为了确认二进制日志文件是否已经在主库上创建，使用show master status命令。检查输出，如下</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">+<span class="comment">-------------+--------+------------+----------------+-----------------+</span></span><br><span class="line">|File         |Position|Binlog_Do_DB|Binlog_Ignore_DB|Executed_Gtid_Set|</span><br><span class="line">+<span class="comment">-------------+--------+------------+----------------+-----------------+</span></span><br><span class="line">|binlog.000003|1364176 |            |                |                 |</span><br><span class="line">+<span class="comment">-------------+--------+------------+----------------+-----------------+</span></span><br></pre></td></tr></table></figure>
+<p>备库也需要在my.cnf中增加类似的配置，并且同样需要重启服务器。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">log_bin = mysql-bin</span><br><span class="line">server_id = 2</span><br><span class="line">relay=log = /var/lib/mysql/mysql-relay-bin</span><br><span class="line">log_slave_updates=1</span><br><span class="line">read_only = 1</span><br></pre></td></tr></table></figure>
+<p>这些选项并不总是必要的。只有server_id时必须的。log_bin默认情况下是根据机器名来命名的，但如果机器名变化了可能会导致问题，为了简便，主库和备库设置为相同的值。</p>
+<p>另外还有两个选项：relay_log（指定中继日志的位置和命名）和log_slave_updates（允许备库将其重放的日志也记录到自身的二进制日志中），后一个选项会给备库增加额外的工作，但正如后面将会看到的，我们有理由为每个备库设置该选项。</p>
+<p>有时候只开启了二进制日志，却没有开启log_slave_updates，可能会碰到一些奇怪的现象，例如，当配置错误时可能会导致备库数据被修改。如果可能的话，最好使用read_only配置选项，该选项会阻止任何没有特权权限的线程修改数据（所以最好不要给予用户超出需要的权限）。但read_only选项常常不是很实用，特别是对于那些需要在备库建表的应用。</p>
+<h5><span id="23-启动复制">2.3 启动复制</span></h5><hr>
+<p>下一步是告诉备库如何连接到主库并重放其二进制日志。这一步不要通过修改my.cnf来配置，而是使用change master to语句，该语句完全替代了my.cnf中的设置，并且允许以后指向别的主库时无需重启备库。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">change</span> <span class="keyword">master</span> <span class="keyword">to</span> master_host = <span class="string">'server1'</span> ,master_user = <span class="string">'repl'</span>,master_password =<span class="string">'p4ssword'</span>,master_log_file =<span class="string">'mysql-bin.0000001'</span>,master_log_pos =<span class="number">0</span></span><br></pre></td></tr></table></figure>
+<p>master_log_pos参数被设置为0，因为要从日志的开头读起。当执行完这条语句后，可以通过show slave status语句来检查复制是否正确执行。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">slave</span> <span class="keyword">status</span>;</span><br><span class="line"><span class="comment"># TODO</span></span><br></pre></td></tr></table></figure>
+<p>slave_io_state，slave_io_running和slave_sql_running这三列显示当前备库复制尚未运行。MySQL知道第一个事件从文件的第四位开始读。</p>
+<p>运行命令开始复制</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">start</span> <span class="keyword">slave</span>;</span><br></pre></td></tr></table></figure>
+<p>执行该命令没有显示错误，我们再用show slave status命令检查。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">slave</span> <span class="keyword">status</span>;</span><br><span class="line"><span class="comment"># TODO</span></span><br></pre></td></tr></table></figure>
+<p>从输出可以看到IO线程和SQL线程都已经开始运行,seconds_behind_master的值也不再为null。IO线程正在等待从主库传递过来的事件，这意味着IO线程已经读取了主库所有的事件.日志位置发生了变化,表明已经从主库获取和执行了一些事件.如果实在主库上做一些数据更新，就会看到备库的文件或者日志文职都可能会增加。备库中的数据同样会随之更新。</p>
+<p>还可以从线程列表中看到复制线程。在主库上可以看到由备库IO线程向主库的连接。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">processlist</span>;</span><br></pre></td></tr></table></figure>
+<p>同样，在备库也可以看到两个线程，一个是IO线程，一个是SQL线程。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">processlist</span>;</span><br></pre></td></tr></table></figure>
+<p>这些线程总是运行在system user账号下，其他列的值则不相同。例如，当SQL线程回放事件时，info列可能显示正在执行的查询</p>
+<h5><span id="24-从另一个服务器开始复制">2.4 从另一个服务器开始复制</span></h5><hr>
+<p>大多数情况下有一个已经运行了一段时间的主库，然后用一台新安装的备库与之同步，此时这台备库还没有数据。</p>
+<p>有几种办法来初始化备库或者从其他服务器克隆数据到备库。包括从主库复制数据，从另外一台备库克隆数据，以及使用最近的一次备份来启动备库，需要有三个条件来让主库和备库保持同步。</p>
+<ul>
+<li>在某个时间点的主库的数据快照</li>
+<li>主库当前的二进制日志文件，和获得数据快照时在该二进制文件中的偏移量，我们把这两个值称为日志文件坐标（log file coordinates）。通过这两个值可以确定二进制日志的位置。可以通过show master status命令来获取这些值。</li>
+<li>从快找时间到现在的二进制日志</li>
+</ul>
+<p>下面是一些从被的服务器克隆备库的方法</p>
+<ul>
+<li><p>使用冷备份</p>
+<p>  最基本的方法是关闭主库，把数据复制到备库。重启主库后，会使用一个新的二进制日志文件，我们在备库通过执行change master to 指向这个文件的起始处。这个方法的缺点很明显，在复制数据时需要关闭主库</p>
+</li>
+<li><p>使用热备份</p>
+<p>  如果仅使用了myisam表，可以在主库运行时使用mysqlhotcopy或rsync来复制数据。</p>
+</li>
+<li><p>使用mysqldump</p>
+<p>  如果只包含innodb表，那么可以使用以下命令来转储主库数据并将其加载到备库，然后设置响应的二进制日志坐标</p>
+  <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysqldump --single-transcation --all-databases --master-data=1 --host=server1 | mysql --host=server2</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<pre><code>选项--single-transaction使得转储的数据为事务开始前的数据。如果使用的是非事务型表，可以使用--loack-all-tabels选项来获得所有表的一致性转储。
+</code></pre><ul>
+<li><p>使用快照或备份</p>
+<p>  只要知道对应的二进制日志坐标，就可以使用主库的快照或者备份来初始化备库（如果只使用备份，需要确保从备份的时间点开始的主库二进制文件都要存在）。只需要把备份或快照恢复到备库，然后使用change master to 指定二进制日志的坐标。</p>
+</li>
+<li><p>使用Percona Xtrabackup</p>
+</li>
+<li><p>使用另外的备库</p>
+<p>  可以使用任何一种提及的克隆或拷贝技术从任意一台备库上将数据克隆岛另外一台服务器，但是如果使用的是mysqldump，—master-data选项就不会起作用。</p>
+<p>  此外，不能使用show master status来获得主库的二进制日志坐标，而是在获取快照时使用show slave status来获取备库在主库上的执行位置。</p>
+<p>  使用另外的备库进行数据克隆最大的缺点是，如果这台备库的数据已经和主库不同步，克隆到的就是脏数据库。</p>
+</li>
+</ul>
+<h5><span id="25-推荐的复制配置">2.5 推荐的复制配置</span></h5><p>在主库上二进制日志最重要的选项就是sync_binlog： sync_binlog=1</p>
+<p>如果开启该选项，MySQL每次在提交事务前会将二进制日志同步到磁盘上，保证在服务器崩溃时不会丢失事件。如果禁止该选项，服务器会少做一些工作，但二进制日志文件可能在服务器崩溃时损坏或丢失信息。在一个不需要作为主库的备库上，该选项带来了不必要的开销。他只适合于二进制日志，而非中继日志。</p>
+<p>如果无法容忍服务器崩溃导致表损坏，推荐使用innodb。在表损坏无关紧要时，myisam是可以接受的，但在一次备库服务器崩溃重启后，myisam可能已经处于不一致状态。一种可能是语句没有完全应用到一个或多个表上，那么即使修复了表，数据也可能是不一致的。</p>
+<p>如果使用innodb，我们强烈推荐设置如下选项：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">innodb_flush_logs_at_trx_commit # Flush every log write</span><br><span class="line">innodb_support_xa=1 # MySQL 5.0 and newer only</span><br><span class="line">innodb_safe_binlog  #MySQL 4.1 only，roughly equivalent to innodb support_xa</span><br></pre></td></tr></table></figure>
+<p>这些事MySQL5.0及最新版本中的默认配置，我们推荐明确指定二进制日志的名字，以保证二进制日志名在所有服务器上是一致的，避免因为服务器名的变化导致的日志文件名变化。你可能认为以服务器名来命名二进制日志无关紧要，但经验表明，当在服务器间转移文件、克隆新的备库、转储备份或者其他一些你想不到的场景下，可能会导致很多问题。为了避免这些问题，需要给log_bin选项制定一个参数。可以随意地给一个绝对路径，但必须明确地指定基本的命名：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">log_bin=/var/lib/mysql/mysql-bin</span><br></pre></td></tr></table></figure>
+<p>在备库上，我们同样推荐开启如下配置选项，为中继日志指定绝对路径</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">relay_log = /path/to/logs/relay-bin</span><br><span class="line">skip_slave_start</span><br><span class="line">read_only</span><br></pre></td></tr></table></figure>
+<p>通过设置relay_log可以避免中继日志文件基于文件名来命名，防止之前剃刀哥可能在主库发生的问题。指定绝对路径可以避免多个MySQL版本中存在的bug，这些bug可能会导致中继日志在一个意料外的位置创建。skip_slave_start选项能够阻止备库在崩溃后自动启动复制。这可以给你一些机会来修复可能发生的问题。如果备库在崩溃后自动启动并且处于不一致的状态，就可能会导致更多的损坏，最后将不得不把所有数据丢弃，并重新开始配置备库</p>
+<p>read_only选项可以组织大部分用户更改非临时表，除了复制SQL线程和其他拥有超级权限的用户之外，这也是要尽量避免给正常账号授予超级权限的原因之一。</p>
+<p>即使开启了所有我们建议的选型，备库仍然可能在崩溃后被终端，因为master.info和中继日志文件都不是崩溃安全的。默认情况下甚至不会刷新到磁盘，直到MySQL5.5版本才有选项来控制这种行为。如果正在使用MySQL5.5并且不介意额外的fsync()导致的性能开销，最好设置以下选项。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sync_master_info = 1</span><br><span class="line">sync_relay_log = 1</span><br><span class="line">sync_relay_log_info = 1</span><br></pre></td></tr></table></figure>
+<p>如果备库和主库的延迟很大，备库的IO线程可能会写很多中继日志文件，SQL线程在重放完一个中继日志中的时间后会尽快将其删除（通过relay_log_purge选项来控制）。 但如果延迟非常严重，IO线程可能会把整个磁盘撑满.解决办法是配置realy_log_space_limit变量。如果所有中继日志的大小之和超过这个值，IO线程会停止,等待SQL线程释放磁盘空间</p>
+<p>还有一个隐藏的问题。如果备库没有从主库获取所有的中继日志，这些日志可能在主库崩溃时丢失。早先这个选项存在一些bug，使用率也不高，所以用到这个选项遇到bug的风险会更高。除非磁盘空间真的非常紧张，否则最好让中继日志使用其需要的磁盘空间，这也是为什么我们没有将relay_log_space_limit列入推荐的配置选项的原因。</p>
+<h4><span id="3-复制的原理">3 复制的原理</span></h4><h5><span id="31-基于语句的复制">3.1 基于语句的复制</span></h5><hr>
+<p>在MySQL5.0之前的版本中只支持语句语句的复制（逻辑复制），这在数据库领域是很少见的。基于语句的复制模式下，主库会记录那么造成数据更改的查询，当备库读取并重放这些事件时，实际上只是把主库上执行过的SQL再执行一遍。这种方式既有好处，也有缺点。</p>
+<p>最明显的好处是实现相当简单。理论上讲，简单地记录和执行这些语句，能够让主备保持同步。另一个好处是二进制日志里的事件更加紧凑，所以相对而言，基于语句的模式不会使用太多带宽。一条更新好几兆数据的语句在二进制日志里可能只占几十个字节。另外mysqlbinlog工具是基于语句的日志的最佳工具。</p>
+<p>但事实上基于语句的方式可能并不如其看起来那么便利。因为主库上的数据更新除了执行的语句外，可能还依赖于其他元素。例如，同一条SQL在主库和备库上执行的时间可能不同，因此在传输的二进制日志中，除了查询语句，还包括了一些元数据信息，如当前的时间戳。即使如此，还存在着一些无法被正确复制的SQL。例如，使用current_user()函数的语句。存储过程和触发器在使用基于语句的复制模式时也可能存在问题。</p>
+<p>另一个问题是更新必须是串行的。这需要更多的锁，有时候要特别关注这一点。另外不是所有的存储引擎都支持这种复制模式。尽管这些存储引擎是包括在MySQL5.5及之前版本中发行的。</p>
+<h5><span id="32-基于行的复制">3.2 基于行的复制</span></h5><hr>
+<p>5.1开始支持基于行的复制，最大的好处是可以正确地复制每一行。一些语句可以被更加有效的复制。</p>
+<p>由于无需重放更新主库数据的查询，使用基于行的复制模式能够高效地复制数据。重放一些查询的代价可能会很高。例如，下面有一个查询将数据从一个大表汇总到小表：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> summary_table(col1,col2,col3) <span class="keyword">select</span> col1,col2,<span class="keyword">sum</span>(col3) <span class="keyword">from</span> enormous_table <span class="keyword">group</span> <span class="keyword">by</span> col1,col2;</span><br></pre></td></tr></table></figure></p>
+<p>如果表enormous_table的列col1和col2有三种组合，这个查询可能在源表上扫描多次，但最终只在目标表上产生三行数据。但使用基于行的命令方式，在备库上开销会小很多。这种情况下，基于行的复制模式更加高效。</p>
+<p>但在另一方面，下面这条语句使用基于语句的复制方式代价会小很多。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">update</span> enormous_table <span class="keyword">set</span> col1 = <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+<p>由于这条语句做了全表更新，使用基于行的复制开销会很大，因为每一行的数据都会被记录到二进制日志中，这使得二进制日志事件非常庞大。并且会给主库上记录日志和复制增加额外的负载，更慢的日志记录会降低并发度。</p>
+<p>没有哪种模式是完美的，MySQL能够在这两种复制模式减动态切换。默认情况下使用的是基于语句的复制方式，但如果发现语句无法被正确地复制，就切换到基于行的复制模式。还可以根据需要来设置会话级别的变量 binlog_format，控制二进制日志格式。</p>
+<p>对于基于行的复制模式，很难进行时间点恢复，但并非不可能</p>
+<h5><span id="33-基于行或基于语句哪种更优">3.3 基于行或基于语句：哪种更优</span></h5><hr>
+<p>理论上基于行的复制模式整体上更优，并且在实际应用中也适用于大多数场景。</p>
+<ul>
+<li><p>基于语句的复制模式的有点</p>
+<p>  当贮备的模式不同时，逻辑复制能够在多种情况下工作。例如，在主备上的表的定义不同但数据类型相兼容、列的顺序不同等情况。这样就很容易现在备库上修改scheam，然后将其提升为主库，减少停机时间。基于语句的复制方式一般允许更灵活的操作。</p>
+<p>  基于语句的方式执行复制的郭恒基本上就是执行SQL语句.这意味着所有在服务器上发生的变更都以一种容易理解的方式运行.这样当出现问题时可以很好的去定位.</p>
+</li>
+<li><p>基于语句的复制模式的缺点</p>
+<p>  很多情况下通过基于语句的模式无法复制正确，几乎每一个安装的备库都会至少碰到一次。事实上对于存储过程，触发器以及其他的一些语句的复制在5.0和5.1的一系列版本中存在大量的BUG。这些语句的复制的方式已经被修改了很多次，以使其更好地工作。简单的说，如果正在使用触发器或者存储过程，就不要使用基于语句的复制模式，除非能够清楚的确定不会碰到复制问题。</p>
+</li>
+<li><p>基于行的复制模式的优点</p>
+<p>  几乎没有基于行的复制模式无法处理的场景。对于所有的SQL构造、触发器、存储过程等都能正确执行。只是当你试图做一些诸如在备库修改表的schema这样的事情时才可能导致复制失败。</p>
+<p>  这种方式同样可能减少锁的使用，因为它并不要求这种强串行化是可重复的。</p>
+<p>  基于行的复制模式会记录数据变更，因此在二进制日志中记录的都是实际上在主库上发生了变化的数据。你不需要查看一条语句去猜测它到底修改了哪些数据。在某种程度上，该模式能够更加清楚滴知道服务器上发生了哪些更改，并且有一个更好的数据变更记录。另外在一些情况下基于行的二进制日志还会记录发生改变之前的数据，因此这可能有利于某些数据恢复。</p>
+<p>  在很多情况下，由于无须像基于语句的复制那样需要为查询建立执行计划并执行查询，因此基于行的复制占用更少的CPU。</p>
+<p>  最后在某些情况下，基于行的复制能够帮助更快地找到并解决数据不一致的情况。举个栗子，如果是使用基于语句的复制模式，在备库更新一个不存在的记录时不会失败，但在基于行的复制模式下则会报错并停止复制。</p>
+</li>
+<li><p>基于行的复制模式的缺点</p>
+<p>  由于语句并没有在日志里记录，因此无法判断执行了哪些SQL，除了需要知道行的变化外，正在很多情况下也很重要（未来会被修复）。使用一种完全不同的方式在备库进行数据变更，而不是执行SQL，事实上，执行基于行的变化的过程就像一个黑盒子，你无法知道服务器正在做什么。并且没有很好的文档和解释。因此当出现问题时，可能很难找到问题所在。例如，若备库使用一个效率低下的方式去寻找行记录并更新，你无法观察到这一点。</p>
+<p>  如果有多层的复制服务器，并且所有的都被配置成基于行的复制模式，当会话级别的变量@@binlog_format被设置为statement时，所执行的语句在原服务器上被记录为基于语句的模式，但第一层的备库可能将其记录成行模式，并传递给其它层的备库。也就是说你期待的基于语句的日志在复制拓扑中将会被切换到基于行的模式。基于行的日志无法处理注入在被备库修改表的schema这样的情况，而基于语句的日志可以。</p>
+<p>  在某些情况下，例如找不到要修改的行时，基于行的复制可能会导致复制停止，而基于语句的复制则不会。这也可以认为是基于行的复制的一个有点。该行为可以通过slave_exec_mode来进行配置。</p>
+</li>
+</ul>
+<h5><span id="34-复制文件">3.4 复制文件</span></h5><hr>
+<p>复制会使用到的一些文件，除了二进制日志文件和中继日志文件外，还有其他很多文件。</p>
+<ul>
+<li><p>mysql-bin.index</p>
+<p>  当在服务器是哪个开启二进制日志时，同时会生成一个和二进制日志同名的但是以index为后缀的文件，该文件用于记录磁盘上的二进制日志文件。这里的index并不是指表的索引，而是说这个文件的每一行包含了二进制文件的文件名。</p>
+<p>  你可能认为这个文件时多余的，可以被删除（毕竟MySQL可以在磁盘上找到它所需要的文件）。事实上并非如此，MySQL依赖于这个文件，除非在这个文件里有记录，否则MySQL识别不了二进制日志文件。</p>
+</li>
+<li><p>mysql-relay-bin-index</p>
+<p>  中继日志的索引文件，和mysql-bin.index作用类型</p>
+</li>
+<li><p>master.info</p>
+<p>  这个文件用于保存备库连接到主库所需要的信息，格式为纯文本。此文件不能删除，否则备库在重启后无法连接到主库。这个文件以文本的方式记录了复制用户的密码，所以要注意权限控制。</p>
+</li>
+<li><p>relay-log.info</p>
+<p>  这个文件包含了当前备库复制的二进制日志和中继日志坐标（例如，备库复制在主库上的位置），同样也不要删除这个文件，否则在备库重启后将无法获知从哪个位置开始复制，可能会导致重放已经执行过的语句。</p>
+</li>
+</ul>
+<p>以.index作为后缀的文件也与expire_logs_days存在交互，该参数定义了MySQL清理过期日志的方式，如果文件mysql-bin.index在磁盘上不存在，某些版本中自动清理就不会起作用。</p>
+<p>最好能显式的执行一些日志清理策略，比如设置expire_logs_days参数或者其他方式，否则MySQL的二进制日志可能会将磁盘撑满。当做这些事情时，还需要考虑到备份策略。</p>
+<h5><span id="35-发送复制事件到其他备库">3.5 发送复制事件到其他备库</span></h5><hr>
+<p>log_slave_updates 选项可以让备库变成其他服务器的主库。在设置该选项后，MySQL会将其执行过的时间记录到它自己的二进制日志中。这样它的备库就可以从其日志中检索并执行事件。</p>
+<p>在这种场景下，主库将数据更新事件写入二进制日志，第一个备库提取并执行这个时间。这时候一个事件的生命周期应该已经结束了，但由于设置了log_slave_updates，备库会将这个事件写到她自己的二进制日志中。这样第二个备库就可以将时间提取到它的中继日志中并执行。这意味着作为源服务器的主库可以将数据变化传递给没有与其直接相连的备库上。默认情况下这个选项是被打开的，这样在连接到备库时就不需要重启服务器。</p>
+<p>当第一个备库从主库获得的事件写入到其二进制日中中时，这个日志在备库二进制日中中的位置与其在主库二进制日志中的位置几乎肯定是不相同的，可能在不同的日志文件或文件内不同的位置。这意味着你不能嘉定所有拥有同一逻辑复制点的服务器拥有相同的日志坐标。</p>
+<p>除非你已经注意到要给每个服务器分配一个唯一的服务器ID,否则按照这种方式配置备库会导致一些奇怪的错误,甚至还会导致复制停止.一个常见的问题是:为什么要制定服务器ID,难道MySQL在不知道复制命令来源的情况下不能执行么?为什么MySQL要在意服务器ID是全局唯一的。问题的答案自安于MySQL在复制过程中如何防止无限循环。当复制SQL线程读中继日志时，会丢弃事件中记录的服务器ID和该服务器本身ID相同的事件，从而打破了复制过程中的无限循环。在某些复制拓扑结构下打破无限循环非常重要，例如 主-主复制结构。</p>
+<h5><span id="36-复制过滤器">3.6 复制过滤器</span></h5><hr>
+<p>复制过滤选项允许你金复制服务器上一部分数据，不过这可能没有想象中那么好用。有两种过滤方式：<strong>在主库上过滤日志到二进制日志中的时间；以及在备库上过滤记录到中继日志的时间</strong>。</p>
+<p>使用选项**binlog_do_db和binlog_ignore_db来控制过滤，不需要开启他们，否则还得解释，数据为啥不一致啊。</p>
+<h4><span id="4-复制拓扑">4. 复制拓扑</span></h4><hr>
+<p>可以在任意个主库和备库之间建立复制，只有一个限制：<strong>每一个备库只能有一个主库</strong>。基本原则如下：</p>
+<ul>
+<li>一个MySQL备库实例只能有一个主库</li>
+<li>每个备库必须有一个唯一的服务器ID</li>
+<li>一个主库可以有多个备库</li>
+<li>如果打开了log_slave_updates选项，一个备库可以把其主库上的数据变化传播到其他备库。</li>
+</ul>
+<h5><span id="41-一主库多备库">4.1 一主库多备库</span></h5><p>备库之间根本没有交互，仅仅是连接到同一个主库上。</p>
+<p>在有少量写和大量读的时候，这种配置是非常有用的。可以把读分摊到多个备库上，知道备库给主库造成了太大的负担，或者主备之间的带宽成为瓶颈为止。</p>
+<p>下面是它的一些用途：</p>
+<ul>
+<li>为不同的角色使用不同的备库</li>
+<li>把一台备库当做待用的主库，除了复制没有其他数据传输。</li>
+<li>将一台备库放到远程数据中心，用作灾难恢复。</li>
+<li>延迟一个或多个备库，以备灾难恢复</li>
+<li>使用其中一个备库，作为备份，培训，开发或者测试使用服务器</li>
+</ul>
+<p>这种结构流行的原因是它避免了很多其他拓扑结构的复杂性：例如：<strong>可以方便地比较不同备库重放的事件在主库二进制日志中的位置。换句话说，如果在同一个逻辑点停止所有备库的复制，他们读取的是主库上同一个日志文件的相同物理位置。这是个很好的特性，可以减轻管理员许多工作，例如把备库提升为主库</strong>。</p>
+<p>这种特性只存在于兄弟备库之间。在没有直接的主备或者兄弟关系的服务器上去比较日志文件的位置要复杂得多。</p>
+<h5><span id="42-主动-主动模式下的-主-主复制">4.2 主动 - 主动模式下的 主 - 主复制</span></h5><hr>
+<p>主-主复制（双主复制）包含两套服务器，互为主备。是一对主库。</p>
+<p>这种配置最大的问题是如何解决冲突，两个可写的互主服务器导致的问题非常多。通常发生在两台服务器同时修改一行记录，或者同时在两台服务器上向一个包含auto_increment列的表里插入数据。</p>
+<p>MySQL不支持多主库复制</p>
+<p>允许向两个服务器上写入所带来的麻烦远大于其带来的好处。但是 主动 - 被动模式则会非常有用</p>
+<h5><span id="43-主动-被动模式下的-主-主-复制">4.3 主动 - 被动模式下的 主  主 复制</span></h5><hr>
+<p>主要区别在于，其中的一台服务器是只读的被动服务器。</p>
+<p>这种方式使得反复切换主动和被动服务器非常方便，因为服务器的配置是对称的。这使得故障转译和故障恢复很容易。它也可以让你在不关闭服务器的情况下执行维护、优化表、升级操作系统等其他任务。</p>
+<p>例如，<strong>执行alter table操作可能会锁住整个表</strong>，阻塞对表的读和写，这可能会花费很长时间并导致服务中断。然后在主-主配置下，可以先停止主动服务器上的备库复制线程，然后在被动服务器上执行alter操作，交换角色，最后再闲钱的主动服务器上启动复制线程。这个服务器将会读取中继日志并执行相同的alter语句。这可能花费很长时间，但不要紧，因为该服务器没有为任何活跃查询提供服务。</p>
+<p>对称的设置：</p>
+<ol>
+<li>确保两台服务器上有相同的数据</li>
+<li>启用二进制日志，选择唯一的服务器ID，并创建复制账号</li>
+<li>启用备库更新的日志记录，后面将会看到，这是故障转移和故障恢复的关键。</li>
+<li>把被动服务器配置成只读，防治可能与主动服务器上的更新产生冲突，这一点是可选的</li>
+<li>启动每个服务器的MySQL实例</li>
+<li>将么个主库设置为对方的备库，使用新创建的二进制日志开始通过</li>
+</ol>
+<p>主动服务器上更新时会发生什么事情：更新没记录到二进制日志中，通过复制传递给被动服务器的中继日志中。被动服务器执行查询并将其记录到自己的二进制日志中（因为开启了log_slave_updates选项）。由于事件的服务器ID与主动服务器的相同,因此主动服务器将忽略这些时间.</p>
+<p>设置主动-被动的主-主拓扑结构在某种意义上类似于创建一个热备份,但是可以使用这个备份来提高性能,例如,用它来执行读操作、备份、离线维护以及升级等。真正的热备份做不了这些事情，但是，并不会获得比单台服务器更好的写性能。</p>
+<h5><span id="44-拥有备库的主-主结构">4.4 拥有备库的主-主结构</span></h5><hr>
+<p>优点是增加了荣誉，对于不同地理位置的复制拓扑，能够消除站点单点失效的问题。</p>
+<h5><span id="45-环形复制">4.5 环形复制</span></h5><hr>
+<p>环形结构没有双主结构的一些优点，例如对称的配置和简单的故障转移，并且完全依赖与环上的每一个可用节点，大大增加了系统失效的几率，如果移除一个节点，这个节点发起的事件就会陷入无限循环。环形结构非常脆弱，尽量避免。</p>
+<h5><span id="46-主库-分发主库以及备库">4.6 主库、分发主库以及备库</span></h5><hr>
+<p>当备库足够多时，会对主库造成很大的负载。每个备库会在主库上创建一个线程，并执行binlog dump命令。该命令会读取二进制文件中的数据，并将其发送给备库。每个备库都会重复这样的工作，它们不会共享binlog dump的资源。</p>
+<p>如果有很多备库，并且有大的事件时，例如一次很大的load data file操作，主库上的负载会显著上升，甚至可能由于备库同时请求同样的事件而耗尽内存并崩溃。另一方面，如果备库请求的数据不再文件系统的缓存中，可能会导致大量的磁盘年间所，这同样会影响主库的性能并增加锁的竞争。</p>
+<p>因此，如果需要多个备库，一个好的办法是从主库移除负载并使用分发主库。分发主库事实上也是一个备库，它的唯一目的就是提取和提供主库的二进制日志。多个备库连接到分发主库，这使得原来的主库摆脱了负担。为了避免在分发主库上做十几的查询，可以将它的表格修改为blackhole存储引擎。如图</p>
+<p>很难说备库数据达到多少时需要一个分发主库。按照通用规则，如果主库接近满负载，不应该为其建立10个以上的备库。如果有少量的写操作，或者只复制其中一部分表，主库皆可以提供更多的复制。另外，也不一定只使用一个分发主库。如需要的话，可以使用多个分发主库向大量的备库进行复制，或者使用金字塔的分发主库，在某些情况下，可以通过设置sleve_compressed_protocol来节约一些主库带宽。这对跨数据中心复制很有好处。</p>
+<p>还可以通过分发主库实现其他目的，例如，对二进制日志进行过滤和重写规则。这比在每个备库上重复进行日志记录，重写和查询高效的多。</p>
+<p>使用分发主库的另一个缺点是无法使用一个备库来代替主库，因为由于分发主库的存在，导致各个备库与原始主库的二进制日志坐标已经不相同。</p>
+<h5><span id="47-树或金字塔形">4.7 树或金字塔形</span></h5><hr>
+<p>这种设计的好处是减轻了主库的负担。缺点是中间层出现的任何错误都会影响到多个服务器。如果每个备库和主库直接相连就不会存在这样的问题。同样，中间层次越多，处理故障会更困难、更复杂。</p>
+<h5><span id="48-定制的复制方案">4.8 定制的复制方案</span></h5><hr>
+<ul>
+<li>选择性复制</li>
+</ul>
+<p>为了利用访问局部性原理（locality of reference），并将需要读的工作驻留在内存中，可以复制少量数据到备库中。如果每个备库只拥有主库的一部分数据，并且将读分配给备库，就可以更好地利用备库的内存。并且每个备库也只有主库一部分的写入负载，这样主库的能力更强并能保证备库延迟。</p>
+<p>这个类似于水平数据划分，但它的优势在于主库包含了所有的数据集，这意味着无需为了一条写入查询去访问多个服务器。如果读操作无法在备库上找到数据，还可以通过主库来查询。即使不能从备库上读取所有数据，也可以移除大量的主库读负担。</p>
+<p>最简单的方法是在主库上将数据划分道不同的数据库里。然后将每个数据库复制到不同的备库上。例如，若需要将公司的每一个部分的数据复制到不同的备库，可以创建名为sales、marketing、procurement等的数据库，每个备库通过选项replicate_wild_do_table选项来限制给定数据库的数据。下面是sales数据库的配置：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">replicate_wild_do_tabe = sales.%</span><br></pre></td></tr></table></figure>
+<p>也可以通过一台分发主库进行分发。举个栗子，如果想通过一个很慢或者非常昂贵的网络，从一台负载很高的数据库上复制一部分数据，就可以使用一个包含blackhole表和过滤规则的本地分发主库，分发主库可以通过复制过滤移除不需要的日志。这可以避免在主库上进行不安全的日志选项设定，并且无需传输所有的数据到远程备库。</p>
+<ul>
+<li>分离功能<br>许多应用都混合了在线事务处理（OLTP）和在线数据分析（OLAP）的查询。OLTP查询比较短，并且是事务型的，OLAP查询通常很大，也很慢，并且不要求绝对最新的数据。这两种查询给服务器带来的负担完全不同，因此它们需要不同的配置，甚至可能使用不同的存储引擎或者硬件。</li>
+</ul>
+<p>一个常见的办法是将OLTP服务器的数据复制到专门为OLAP工作负载准备的备库上。这些备库可以有不同的硬件、配置、索引或者不同的存储引擎。如果决定在备库上执行OLAP查询，就可能要忍受更大的复制延迟或降低备库的服务质量。这意味着在一个非专用的备库上执行一些任务时，可能会导致不可接受的性能。例如执行一条长时间运行的查询。</p>
+<ul>
+<li>数据归档</li>
+</ul>
+<p>可以在备库上实现数据归档，也就是说可以再备库上保留主库上删除过的数据，在主库上通过delete语句删除数据是确保delete语句不传递到备库就可以实现的。有两种通常的办法：一种是在主库上选择性地禁止二进制日志，另一种是在备库上使用replicate_ignore_db规则（都很危险）</p>
+<p>第一种方法需要先将SQL_LOG_BIN设置为0,然后再进行数据清理。这种方法的好处是不需要再备库进行任何配置，由于SQL语句根本没有记录到二进制日志中，效率会稍微有所提升。最大缺点也正因为没有将主库的修改记录下载，因此无法使用二进制日志来进行审计或者做按时间点的数据恢复。另外还需要super权限。</p>
+<p>第二种方法是在清理数据之前对主库上特定的数据库使用use语句。例如，可以创建一个名为purge的数据库，然后再备库的my.cnf文件里设置replicate_ignore_db=purge并重启服务器。备库将会忽略使用了USE语句指定的数据库。这种方法没有第一种方法的缺点，但有一个另外的缺点：备库需要去读取它不需要的时间。另外，也可能有人在purge数据库上执行非清理查询，从而导致备库无法重放改时间。</p>
+<ul>
+<li>将备库用作全文检索</li>
+</ul>
+<p>许多应用要求合并事务和全文检索。一个普遍的做法是配置一台备库，将某些表设置为myisam存储引擎，然后创建全文索引并执行全文检索查询。这避免了在主库上同时使用事务型和非事务型存储引擎所带来的复制问题，减轻了主库维护全文索引的负担。</p>
+<ul>
+<li>只读备库</li>
+</ul>
+<p>许多机构将备库设置为只读，以防止在备库进行的无意识修改导致复制通断。可以通过设置read_only选项实现。它会禁止大部分写操作，除了复制线程和拥有超级权限的用户以及临时表操作。只要不给也不应该给普通用户超级权限，这英爱是很完美的方法。</p>
+<ul>
+<li>模拟多主库复制</li>
+</ul>
+<p>当前MySQL不支持多主库复制（一个备库拥有多个主库）。但是可以通过把一台备库轮流指向多台主库的方式来模拟这种结构。</p>
+<p>需要做一些额外的工作来为每个主库跟踪二进制日志坐标。可能还需要保证备库的IO线程在每一次循环读取超过需要的数据，否则可能因为每次循环反复地提取和抛弃大量数据导致主库的网络请求和开销明显增大。</p>
+<ul>
+<li>创建日志服务器</li>
+</ul>
+<p>创建没有数据的日志服务器。它唯一的作用就是更加容易重放并且/或者过滤二进制日志事件。对崩溃后重启复制很有帮助，同时对基于时间点的恢复也很有帮助。</p>
+<p>假设有一组二进制日志或者中继日志，可能从备份或者一台崩溃的服务器上获取，希望能够重放这些日志中的事件，可以停通过mysqlbinlog工具从其中提取出事件，但更加方便和高效的方法是配置一个没有任何数据的MySQL实例并使其认为这些二进制日志是它拥有的。如果只是临时需要。因为无需执行二进制日志，日志服务器也就不需要任何数据。它的目的仅仅是将数据提供给别的服务器。</p>
+<p>假设日志被命名为somelog-bin.000001,somelog-bin000002等，将这些日志放到日志服务器的日志文件夹中，假设为/var/log/mysql。然后在启动服务器前编辑my.cnf文件，如下图所示：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">log_bin = /var/log/mysql/somelog-bin</span><br><span class="line">log_bin_index = /var/log/mysql/somelog-bin.index</span><br></pre></td></tr></table></figure>
+<p>服务器不会自动发现日志，因此还需要更新日志的索引文件。下面这个命令可以在类unix系统上完成</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ls -l /var/log/mysql/somelog-bin.[0-9]* &gt; /var/log/mysql/somelog-bin.index</span><br></pre></td></tr></table></figure>
+<p>确保运行MySQL的账户能够读写日志索引文件。现在可以启动日志服务器并通过show master logs命令来确保其找到日志文件。</p>
+<p>为什么使用日志服务器比用mysqlbinlog来实现恢复更好呢？有以下几个原因：</p>
+<ul>
+<li>复制作为应用二进制日志的方法已经被大量的用户所测试，能够证明是可行的。mysqlbinlog并不能确保像复制那样工作，并且可能无法正确生成二进制日志中的数据更新。</li>
+<li>复制的速度很快，因为无需将语句从日志导出来并传递给MySQL</li>
+<li>可以很容易观察到复制过程</li>
+<li>能够更方便处理错误。例如，可以跳过执行失败的语句。</li>
+<li>更方便过滤复制事件</li>
+<li>有时候mysqlbinlog会因为日志记录格式更改而无法读取二进制日志。</li>
+</ul>
+<h4><span id="5-复制和容量规划">5. 复制和容量规划</span></h4><hr>
+<p>写操作通常是复制的瓶颈，并且很难使用复制来扩展写操作。例如，假设工作负载为20%的写以及80%的读。为了简单计算，假设有以下前提：</p>
+<ul>
+<li>读和写包含同样的工作量</li>
+<li>所有的服务器是等同的，每秒能进行1000次查询。</li>
+<li>备库和主库有同样的性能特征。</li>
+<li>可以把所有的读操作转移到备库。</li>
+</ul>
+<p>如果当前有一个服务器能支持每秒1000次查询，那么应该增加多少备库才能处理当前两倍的负载，并将所有的读查询分配给备库？</p>
+<p>看上去应该增加两个备库并将1600次读操作平分给它们。但是不要忘记，写入负载同样增加到了400次每秒，并且无法在主备服务器之间进行分摊。每个备库每秒必须处理400次写入，这意味着每个备库写入占了40%，只能每秒为600次查询提供服务。因此，需要三台而不是两台备库来处理双倍负载。</p>
+<p>如果负载再增加一倍呢？将有每秒800次写入，这时候主库还能处理，但备库的写入同样提升到80%，这样就需要16台备库来处理每秒3200次读查询。并且如果再增加一点负载，主库也会无法承担。</p>
+<p>这远远不是线性扩展，查询数量增加4倍，却需要17倍的服务器。这说明当为单台主库增加备库时，将很快达到投入远高于回报的地址。这仅仅是基于上面的假设，还忽略了一些事情，例如，单线程的基于语句的复制常常导致备库容量小于主库。</p>
+<h5><span id="51-为什么复制无法扩展写操作">5.1 为什么复制无法扩展写操作</span></h5><hr>
+<p>糟糕的服务容量比例的根本原因是不能像分发读操作那样把写操作等同地分发到更多服务器上。换句话说，复制只能扩展读操作，无法扩展写操作。</p>
+<p>有没有办法使用复制来增加写入能力？答案是否定的，根本不行。对数据进行分区是唯一可以扩展写入的方法。</p>
+<p>可能会想到使用主-主拓扑结构，并为两个服务器执行写操作。这种配置比主备结构能支持稍微多一点的写入，因为可以在两台服务器之间共享串行化带来的开销。如果每台服务器上执行50%的写入，那复制的执行量也只有50%需要串行化。理论上讲，这比在一台机器上对100%的写入并发执行，而在另外一台机器上对100%的写入做串行化要更优。</p>
+<p>但是这种策略不能扩展写入的原因。它只能在两台服务器之间共享串行化写入的缺点。所以，链中最弱的一环并不是那么弱，它只提供了比主动-被动复制稍微好点的性能，但是增加了很大的风险，通常不能带来任何好处。</p>
+<h5><span id="52-备库什么时候开始延迟">5.2 备库什么时候开始延迟</span></h5><hr>
+<p>首先应该观察复制延迟的尖刺。如果有复制延迟的曲线图，需要注意到图上的一些短暂的延迟骤升，这时候可能负载加大，备库短时间内无法跟上主库。当负载接近耗尽备库的容量时，会发现曲线上的突起会更高更宽。前面曲线的上升角度不变，但随后当备库在产生延迟后开始追赶主库时，将会产生一个平缓的斜坡。这些突起的出现和增长是一个警告信息，意味着已经接近容量限制。</p>
+<p>为了预测在某个是简单会发生什么，可以认为制造延迟，然后看多久，备库能够赶上主库。目的是为了明确说明曲线上的斜坡的陡度。如果将备库停止一个小时，然后开启并在一个小时内追赶上，说明正常情况下只消耗了一半的容量。也就是说，如果中午12.00停止备库复制，在1.00开启，并且在2.00追赶上，备库在一小时内完成了两个小时内的所偶变更，说明复制可以再双倍速度下运行。</p>
+<h5><span id="53-规划冗余容量">5.3 规划冗余容量</span></h5><hr>
+<p>在构建一个大型应用时，有意让服务器不被充分使用，这是一种聪明而且划算的方式，尤其是在使用复制的时候。有多余容量的服务器可以更好的处理负载尖锋，也有更多的能力处理慢速查询和维护工作（如optimize table），并且能够更好的跟上复制。</p>
+<p>试图同时向主-主拓扑结构的两个节点来写入或减少复制问题通常是不划算的。分配给每台机器的读负载应该低于50%，否则，如果某台服务器失效，就没有足够的容量了。如果两台服务器都能够独立处理负载，就用不着担心复制的问题了。</p>
+<p>构建冗余容量也是实现高可用性的最佳方式之一，当然还有别的方式，例如，当错误发生时让应用在降级模式下运行。</p>
+<h4><span id="6-复制管理和维护">6 复制管理和维护</span></h4><hr>
+<p>复制增加了MySQL监控的复杂性。尽管复制发生在主库和备库上，但大多数工作是在备库上完成的，这也正是最常出问题的地方。是否所有的备库都在工作？最慢的备库延迟是多大？MySQL本身提供了大量可以回答上述问题的信息，但要实现自动化监控过程以及使复制更健壮，还是需要用户做更多的的工作。</p>
+<p>在主库上，可以使用show master status命令来查看当前主库的二进制日志位置和配置，还可以查看主库当前有哪些二进制日志是在磁盘上的。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">master</span> <span class="keyword">logs</span>;</span><br><span class="line">+<span class="comment">-------------+---------+---------+</span></span><br><span class="line">|Log_name     |File_size|Encrypted|</span><br><span class="line">+<span class="comment">-------------+---------+---------+</span></span><br><span class="line">|binlog.000001|668      |No       |</span><br><span class="line">|binlog.000002|179      |No       |</span><br><span class="line">|binlog.000003|1364199  |No       |</span><br><span class="line">|binlog.000004|156      |No       |</span><br><span class="line">+<span class="comment">-------------+---------+---------+</span></span><br></pre></td></tr></table></figure>
+<p>该命令用于给purge master logs命令决定使用哪个参数，另外还可以通过show binlog events来查看复制时间。例如，在运行前一个命令后，我们在另一个不曾使用过的服务器上创建一个表，因为知道这是唯一改变数据的语句，并且也知道语句在二进制日志中的偏移量是156，所以可以看大如下内容：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">binlog</span> <span class="keyword">events</span> <span class="keyword">in</span> <span class="string">'binlog.000003'</span> <span class="keyword">from</span> <span class="number">156</span></span><br><span class="line"></span><br><span class="line">+<span class="comment">-------------+---+--------------+---------+-----------+------------------------------------+</span></span><br><span class="line">|Log_name     |Pos|Event_type    |Server_id|End_log_pos|Info                                |</span><br><span class="line">+<span class="comment">-------------+---+--------------+---------+-----------+------------------------------------+</span></span><br><span class="line">|<span class="keyword">binlog</span><span class="number">.000003</span>|<span class="number">156</span>|Anonymous_Gtid|<span class="number">1</span>        |<span class="number">233</span>        |<span class="keyword">SET</span> @@SESSION.GTID_NEXT= <span class="string">'ANONYMOUS'</span>|</span><br><span class="line">|<span class="keyword">binlog</span><span class="number">.000003</span>|<span class="number">233</span>|<span class="keyword">Query</span>         |<span class="number">1</span>        |<span class="number">342</span>        |<span class="keyword">DROP</span> <span class="keyword">SCHEMA</span> <span class="keyword">IF</span> <span class="keyword">EXISTS</span> sakila        |</span><br><span class="line">|<span class="keyword">binlog</span><span class="number">.000003</span>|<span class="number">342</span>|Anonymous_Gtid|<span class="number">1</span>        |<span class="number">419</span>        |<span class="keyword">SET</span> @@SESSION.GTID_NEXT= <span class="string">'ANONYMOUS'</span>|</span><br><span class="line">|<span class="keyword">binlog</span><span class="number">.000003</span>|<span class="number">419</span>|<span class="keyword">Query</span>         |<span class="number">1</span>        |<span class="number">531</span>        |<span class="keyword">CREATE</span> <span class="keyword">SCHEMA</span> sakila <span class="comment">/* xid=94 */</span>   |</span><br><span class="line">+<span class="comment">-------------+---+--------------+---------+-----------+------------------------------------+</span></span><br></pre></td></tr></table></figure>
+<h5><span id="62-测量备库延迟">6.2 测量备库延迟</span></h5><hr>
+<p>一个比较普遍的问题是如何监控备库落后主库的延迟有多大。虽然show slave status输出的seconds_behind_master列理论上显示了备库的延时，但由于各种各样的原因，并不总是准确的。</p>
+<ul>
+<li>备库seconds_bebind_master值是通过将服务器当前的时间戳与二进制日志中的时间戳相对比得到的，所以只有在执行事件时才能报告延迟。</li>
+<li>如果备库复制线程没有运行，就会报延迟为null</li>
+<li>一些错误（例如主备的max_allowed_packet不匹配，或者网络不稳定）可能中断复制并且/或者停止复制线程，但second_behind_master将显示为0而不是显示错误。</li>
+<li>即使备库线程正在运行，备库有时候可能无法计算延时。如果发生这种情况，备库会报0或者null。</li>
+<li>一个大事务可能会导致延迟拨动，例如，有一个事务更新数据长达一个小时，最后提交，这条更新将比他实际发生时间晚一个小时才记录到二进制日志中。当备库执行这条语句时，会临时地报告备库延迟为一个小时，然后又很快标称0。</li>
+<li>如果分发主库落后了，并且其本身也有已经追赶上它的备库，备库的延迟将显示为0，而事实上和源主库之间是有延迟的。</li>
+</ul>
+<p>解决这些问题的办法是，忽略seconds_behind_master的值，并使用一些可以直接观察和衡量的方式来监控备库延迟。最好的解决办法是使用heartbeat record，这是一个在主库上会每秒更新一次的时间戳。为了计算延时，可以直接用备库当前的时间戳减去心跳记录的值。这个方法能够解决刚刚我们提到的所有问题，另外一个额外的好处是我们还可以通过时间戳知道备库当前的复制情况。</p>
+<p>心跳还有其他好处，记录在二进制日志中的心跳记录拥有许多用途，例如在一些很难解决的场景下可以用于灾难恢复。</p>
+<h5><span id="63-确定主备是否一致">6.3 确定主备是否一致</span></h5><hr>
+<p>理想情况下，备库和主库的数据应该是完全一样的。但事实上备库可能发生错误并导致数据不一致。即使没有明显的错误，备库同样可能因为MySQL自身的特性导致数据不一致，例如MySQL的BUG，网络中断、服务器崩溃，非正常关闭或者其他一些错误。</p>
+<p>按照经验来看，主备一致应该是一种规范，而不是例外，也就是说，检查你的主备一致性应该是一个日常工作，特别是当使用备库来做备份时尤为重要，因为你肯定不希望从一个已经损坏的备库里获得备份数据。</p>
+<p>MySQL并没有内建的方法来比较一台服务器与别的服务器的数据是否相同。它提供了一些组件来为表和数据生成校验值，例如checknum table。但当复制正在进行时，这种方法是不可行的。</p>
+<p>pt-table-checksum是唯一能够有效比较主备一致性的工具。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pt-table-checknum --replicate=test.checksum &lt;master_host&gt;</span><br></pre></td></tr></table></figure>
+<h5><span id="64-从主库重新同步备库">6.4 从主库重新同步备库</span></h5><hr>
+<p>传统的修复不一致的办法是关闭备库，然后从主库复制一份数据。当备库数据不一致的问题可能导致严重后果时，一旦发现就应该将备库停止并从生产环境移除，然后在从一个备份中克隆或者恢复备库。</p>
+<p>这种方法的缺点是不太方便，特别是数据量很大时。如果能够找出并修复不一致的数据，要比从其他服务器上重新克隆数据有效的多。如果发现的不一致并不严重，就可以保持备库在线，并重新同步受影响的数据。</p>
+<p>最简单的办法是使用mysqldump转储受影响的数据并重新导入。在整个过程中，如果数据没有发生变化，这种方法会很好。你可以在主库上简单地锁住表然后进行转储，再等待备库赶上主库，然后将数据导入到备库中。（需要等待备库赶上主库，这样就不至于为其他表引入新的不一致，例如那么可能通过和失去同步的表做join后进行数据更新的表）</p>
+<p>虽然这种方法在许多场景下是可行的，但在一个繁忙的服务器上有可能行不通。另外一个缺点是在备库上通过非复制的方式改变数据。通过复制改变备库数据（通过在主库上执行更新）通常是一种安全的技术，因为它避免了竞争条件和其他意料外的事情。如果表很大或者网络带宽受限，转储和重载数据的代价依然很高。当在一个有一百万行的表上只有一千行不同的数据呢？转储和重载表是非常浪费的。</p>
+<p>pt-table-sync可以解决该问题。</p>
+<h5><span id="65-改变主库">6.5 改变主库</span></h5><hr>
+<p>主需要在备库简单的使用change master to 命令，并制定合适的值。大多数值都是可选的。只需要制定需要的改变的项即可。备库将抛弃之前的配置和中继日志并从新的主库开始复制。同样新的参数会被更新到master.info文件中，这样就算重启，备库配置信息也不会丢失。</p>
+<p>整个过程中最难得是获取新主库上合适的二进制日志位置，这样备库才可以从老主库相同的逻辑位置开始复制。</p>
+<p>把备库提升为主库要更苦难一点。有两种场景需要将备库替换为主库，一种是计划内的提升，一种是计划外的提升。</p>
+<ul>
+<li><p>计划内的提升</p>
+<ul>
+<li>停止向老的主库写入</li>
+<li>让备库追赶上主库</li>
+<li>将一台备库配置为新的主库</li>
+<li>将备库和写操作指向新的主库，然后开启主库的写入</li>
+</ul>
+</li>
+</ul>
+<p>更深入一点，下面是大多数配置需要的步骤</p>
+<ol>
+<li>停止当前主库上的所有写操作。如果可以，最好能将所有的客户端程序关闭（除了复制链接）。为客户端程序建立一个do not run这样的类似标记可能会有所帮助。如果正在使用虚拟IP地址,也可以简单的关闭虚拟IP,然后断开所有的客户端链接以关闭其打开的事务.</li>
+<li>通过flush tables with read lock在主库上停止所有活跃的写入，这一步是可选的。也可以在主库上设置read_only选项。从这一刻开始，应该禁止向即将被替换的主库做任何写入。因为一旦它不是主库，写入就意味着数据丢失。注意，即使设置read_only也不会阻止当前已存在的食物继续提交，为了更好的保证这一点，可以先kill掉所有打开的事务，这样将会真正的结束所有写入。</li>
+<li>选择一个备库作为新的主库，并确保它已经完全跟上主库（例如，让它执行完所有从主库获得的中继日志）</li>
+<li>确保新主库和旧主库的数据是一致的。</li>
+<li>在新主库上执行stop slave。</li>
+<li>在新主库上执行 change master to master_host = ‘’，然后在执行reset slave ，使其断开与老主库的链接，并丢弃master.info里记录的信息（这就是不建议把复制连接信息写到配置文件里的原因之一）</li>
+<li>执行show master status记录新主库的二进制日志坐标</li>
+<li>确保其他主库已经追赶上。</li>
+<li>关闭旧主库</li>
+<li>激活新主库上事件</li>
+<li>将客户端连接到新主库</li>
+<li>在每台备库上执行change master to语句，使用之前通过show master status获得的二进制日志坐标，来指向新的主库。</li>
+</ol>
+<ul>
+<li>计划外的提升</li>
+</ul>
+<p>当主库崩溃时，需要提升一台备库来替代它，这个过程可能就不太容易。如果只有一台备库，可以直接使用这台备库。但如果有超过一台的备库，就需要做一些额外的工作。</p>
+<p>另外，还有潜在的丢失复制事件的问题。可能有主库上已经发生的修改还没有更新到它的任何一台备库上的情况。甚至还可能一条语句在主库上执行了回滚，但在备库上没有回滚，这样备库可能超过主库的逻辑复制位置。如果能在某一点恢复主库的数据，也许就可以取得丢失的语句并手动执行它们。</p>
+<p>以下是对主备拓扑结构中的备库进行提升的过程：</p>
+<ol>
+<li>确定哪台备库的数据最新。检查每台备库上show slave status命令的输出，选择其中master_log_file / read_master_log_pos的值最新的那个</li>
+<li>让所有备库执行完所有其从崩溃前的旧主库那获得的中继日志。如果在未完成前修改备库的主库，它会抛弃剩下的日志事件，从而无法获知该备库在什么地方停止。</li>
+<li>执行前一小节的5-7步</li>
+<li>比较每台备库和新主库上的master_log_file / read_master_log_pos的值。</li>
+<li>执行前一小节的10 - 12步。</li>
+</ol>
+<p>如果有备库和新主库的位置不相同，则需要找到该备库最后一条执行的时间在新主库的二进制日志中响应的位置，然后在执行change master to ，可以通过mysqlbinlog工具来找到备库执行的最后一条查询，然后在主库上找到同样的查询，进行简单的计算就可以得到。</p>
+<p>为了便于描述，假设每个日志事件有一个自增的数字ID，最新的备库，也就是新主库，在旧主库崩溃时获得了编号为100的事件，假设有另外两台备库：replica2和replica3。replica2已经获取了99号事件，replica3获取了98号事件。如果把两台备库都指向新主库的同一个二进制日志位置，它们将从101号事件开始复制，从而导致数据不同步。但只要新主库的二进制日志已经通过log_slage_updates打开，就可以在新主库的二进制日志中找到99号和100号日志，从而将备库恢复到一直的状态。</p>
+<p>由于服务器重启，不同的配置，日志轮转或者flush logs命令，同一个事件在不同的服务器上可能有不同的偏移量。找到这些时间可能会耗时很长并且枯燥，但是通常没有难度。通过mysqlbinlog从二进制日志或中介日志中解析出每台备库上执行的最后一个事件，并同样使用该命令解析新主库上的二进制日志，找到相同的词典哈讯，mysqlbinlog会打印出该事件的偏移量，在change master to 命令中使用这个值。</p>
+<p>更快的方法是把新主库的停止的备库上的字节偏移量想减，它显示了字节为止的差异。然后把这个值和新主库当前二进制日志的位置相减，就可以得到期望的查询的位置。只需要验证一下就可以据此启动备库。</p>
+<p>看个例子。假设server1是server2和server3的主库，其中服务器server1已经崩溃，根据show slave status获得master_log_file/read_master_file_post的值，server2已经执行完了server1上的所有二进制日志，但server3还不是最新数据。如图：</p>
+<p>如图所示，我们可以确定，server2已经执行忘了主库上的所有二进制日志，因为master_log_file和read_master_log_pos的值和server1上最后的日志位置是相吻合的，因此我们可以将server2提升为新主库，并将server3设置为server2的备库。</p>
+<p>应该在server3上为需要执行的change master to语句赋予什么样的参数呢？这里需要做一点点计算和调查。server3在偏移量1493停止，比server2执行的最后一条语句的偏移量1582要小89字节。server2正在想偏移量为8167的二进制日志写入，8167-89=8087，因此理论上我们应该将server3指向server2的日志的偏移量设置为8087的位置。最好去确认下这个位置附近的日志时间，以确定在该位置上是否是正确的日志时间，因为可能有别的例外，例如有些更新你只发生在server2上</p>
+<p>假设我们观察到的事件是一样的，下面这条命令会将server3切换为server2的备库</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">change</span> <span class="keyword">master</span> <span class="keyword">to</span> master_host = <span class="string">'server2'</span>,master_log_file=<span class="string">'mysql-bin.000009'</span>, master_log_post=<span class="number">8078</span></span><br></pre></td></tr></table></figure>
+<p>如果服务器在崩溃时已经完成并记录了超过一个时间，会怎么样呢？因为server2仅仅读取并执行到了偏移位置1582，你可能永远的失去了一个时间。但是如果老主库的磁盘没有损坏，仍然可以通过mysqlbinlog或者从二进制服务器日志中找到丢失的事件。</p>
+<p>如果需要从老主库上恢复丢失的时间，建议在提升新主库之后且在允许客户端连接之前做这件事情。这样就无需再没台备库上都执行丢失的事件，只需使用复制来完成。但如果崩溃的老主库完全不可用，就不得不等待，稍后再做这一项工作。</p>
+<p>上述流程中一个可调整的地方是使用可靠的方式来存储二进制日志，比如SAN或者分布式复制数据库设备（DRBD）。即使主库完全失效，依然能够获得它的二进制日志。也可以设置一个日志服务器，把备库指向它，然后让所有备库赶上主库失效的点。这使得提升一个备库为新的主库没那么重要，本质上这个计划中的提升是相同的。</p>
+<h5><span id="66-在一个主-主配置中交换角色">6.6 在一个主 - 主配置中交换角色</span></h5><hr>
+<p>主主复制拓扑结构的一个好处就是可以很容易的切换主动和被动的角色，因为其配置是对称的。</p>
+<p>当在主-主配置下切换角色时，必须确保任何时候只有一个服务器可以写入。如果两台服务器交叉写入，可能会导致写入冲突。换句话说，在切换角色后，原被动服务器不应该接收到主动服务器的任何二进制日志。可以通过确保原被动服务器的复制SQL线程在该服务器可写之前已经赶上主动服务器来避免。</p>
+<p>通过以下步骤切换服务器角色，可以避免更新重复的危险；</p>
+<ol>
+<li>停止主动服务器上的所有写入。</li>
+<li>在主动服务器上执行set global read_only = 1，同时在配置文件里也设置一下read_only，防止重启后失效。但记住这不会阻止拥有超级权限的用户更改数据。如果想阻止所有人更改数据，可以执行flush tables with read lock。如果没有这么做，你必须kill所有的客户端连接以保证没有长时间运行的语句或者未提交的事务。</li>
+<li>在主动服务器上执行show master status并记录二进制日志坐标。</li>
+<li>使用主动服务器上的二进制日志坐标在被动服务器上执行select master_pos_wait()。该语句将会阻塞，知道复制跟上主动服务器中。</li>
+<li>在被动服务器上执行set global read_only =0，这样就变换成主动服务器。</li>
+<li>修改应用的配置，使其写入到新的主动服务器中。</li>
+</ol>
+<h4><span id="7-复制的问题和解决方案">7 复制的问题和解决方案</span></h4><h5><span id="71-数据损坏或丢失的错误">7.1 数据损坏或丢失的错误</span></h5><hr>
+<p>MySQL的复制并不能很好地从服务器崩溃、掉电，磁盘损坏、内存或网络错误中恢复。回到这些问题时几乎可以肯定都需要从某个点开始重启复制。</p>
+<p>大部分由于非正常关机后导致的肤质问题都是由于没有把数据及时地刷到磁盘。下面是意外关闭服务器时可能会碰到的情况。</p>
+<ul>
+<li><p>主库意外关闭</p>
+<p>  如果没有设置主库的sync_binlog选项，就可能在崩溃前没有降最后的几个二进制日志时间刷新到磁盘中。备库IO线程因此也可能一直处于读不到尚未写入磁盘的事件的状态中。当主库重新启动时，备库将重连到主库并在此尝试去读该事件，但主库会告诉备库没有这个二进制日志偏移量。二进制日志转储线程通常很快，因此这种情况并不经常发生。</p>
+<p>  结局色这个问题的办法是指定备库从下一个二进制文件的开头度日志。但是有一些日志事件将会永久的丢失，建议使用pt-table-checknum来检查主备一致性，以便于修复。可以通过在主库开启sync_binlog来避免事件丢失。</p>
+<p>  即使开启了sync_binlog，myisam表的数据仍然可能在崩溃的时候损坏，对于innodb事务，如果innodb_flush_log_at_trx_commit没有设为1，也可能丢失数据（但数据不会损坏）</p>
+</li>
+<li><p>备库意外关闭</p>
+<p>  当备库再一次非计划中的关闭后重启时，回去读master.info文件以找到上次停止复制的位置。不幸的是，该文件没有同步写到磁盘，文件中存储的信息可能是错误的。备库可能会尝试重新执行一些二进制日志事件，这可能会导致唯一索引错误。除非能确定备库在哪里停止，否则唯一的办法就是忽略那些错误。pt-slave-restart工具可以完成</p>
+<p>  如果使用的都是innodb表，可以再重启后观察MySQL错误日志。innodb在恢复过程中会打印出它的恢复点的二进制日志坐标。可以使用这个值来决定备库指向主库的偏移量。</p>
+</li>
+</ul>
+<p>除了MySQL非正常关闭导致的数据丢失外，磁盘上二进制文件或中继日志文件损坏并不罕见。下面是一些更普遍的场景：</p>
+<ul>
+<li><p>主库上的二进制文件损坏</p>
+<p>  如果主库上的二进制日志损坏，除了忽略损坏的位置外你别无选择。可以再主库上执行flush logs命令，这样主库会开始一个新的日志文件，然后将备库指向该文件的开始位置。也可以试着去发现损坏区域的结束位置。某些情况下可以通过set global sql_slave_skip_counter = 1来忽略一个损坏的事件，如果有多个损坏的事件，就需要重复该步骤，知道跳过所有损坏的时间。但是如果有太多的损坏事件，这么做可能就没有意义了。损坏的事件头会阻止服务器找到下一个事件。这种情况下，可能不得不手动地找到下一个完好的事件。</p>
+</li>
+<li><p>备库上的中继日志损坏</p>
+<p>  如果主库上的日志是完好的，就可以通过change master to 命令丢弃并获取损坏的事件。只需要将备库指向它当前正在复制的位置。这会导致备库丢弃所有在磁盘上的中继日志。就这一点而言，MySQL5.5做了一些改进，它能够在崩溃后自动重新获取中继日志。</p>
+</li>
+<li><p>二进制日志于innodb事务日志不同步</p>
+<p>  当主库崩溃时，innodb可能将一个事务标记为已提交，此时该事务可能还没有记录到二进制日志中。除非是某个备库的中继日志已经保存，否则没有任何办法恢复丢弃的事务。MySQL5之后可以设置sync_binlog选项来防止该问题。</p>
+</li>
+</ul>
+<p>当一个二进制日志损坏时，能恢复多少数据取决于损坏的类型。</p>
+<ul>
+<li><p>数据改变，但事件仍是有效的SQL</p>
+<p>  不幸的是,MySQL无法察觉这种损坏。因此最好还是经常检查备库的数据是否正确。在MySQL未来的版本中可能会被修复。</p>
+</li>
+<li><p>数据改变并且事件时无效的SQL</p>
+<p>  这种情况可以通过mysqlbinlog提取出事件并看到一些错乱的数据，例如：</p>
+  <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">update</span> tab1 <span class="keyword">col</span>???????</span><br></pre></td></tr></table></figure>
+<p>  可以通过增加偏移量的方式找到下一个事件，这样就可以之忽略这个损坏的事件。</p>
+</li>
+<li><p>数据遗漏并且/或者事件的长度是错误的</p>
+<p>  这种情况下，mysqlbinlog可能会发生错误退出或者直接崩溃，因为它无法读取时间，并且找不到下一个事件的开始位置。</p>
+</li>
+<li><p>某些事件已经损坏或被覆盖，或者偏移量已经改变并且下一个事件的起始偏移量也是错误的</p>
+<p>  同样，mysqlbinlog没作用。</p>
+</li>
+</ul>
+<p>当损坏非常严重，通过mysqlbinlog已经无法获取日志事件时，就不得不进行一些十六进制的编辑或者通过一些繁琐的技术找到日志事件的边界。通常不困难，因为有一些可辨识的标记会分割事件。</p>
+<p>如下面的例子，先用mysqlbinlog找到样例日志的日志事件偏移量</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">mysqlbinlog mysql-bin.000113 | egrep '^# at '</span><br><span class="line"></span><br><span class="line">at 4</span><br><span class="line">at 98 </span><br><span class="line">15 447</span><br></pre></td></tr></table></figure>
+<p>一个找到日志便宜量的比较简单的方法是比较一下string命令输出的偏移量：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">strings -n 2 -t d mysql-bin.000113</span><br><span class="line">std</span><br><span class="line">test</span><br><span class="line">C'C</span><br><span class="line">std</span><br><span class="line">test</span><br></pre></td></tr></table></figure>
+<p>注意以’G结尾的字符串在日志事件开头的一个字节后的位置。他们是固定长度的事件头的一部分。</p>
+<p>简单分析后应该能从二进制日志中找到这些模式并找到下一个完成的日志事件偏移量。然后通过mysqlbinlog的—start-position选项来跳过损坏的事件，或者使用change master to 命令的 master_log_pos参数。</p>
+<h5><span id="72-使用非事务型表">7.2 使用非事务型表</span></h5><hr>
+<p>如果一切正常，基于语句的复制通常能够很好的处理非事务型表。但是当对非事务型表的更新发生错误时，例如在查询完成前被kill，就可能导致主库和备库的数据不一致。</p>
+<p>例如，假设更新一个myisam表的100还能够数据，若查询更新到了其中50条时有人kill该查询，会发生什么呢？一般的数据改变了，而另一半则没有，结果是复制必然不同步，因为该查询会在备库重放并更新完100行数据（MySQL嘶吼会在主库上发现查询引起的错误，而备库上则没有报错，伺候复制将会发生错误并中断）</p>
+<p>如果使用的是myisam表，在关闭MySQL之前需要确保已经运行了stop slave，否则服务器在关闭时会kill所有正在运行的查询（包括没有完成的更新）。事务型存储引擎则没有这个问题。如果使用的是事务型表，失败的更新会在主库上回滚并不会记录到二进制日志中。</p>
+<h5><span id="73-混合事务型和非事务型表">7.3 混合事务型和非事务型表</span></h5><hr>
+<p>如果使用的是事务型存储引擎，只有在事务提交后才会将查询记录到二进制日志中。因此如果事务回滚，MySQL就不会记录这条查询，也就不会在备库上重放。</p>
+<p>但是如果混合使用事务型和非事务型表，并且发横了一次回滚，MySQL能够回滚事务表的更新，但非事务型表则被永久地更新了。只要不发生类似查询中被kill这样的错误，就不是问题：MySQL此时会记录该查询并记录一条rollback语句到日志中。如果是同样的语句也在备库执行，所有的都很正常。这样效率会低一点，因为备库需要做一些工作最后再把它们丢弃掉。但理论上能够保证主备的数据一致。</p>
+<p>但是如果备库发生死锁而主库也没有也可能会导致问题。事务型表的更新会被回滚，而非事务型表则无法回滚，此时备库和主库的数据是不一致的。</p>
+<p>防止该问题的唯一办法是避免混合使用事务型和非事务型表。如果遇到这个问题，唯一的解决办法是忽略错误，并重新同步相关的表。</p>
+<p>基于行的复制不会受到这个问题的影响。因为它记录的是数据的修改，而不是SQL语句.如果一条语句改变了一个myisam表和一个innodb表的某些航,然后主库上发生了一次死锁,innodb表的更新会被回滚,而myisam标的更新仍会被记录到日志中并在备库重放</p>
+<h5><span id="74-不确定语句">7.4 不确定语句</span></h5><hr>
+<p>当使用基于语句的复制模式时，如果通过不确定的方式更改数据可能会导致主备不一致。例如，一条带有limit的update语句更改的数据取决于查找航的顺序，除非能保证主库和备库上的顺序相同。例如，若行根据主键排序，一条查询可能在主库和备库上更新不同的行，这些问题非常微妙并且很难注意到。所以一些人禁止对哪些会更新数据的语句使用limit。另一种不确定的行为是在一个拥有多个唯一索引的表上使用replace或者insert ignore语句，MySQL在主库和备库上可能会选择不同的索引。</p>
+<p>另外还要注意那些涉及information_schema表的语句。他们很容易在主库和备库上产生不一致，其结果也会不相同。</p>
+<h5><span id="75-主库和备库使用不同的存储引擎">7.5 主库和备库使用不同的存储引擎</span></h5><hr>
+<p>基于语句的复制方式，如果备库使用了不同的存储引擎，则可能造成一条查询在主库和备库上的执行结果不同。</p>
+<h5><span id="76-备库发生数据改变">7.6 备库发生数据改变</span></h5><hr>
+<p>基于语句的复制方式前提是确保备库上有和主库相同的数据，因此不应该允许对备库数据的任何修改（read_only）。假设有如下语句：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> table1 <span class="keyword">select</span> * <span class="keyword">from</span> table2;</span><br></pre></td></tr></table></figure>
+<p>如果备库上table2的数据和主库上不同，该语句会导致table1的数据也会不一致。换句话说，数据不一致可能会在表之间传播。不仅仅是insert … select查询，所有类型的查询都有可能发生。有两种可能的结果：备库上发生重复索引键冲突错误或者根本不提示任何错误。如果能报告错误还好，起码能够提示你主备数据已经不一致。无法察觉的不一致可能会悄无声息的导致各种问题</p>
+<p>唯一的解决办法就是重新从主库同步数据。</p>
+<h5><span id="77-不唯一的服务器id">7.7 不唯一的服务器ID</span></h5><hr>
+<p>如果不小心为两台备库设置了相同的服务器ID，看起来似乎没有什么问题，但如果查看错误日志，或者使用innotop查看主库，可能会看到一些固态的信息。</p>
+<p>在主库上，会发现两台备库中只有一台连接到主库（通常情况下所有的备库都会建立连接以等待随时进行复制）。在备库的错误日志中，则会发现反复的重连和连接断开信息，但不会提及被错误配置的服务器ID。</p>
+<p>MySQL可能会缓慢的进行正确的复制，也可能无法进行正确复制，这取决于MySQL的版本，给定的备库可能会丢失二进制日志时间，或者重复执行事件，导致重复建错误（或者不可见的数据损坏）。也可能因为备库的互相竞争造成主库的负载升高。如果备库竞争非常激烈，会导致错误日志在很短时间内急剧增大。</p>
+<p>唯一的解决办法是小心设置备库的服务器ID。建立映射表。</p>
+<h5><span id="78-未定义的服务器id">7.8 未定义的服务器ID</span></h5><hr>
+<p>如果没有在my.cnf里定义服务器ID，可以通过chnge master to 来设置备库，但无法启动复制。</p>
+<h5><span id="79-对未复制数据的依赖性">7.9 对未复制数据的依赖性</span></h5><hr>
+<p>如果在主库上有备库不存在的数据库或表，复制会很容易意外中断，反之亦然。假设主库上有一个备库不存在的数据库，命名为search。如果在主库上发生对该数据库中表的更新，备库会在尝试重放这些更新时中断。同样的，如果在主库上创建一个备库上已存在的表，复制也可能会中断。</p>
+<p>没有办法，只能避免</p>
+<h5><span id="710-丢失的临时表">7.10 丢失的临时表</span></h5><hr>
+<p>临时表在某些时候比较有用，但不幸的是，它与基于语句的复制方式是不相容的。如果备库崩溃或者正常关闭，任何复制线程拥有的临时表都会丢失。重启备库后，所有依赖于该临时表的语句都会失败。</p>
+<p>当基于语句进行复制时，在主库上没有安全使用临时表的方法。很多人确实很喜欢临时表。但是不管它们的存在多么短暂，都会使得备库的启动和停止以及崩溃恢复变得困难，即使是在一个事务内使用也是一样。</p>
+<p>如果备库重启后复制因找不到临时表而停止，可能需要做下面一些事：可以直接跳过错误，或者手动创建一个名字和结构相同的表来代替消失的临时表。不管用什么办法，如果写入查询依赖于临时表，都可能造成数据不一致。</p>
+<p>避免使用临时表没有看起来那么难，临时表主要有两个比较有用的特性：</p>
+<ul>
+<li>只对创建临时表的线程课件。所以不会和其他拥有相同名字临时表的连接起冲突。</li>
+<li>随着连接关闭而消失，所以无需显式的移除它们。</li>
+</ul>
+<p>可以保留一个专用的数据库，在其中创建持久表，把他们作为临时表，模拟这些特性，只需要为它们选择一个唯一的名字。当应用不在使用临时表后，可以将其删除或者使用一个清理线程来进行移除。使用实体表而非临时表还有别的好处。例如，能够帮助你更容易的调试应用程序，因为可以通过别的链接来查看应用正在维护的数据。如果使用的是临时表，可能就没这么容易做到。</p>
+<p>但是实体表会多一些开销，例如创建更慢，因为为这些表分配.frm文件需要刷新到磁盘。可以通过禁止sync_frm选项来加速，但是这坑你导致钱财的风险。</p>
+<p>如果确实需要使用临时表，也应该在关闭备库前确保slaev_open_temp_tables状态变量值为0。如果不是0，在重启备库后就可能会出现问题。合适的流程是执行stop slave，检查变量，然后再关闭备库。如果在停止复制前检查变量，可能会发生竞争条件的风险。</p>
+<h5><span id="711-不复制所有的更新">7.11 不复制所有的更新</span></h5><hr>
+<p>如果错误的使用set sql_log_bin=0或者没有理解过滤规则，备库可能会丢失主库上已经发生的更新。有时候希望利用此特性来做归档，但常常会导致意外并出现不好的结果。</p>
+<p>例如，假设设置了replicate_do_db规则，把sakila数据库的数据复制到某一台备库上。如果在主库执行如下语句，会导致主备数据不一致；</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> <span class="keyword">test</span>;</span><br><span class="line">upate sakila.actor ...</span><br></pre></td></tr></table></figure>
+<h5><span id="712-innodb枷锁读引起的锁争用">7.12 InnoDB枷锁读引起的锁争用</span></h5><hr>
+<p>正常情况下，InnoDB的读操作是非阻塞的，但在某些情况下需要枷锁。特别是在使用基于语句的复制方式时，执行insert … select操作会锁定源表上的所有行。MySQL需要枷锁以确保该语句的执行结果和在主库和备库上是一致的。实际上，枷锁导致主库上的语句串行化，以确保和备库上执行的方式相同。</p>
+<p>这种设计可能导致锁竞争、则色，以及锁等待超时等情况。一种缓解的办法就是避免让事务开启太久以减少阻塞。可以再主库上尽快的提交事务以释放所。</p>
+<p>把大命令拆成小命令，使其尽可能简短。这也是一种减少锁竞争的有效方法。即使有时很难做到，但也是值得的</p>
+<p>另一种方法是替换掉insert … select语句，在主库上先执行select into outfile，在执行load data in file。这种方法更快，并且不需要加锁。这种方法很特殊，但有时候很有用。最大的问题是为输出文件选择一个唯一的名字，并在完成后清理掉文件。可以通过之前讨论过的connection_id()来保证文件名的唯一性。并且可以使用定时任务在链接不在使用你这些文件后进行自动清理工。</p>
+<p>也可以尝试关闭上面的锁机制，而不是使用上面的变通方法。有一种方法可以做到，但在大多数场景下并不是好办法，备库可能会在不知不觉间就失去和主库的数据同步。这也会导致在做恢复时二进制日志变得毫无用处。但如果确实觉得这么做利大于弊，可以使用下面的方式来关闭这种锁机制。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># This is not safe!</span><br><span class="line">innodb_locks_unsafe_for_binlog=1</span><br></pre></td></tr></table></figure>
+<p>这使得查询的结果所依赖的数据不再枷锁。如果第二条查询修改了数据并在第一条查询之前先提交。在主库和备库上执行这两条语句的结果可能不相同。对于复制和基于时间点的恢复都是如此。</p>
+<p>为了了解读取锁定是如何防止混乱的，假设有两张表，一个没有数据，另一个只有一行数据，值为00.有两个事务更新数据，事务1将第二张表的数据插入到第一张表，事务2更新第二张表。如图：两个事务更新数据，使用共享锁串行化读取</p>
+<p>第二步非常重要，事务2尝试去更新源表，这需要在更新的行上加排他锁（写锁）。排他锁与其他锁是不相容的，包括事务1在行记录上加的共享锁。因此事务2需要等待直到事务1完成。事务按照其提交的顺序在二进制日志中记录，所以在备库重放这些事务时产生相同的效果。</p>
+<p>但从另一个方面来说，如果事务1没有在读取的行上加共享锁，就无法保证了。如果没有枷锁，记录在日志中的事务顺序在主备上可能会产生不同的结果。MySQL会先记录事务2，这回影响到事务1在备库上的结果，而主库上则不会发生，从而导致了主备的数据不一致。</p>
+<p>强烈建议将innodb_locks_unsafe_for_binlog的值设置为0。基于行的复制由于记录了数据的变化而非语句，因此不会存在这个问题。</p>
+<h5><span id="713-在主-主复制结构中写入两台主库">7.13 在主-主复制结构中写入两台主库</span></h5><hr>
+<p>太多不写，基本没有机会可以用到</p>
+<h5><span id="714-过大的延迟复制">7.14 过大的延迟复制</span></h5><hr>
+<p>复制延迟是一个很普遍的问题。不管怎么样，最好在设计应用程序时能够让其容忍备库出现延迟。如果系统在备库出现延迟时就无法很好的工作，那么应用程序也许就不应该用到复制。但是也有一些办法可以让备库跟上主库。</p>
+<p>MySQL单线程复制的设计导致备库的效率相当低下。即使备库有很多磁盘、CPU或者内存，也会很容易落后于主库。因为备库的单线程通常只会有效的使用一个CPU和磁盘.而事实上,备库通常都会和主库使用相同配置的机器.</p>
+<p>备库上的锁同样也是问题。其他在备库运行的查询可能会阻塞住复制线程。因为复制是单线程的，复制线程在等待时将无法做别的事情。</p>
+<p>复制一般有两种产生延迟的方式：突然产生延迟然后再跟上，或者稳定的延迟增大。前一种通常姑娘是由于一条运行很长时间的查询导致的，而后者即使在没有长时间的查询时也会出现。</p>
+<p>不幸的是，目前我们没那么容易确定备库是否接近其容量上限。正如之前所提到的。如果负载总是保持均匀的，备库在负载达到99%时和其负载在10%的时候表现的性能相同，但一旦达到100%时就会突然开始产生延迟。但实际上负载不太可能很稳定，所以当备库接近写容量时，就可能在尖峰负载时看到复制延迟的增加。</p>
+<p>当备库无法跟上时，可以记录备库上的查询并使用一个日志分析工具找出哪里慢了。不要依赖与自己的直觉，也不要基于查询在主库上的查询性能进行判断，因为主库和备库性能特征很不相同。最好的分析办法是暂时在备库上打开慢查询日志记录，然后使用pt-query-digest工具来分析。如果打开了log_slow_slave_statementse选项，在标准的MySQL慢查询日志能够记录复制线程执行的语句，这样就可以找到在复制时哪些语句满了。</p>
+<p>除了购买更快的磁盘和CPU,备库没有太多的调优空间。大部分选项都是禁止某些额外的工作来减少备库的负载。一个简单的办法是配置innodb，使其不要那么频繁的刷新磁盘，这样事务会提交的更快一些。可以通过设置innodb_flush_log_at_trx_commit的值为2来实现。还可以在备库上禁止二进制日志记录，把innodb_locks_unsafe_for_binlog设置为1，并把myisam的delay_key_write设置为all。但是这些设置以牺牲安全换取速度。如果需要将备库提升为主库，记得把这些选项这只会安全的值。</p>
+<p><strong>不要重复写操作中代价比较高的部分</strong></p>
+<p>重构应用或者优化查询通常是最好的保持备库同步的办法。尝试去最小化系统中重复的工作。任何主库上昂贵的写操作都会在每一个备库上重放。如果可以把工作转移到备库，那么就只有一台备库需要执行，然后我们可以把写的结果回传到主库，例如，通过执行load data infile。</p>
+<p>例子：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">replace</span> <span class="keyword">into</span> main_db.summary_table(col1,col2,...)</span><br><span class="line"><span class="keyword">select</span> col1,<span class="keyword">sum</span>(col2,...)</span><br><span class="line"><span class="keyword">from</span> main_db.enormous_table <span class="keyword">group</span> <span class="keyword">by</span> col1;</span><br></pre></td></tr></table></figure>
+<p>如果在主库上执行查询，每个备库将同样需要执行庞大的group by 查询。当进行太多这样的操作时,备库将无法跟上。把这些工作转移到一台备库上也许会有帮助。在备库上创建一个特别保留的数据库，用于避免和从主库上复制的数据产生冲突。可以执行以下查询：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">replace</span> <span class="keyword">into</span> smmary_db.summary_table(col1,col2,...)</span><br><span class="line"><span class="keyword">select</span> col1,<span class="keyword">sum</span>(col2,...)</span><br><span class="line"><span class="keyword">from</span> main_db.enormous_table <span class="keyword">group</span> <span class="keyword">by</span> col1;</span><br></pre></td></tr></table></figure>
+<p>现在可以执行select info outfile，然后再执行load data infile，将结果集加载到主库中。现在重复工作被简化为load data infile操作。如果有N个备库,就节约了N-1次庞大的group by 操作。</p>
+<p>该策略的问题是需要处理陈旧数据。有时候从备库读取的数据和写入主库的数据很难保持一致。如果难以在备份上读取数据，依然能够简化并节省库备工作。如果分离查询的replace和select部分，就可以把结果返回给应用程序，然后将其插入到主库中。首先，在主库执行如下查询：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> col1, <span class="keyword">sum</span>(col2,...) <span class="keyword">from</span> main_db.enormous_table <span class="keyword">group</span> <span class="keyword">by</span> col1;</span><br></pre></td></tr></table></figure>
+<p>然后为结果集的每一行重复执行如下语句，将结果插入到汇总表中：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">replae into main_db.summary_table (col1,col2,...) <span class="keyword">values</span> (?,?,...)</span><br></pre></td></tr></table></figure>
+<p>这种方法再次避免了在备库上执行查询中的group by 部分。将select 和 repalce分离后意味着查询的select操作不会在每一台备库上重放。</p>
+<p>这种通用的策略，节约了备库上昂贵的写入操作部分，在很多情况下很有帮助：计算查询的结果代价很昂贵，但一旦计算出来后，处理就很容易。</p>
+<p><strong>在复制之外并行写入</strong></p>
+<p>另一种避免备库严重延迟的办法是绕过复制。任何在主库的写入操作必须在备库串行化。因此有理由认为串行化写入并不能充分利用资源。所有写操作都应该从主库传递到备库么？如果把备库有限的串行写入容量留给那些真正需要通过复制进行的写入？</p>
+<p>这种考虑有助于对写入进行区分。特别是，如果能确定一些写入可以轻易的在复制之外执行，就可以并行化这些操作以利用备库的写入容量。</p>
+<p>一个很哈的例子是之前讨论过的数据归档。OLTP归档需求通常是简单的单行操作。如果只是把不需要的记录从一个表转移到另一个表，就没有必要将这些写入复制到备库。可以禁止归档查询记录到二进制日志中，然后分别在主库和备库上单独执行这些归档查询。</p>
+<p>自己复制数据到另外一台服务器，而不是通过复制，听起来很扯，但对一些应用很有意义，特别是如果应用是某些标的唯一更新源。复制的瓶颈通常集中在小部分表上。如果能在复制之外单独处理这些表，就能够显著的加快复制。</p>
+<p><strong>为复制线程预取缓存</strong></p>
+<p>如果有正确的工作负载，就能通过预先将数据读入内存中，以受益于在备库上的并行IO所带来的好处。这种方式大部分人并不会使用，因为除非有争取的工作负载特性和硬件配置，否则可能没有任何用户。我们刚刚讨论过的其他几种变通方式是更好的选择，并且有更多的方法来应用他们。</p>
+<p>有两种可行的实现方法。一种是通过程序实现，略微比备库SQL提前读取中继日志并将其转换为SELECT语句执行。这会使得服务器将数据从磁盘加载到内存中农，这样当SQL线程执行到对应的语句时，就无须从磁盘读取数据。事实上，select语句可以并行的执行，所以可以加速SQL线程的串行IO。当一条语句正在执行时，洗啊一条语句需要的数据也正在从磁盘加载到内存中。</p>
+<p>如果满足下面这些条件，预取可能弧有效：</p>
+<ul>
+<li>复制SQL线程是IO密集型的，但备库服务器并不是IO密集型的.一个完全的IO密集型服务器不会受益于预取，因为他没有多余的磁盘性能来提供预取。</li>
+<li>备库有多个硬盘驱动器，也许8个或者更多。</li>
+<li>是用的是innodb引擎，并且工作集远不能完全加载到内存中。</li>
+</ul>
+<p>一个受益于预读取的例子是随机单行update语句，这些语句通常在主库山高并发执行。delete语句也可能受益于这种方法，但insert语句则不太可能会，尤其是当顺序插入时，因为前一次插入已经使得索引预热了。</p>
+<p>如果表上有很多索引，同样无法预取所有将要被修改的数据。update语句可能需要更新所有索引，但select语句通常只会读取主键和一个二级索引。update语句依然需要去读取其他索引的数据已进行更新。在多索引表上这种方法效率会降低。</p>
+<p>只有在清除硬件和操作系统的状况时才能尝试这种方法。正确设置参数非常重要，但是并没有绝对正确的参数组合。</p>
+<p>另一种方法是innobd内部实现的。它可以允许设置事务为特殊的模式，以语序innodb执行假更新。因此可以使用一个程序来执行这些假更新，这样复制线程就可以更快的执行真正的更新。</p>
+<h5><span id="715-例子主库的过大的包">7.15 例子主库的过大的包</span></h5><hr>
+<p>主库的max_allow_packet值和备库的不匹配。这种情况下，主库可能会记录一个备库认为过大的包。当备库获取到该二进制日志事件时，可能会碰到各种各样的问题，包括无线报错和重试，或者中继日志损坏。</p>
+<h5><span id="716-受限制的复制贷款">7.16 受限制的复制贷款</span></h5><hr>
+<p>如果带宽受限，可以开启备库上的slave_compressed_protocol选项。当备库连接主库时，会请求一个被压缩的连接，和MySQL客户端使用的压缩连接一样。使用的压缩引擎是zip，它能将文本类型的数据压缩到大约其原始大小的三分之一。代价是额外的CPU时间，包括在主库和备库上解压数据。</p>
+<h5><span id="717-磁盘空间不足">7.17 磁盘空间不足</span></h5><hr>
+<p>可能因为二进制日志、中继日志或临时文件将磁盘撑满。特别是在主库上执行了load data infile查询并在备库开启了log_slave_updates选项。延迟越严重，接收到但尚未执行的中继日志会占用越多的磁盘空间。可以通过监控磁盘并设置relay_log_space选项来避免这个问题。</p>
+<h5><span id="718-复制的局限性">7.18 复制的局限性</span></h5><hr>
+<p>M大量的SQL函数和编程实践不能被可靠的复制.</p>
+<p>服务器BUG，大多数MySQL的朱版本都存在历史遗留的复制BUG。</p>
+<h4><span id="8-复制有多快">8. 复制有多快</span></h4>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2020/12/29/Book Nodes/高性能MySQL/8-操作系统和硬件优化/" rel="next" title="MySQL操作系统和硬件优化">
+                  <i class="fa fa-chevron-left"></i> MySQL操作系统和硬件优化
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2020/12/31/Book Nodes/高性能MySQL/5-MySQL高级特性/" rel="prev" title="MySQL高级特性">
+                  MySQL高级特性 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">1.</span> <span class="nav-text">1 概述</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 复制解决的问题</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 复制如何工作</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">2.</span> <span class="nav-text">2 配置复制</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 创建复制账号</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 配置主库和备库</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 启动复制</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.4.</span> <span class="nav-text">2.4 从另一个服务器开始复制</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.5.</span> <span class="nav-text">2.5 推荐的复制配置</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">3.</span> <span class="nav-text">3 复制的原理</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 基于语句的复制</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 基于行的复制</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 基于行或基于语句：哪种更优</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">3.4.</span> <span class="nav-text">3.4 复制文件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">3.5.</span> <span class="nav-text">3.5 发送复制事件到其他备库</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">3.6.</span> <span class="nav-text">3.6 复制过滤器</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">4.</span> <span class="nav-text">4. 复制拓扑</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">4.1.</span> <span class="nav-text">4.1 一主库多备库</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">4.2.</span> <span class="nav-text">4.2 主动 - 主动模式下的 主 - 主复制</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">4.3.</span> <span class="nav-text">4.3 主动 - 被动模式下的 主  主 复制</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">4.4.</span> <span class="nav-text">4.4 拥有备库的主-主结构</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">4.5.</span> <span class="nav-text">4.5 环形复制</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">4.6.</span> <span class="nav-text">4.6 主库、分发主库以及备库</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">4.7.</span> <span class="nav-text">4.7 树或金字塔形</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">4.8.</span> <span class="nav-text">4.8 定制的复制方案</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">5.</span> <span class="nav-text">5. 复制和容量规划</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">5.1.</span> <span class="nav-text">5.1 为什么复制无法扩展写操作</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">5.2.</span> <span class="nav-text">5.2 备库什么时候开始延迟</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">5.3.</span> <span class="nav-text">5.3 规划冗余容量</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">6.</span> <span class="nav-text">6 复制管理和维护</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">6.1.</span> <span class="nav-text">6.2 测量备库延迟</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">6.2.</span> <span class="nav-text">6.3 确定主备是否一致</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">6.3.</span> <span class="nav-text">6.4 从主库重新同步备库</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">6.4.</span> <span class="nav-text">6.5 改变主库</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">6.5.</span> <span class="nav-text">6.6 在一个主 - 主配置中交换角色</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">7.</span> <span class="nav-text">7 复制的问题和解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">7.1.</span> <span class="nav-text">7.1 数据损坏或丢失的错误</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">7.2.</span> <span class="nav-text">7.2 使用非事务型表</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">7.3.</span> <span class="nav-text">7.3 混合事务型和非事务型表</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">7.4.</span> <span class="nav-text">7.4 不确定语句</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">7.5.</span> <span class="nav-text">7.5 主库和备库使用不同的存储引擎</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">7.6.</span> <span class="nav-text">7.6 备库发生数据改变</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">7.7.</span> <span class="nav-text">7.7 不唯一的服务器ID</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">7.8.</span> <span class="nav-text">7.8 未定义的服务器ID</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">7.9.</span> <span class="nav-text">7.9 对未复制数据的依赖性</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">7.10.</span> <span class="nav-text">7.10 丢失的临时表</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">7.11.</span> <span class="nav-text">7.11 不复制所有的更新</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">7.12.</span> <span class="nav-text">7.12 InnoDB枷锁读引起的锁争用</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">7.13.</span> <span class="nav-text">7.13 在主-主复制结构中写入两台主库</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">7.14.</span> <span class="nav-text">7.14 过大的延迟复制</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">7.15.</span> <span class="nav-text">7.15 例子主库的过大的包</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">7.16.</span> <span class="nav-text">7.16 受限制的复制贷款</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">7.17.</span> <span class="nav-text">7.17 磁盘空间不足</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">7.18.</span> <span class="nav-text">7.18 复制的局限性</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">8.</span> <span class="nav-text">8. 复制有多快</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="温海林"
+    src="/uploads/images/fbb1.jpg">
+  <p class="site-author-name" itemprop="name">温海林</p>
+  <div class="site-description" itemprop="description">Fake it, make it!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">89</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/wenslo" title="GitHub &rarr; https://github.com/wenslo" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/564544234@qq.com" title="E-Mail &rarr; 564544234@qq.com"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">温海林</span>
+</div>
+  <div class="theme-info">主题 – <a href="https://pisces.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.4.2
+  </div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

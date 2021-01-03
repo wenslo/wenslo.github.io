@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.4.2',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="MySQL的IO行为">
+<meta name="keywords" content="MySQL">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL的IO行为">
+<meta property="og:url" content="https://wenslo.github.io/2020/12/26/Book Nodes/高性能MySQL/7-MySQL的IO行为/index.html">
+<meta property="og:site_name" content="温海林的博客">
+<meta property="og:description" content="MySQL的IO行为">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-12-31T13:03:04.760Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL的IO行为">
+<meta name="twitter:description" content="MySQL的IO行为">
+
+<link rel="canonical" href="https://wenslo.github.io/2020/12/26/Book Nodes/高性能MySQL/7-MySQL的IO行为/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>MySQL的IO行为 | 温海林的博客</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">温海林的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">技术，工作，生活，随笔</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://wenslo.github.io/2020/12/26/Book Nodes/高性能MySQL/7-MySQL的IO行为/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
+      <meta itemprop="name" content="温海林">
+      <meta itemprop="description" content="Fake it, make it!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温海林的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL的IO行为
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-12-26 17:45:58" itemprop="dateCreated datePublished" datetime="2020-12-26T17:45:58+08:00">2020-12-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-12-31 21:03:04" itemprop="dateModified" datetime="2020-12-31T21:03:04+08:00">2020-12-31</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index">
+                    <span itemprop="name">MySQL</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">MySQL的IO行为</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2><span id="mysql的io行为">MySQL的IO行为</span></h2><hr><p>innodb不仅允许控制怎么恢复，还允许控制怎么打开和刷新数据，这会对恢复和整体性能产生巨大的影响。尽管可以影响它的行为，innodb的恢复流程实际上是自动的，并且经常在innodb启动时运行。撇开恢复并假设innodb没有崩溃或者出错，innodb依然有很多需要配置的地方。它有一系列复杂的缓存和文件设计可以提升性能，以及保证ACID特性，并且每一部分都是可配置的。</p><a id="more"></a>
+
+<h4><span id="innodb-事务日志">innodb 事务日志</span></h4><p>innodb使用日志来减少提交事务时的开销。因为日志中已经记录了事务，就无须在每个事务提交时把缓冲池的脏块刷新到磁盘中。事务修改的数据和索引通常会映射到表空间的随机位置，所以刷新这些变更到磁盘需要很多随机IO。innodb假设是用的是常规磁盘，随机IO比循序IO要昂贵得多,因为一个IO请求需要时间把磁头移动到正确的位置，然后等待磁盘上读出需要的部分，再转到开始位置。</p>
+<p>innodb用日志吧随机IO变成顺序IO，一旦日志安全写到磁盘，事务就持久化了，即使变更还没写到数据文件。如果一些糟糕的事情发生，比如断电，innodb可以重放日志并且回复已经提交的事务。</p>
+<p>当然，innodb最后还是必须把变更写到数据文件，因为日志有固定的大小。innodb的日志是环形方式写的：当写道日志的尾部，会重新跳转到开头继续写，但不会覆盖还没有应用到数据文件的日志记录，因为这样做会清除掉已提交事务的唯一持久化记录。</p>
+<p>innodb使用一个后台线程智能地书信这些变更到数据文件。这个线程可以批量组合写入，使得数据写入更顺序，以提高效率。实际上，事务日志把数据文件的随机IO转换为几乎顺序的日志文件和数据文件IO，把刷新操作转移到后台使查询可以更快完成，并且缓和查询高峰时IO系统的压力。</p>
+<p>整体的日志文件大小受控于innodo_log_file_size和innodb_log_files_in_group两个参数，这对写性能非常重要。日志文件的总大小是每个文件的大小之和。默认情况下，只有两个5MB的文件,总共10MB，这对于高性能工作来说太小了。至少需要几百M，甚至上G的日志文件.</p>
+<p>innodb使用多个文件作为一组循环日志.通常不需要修改默认的日志数量,只修改每个日志文件的大小即可.要修改日志文件大小,需要完全关闭MySQL,将旧的日志文件转移到其他地方保存,重新配置参数,然后重启.一定要确保MySQL干净地关闭了,或者还有日志文件可以保证需要应用到数据文件的事务记录,否则数据库就无法恢复了.当重启副武器的时候,查看MySQL的错误日志.再重启成功后,才能删除就的日志文件.</p>
+<p>日志文件大小和日志缓存。要确定立项的日志文件大小，必须权衡正常数据变更的开销和崩溃恢复需要的时间。如果日志太小，innodb将必须做更多的检查点，导致更多的日志写。在极个别情况下，写语句可能被拖累，在日志没有空间继续写入前，必须等待变更被应用到数据文件。另一方面，如果日志太大了，在崩溃恢复时innodb可能不得不做大量的工作。这可能极大地增加恢复时间，尽管这个处理在新的MySQL版本中已经改善跟多。</p>
+<p>数据大小和访问模式也将影响恢复时间。假设有一个1TB的数据和16GB的缓冲池，并且全部日志大小是128MB。如果缓冲池里有很多葬爷，并且它们均匀分布在1TB数据中，崩溃后恢复将需要相当长一段时间。innodb必须从头到尾扫描日志，仔细检查数据文件，如果需要还要应用变更到数据文件。这是很庞大的读写操作！另一方面，如果变更是局部的，就是说，如果只有几百MB数据被频繁地变更，恢复可能就很快，即使数据和日志文件很大。恢复时间也依赖于普通修改操作的大小，这根数据行的平均长度有关系。较短的行使得更多的修改可以放在同样的日志中，所以innodb可能必须在恢复时重放更多修改操作。</p>
+<p>当innodb变更任何数据时，会写一条变更记录到内存日志缓冲区。再缓冲满的时候，事务提交的时候，或者每一秒钟，innodb就会刷写缓冲区的内容到磁盘日志文件，无论上述三个条件哪个先到达。如果有大事务，增加日志缓冲区大小可以帮助减少IO。innodb_log_buffer_size可以控制日志缓冲区的大小。</p>
+<p>通常不需要吧日志缓冲区设置的非常大。推荐的范围是1-8m，一般来说足够了，除非要写很多大的blob记录。相对于innodb的普通数据，日志条目是非常紧凑的。它们不是基于页的，所以不会浪费空间来一次存储整个页。innodb也使得日志条目尽可能地短。有时甚至会保存为函数号和C函数的参数。</p>
+<p>较大的日志缓冲区在某些情况下也是有好处的：可以减少缓冲区中空间分配的争用。当配置一台有大内存的服务器时，有时简单地分配32-128m的日志缓冲，因为花费这么点相对而言比较小的内存并没有什么不好，还可以帮助避免压力平津。</p>
+<p>可以通过检查<strong>show innodb status</strong>的输出中log部分来监控innodb的日志和日志缓冲区的IO性能，通过观察innodb_os_log_written状态变量来查看innodb对日志文件写出了多少数据。一个好用的经验法则是：<strong>查看10-100秒间隔的数字，然后记录峰值。可以用这个来判断日志缓冲是否设置的正好。例如，若看到峰值是美妙写100k数据到日志，那么1M的日志缓冲可能足够了。也可以使用这个衡量标准来决定日志文件设置多大会比较好。如果峰值是100k/s，那么256m的日志文件足够存储至少2560秒的日志记录。这看起来足够了。作为一个经验法则，日志文件的全部大小，应该足够容纳服务器一个小时的活动内容。</strong></p>
+<p>innodb怎样刷新日志缓冲。当innodb把日志缓冲刷新到磁盘日志文件时，会先使用一个mutex锁住缓冲区，刷新到所需要的位置，然后移动剩下的条目到缓冲区的前面，当mutex释放时，可能有炒股go一个事务已经准备好刷新七日织记录。innodb有一个group commit功能，可以在一个IO操作内提交多个事务,但是在MySQL5 中打开二进制日志时,这个功能就不能用了.</p>
+<p>日志缓冲必须被刷新到持久化存储，以确保提交的事务完全被持久化了。如果和持久相比更在乎性能，可以修改innodb_flush_log_at_trx_commit变量来控制日志缓冲刷新的频繁程度。可能设置如下</p>
+<ul>
+<li>0，把日志缓冲写到日志文件，并且每秒钟刷新一次，但是事务提交时不做任何事。</li>
+<li>1，将日志缓冲写到日志文件，并且每次事务提交刷新到持久化存储。这是默认的设置，该设置能保证不会丢失任何已经提交的事务，除非磁盘或者操作系统是未刷新。</li>
+<li>2，每次提交时把日志缓冲写到日志文件，但是并不刷新。innodb每秒钟做一次刷新。0和2的最重要的不同是，如果MySQL进程挂了，2不会丢失任事务。如果整个服务器挂了或者断电了，则还是可能会丢失一些事务。</li>
+</ul>
+<p>了解“把日志缓冲写到日志文件”和“把日志刷新到持久化存储”之间的不同是很重要的。在大部分操作系统中，把缓冲写到日志知识简单的把数据从innodb的内存缓冲转移到了操作系统的缓冲，也是在内存里，并没有真的把数据写到了持久化存储。</p>
+<p>因此，如果MySQL崩溃了或者电源断电了，设置0和2通常会导致最多一秒的数据丢失，因为数据只可能存在操作系统的缓存。我们说通常，因为不论如何innodb会每秒尝试刷新日志文件到磁盘，但是在一些场景下也可鞥丢失超过一秒的食物，例如当刷新没延迟了。</p>
+<p>与此相反，把日志刷新到持久化存储意味着innodb请求操作系统把数据刷出缓存，并且确认写到磁盘了。这是一个阻塞IO的调用，知道数据被完全写回才会完成。因为写数据到磁盘比较慢，当innodb_flush_log_at_trx_commit被设置为1时，可能明显地降低innodb每秒可以提交的事务数，今天的告诉驱动器可能每秒只能执行一两百个磁盘事务，受限于磁盘旋转速度和寻址时间。</p>
+<p>有时磁盘控制器或者操作系统假装做了刷新，其实知识吧数据放到了另一个缓存，例如磁盘自己的缓存。这更快但是很危险，因为如果驱动器断电，数据依然可能丢失。这甚至比设置innodb_flush_log_at_trx_commit为不为1的值更糟糕，因为只可能导致数据损坏，不仅仅是丢失事务。</p>
+<p>设置innodb_flush_log_at_trx_commit为不为1的值坑会导致丢失事务。然而，如果不在意持久性，那么设置为其他的值也是有用的。也许你知识想拥有innodb的其他一些功能，例如聚簇索引，防治数据损坏，以及行锁。但仅仅因为性能原因用innodb替换myisam 的情况也并不少见。</p>
+<p><strong>高性能事务处理需要的最佳配置是吧innodb_flush_log_at_trx_commit设置为1且把日志文件放到一个有电池保护的写缓存的RAID卷中。这兼顾了速度和安全</strong>。事实上，我们敢说任何希望能扛过高负荷工作负载的产品数据库服务器，都需要有这种类型的硬件。</p>
+<h5><span id="innodb怎样打开和刷新日志以及数据文件">innodb怎样打开和刷新日志以及数据文件</span></h5><p>使用innodb_flush_method选项可以配置innodb如果跟文件系统相互作用。从名字来看，会以为只能影响innodb怎么写数据，实际上影响了innodb怎么读数据。windows和非windwos的操作系统对这个选项的值是互斥的：async_unbuffered、unbuffered和normal之鞥呢在windows下使用，而且windows下不能使用其他的值。在windows下默认值是unbuffered，其他操作系统都是fdatasync。</p>
+<p><strong>这是一个有点那一理解的选项，因为它既影响日志文件，业形象数据文件，而且有时候对不同类型的文件的处理也不一样。如果有一个选项来配置日志，另一个选项来配置数据文件，这样最好了，但实际上它们混合在同一个配置中。</strong></p>
+<p>下面是一些可能的值</p>
+<ul>
+<li><p>fdatasync</p>
+<p>  这在非windows系统上是默认值：innodb使用fsync()来刷新数据和日志文件。innobd通常用fsync代替fdatasync，即使这个值似乎表达的是相反的意思。fdatasync和fsync相似，但是只刷新文件的数据，而不包括元数据。因此，fsync会导致更多的IO，然而innodb的开发者都很保守，他们发现某些场景下fdatasync会导致数据损坏。innodb决定了哪些方法可以更安全地使用，有一些是编译时设置的，也有一些事运行时设置的。它使用尽可能最快的安全方法。</p>
+<p>  使用fsync的缺点是操作系统至少会在自己的缓存中缓冲一些数据。理论上，这种双重缓冲室浪费的，因为innodb管理自己的缓冲比操作系统能做的更加智能。然而，最后的影响跟操作系统和文件系统非常相关。如果能让文件系统做更智能的IO调度和批量操作,双重缓冲可能并不是坏事.有的文件系统和操作系统可以积累写操作合并执行,通过对IO重新排序来提升效率，或者并发写如多个设备。它们也可能做预读优化，例如，若连续请求了几个顺序的块，它会通知硬盘预读下一个块。</p>
+<p>  有时这些优化有帮助，有时么有。如果好奇fsync会做哪些具体的事，可以阅读系统的帮助手册。</p>
+<p>  innodb_per_file_table选项会导致每个文件独立地做fsync，这意味着写多个表不能合并到一个IO操作。这可能导致innodb执行更多的fsync操作。</p>
+</li>
+<li><p>0_DIRECT</p>
+<p>  innodb对数据文件使用0_DIRECT标记或者directio函数，这依赖于操作系统。这个设置并不影响日志文件并且不是在所有的类unix系统上都有效。但是linux是支持的。不像0_DSYNC标记，，它会同时影响读和写。</p>
+<p>  这个设置依然使用fsync来刷新文件到磁盘，但是会通知操作系统不要缓存数据，也不要预读。这个选项**完全关闭了操作系统缓存，并且使得所有的读和写都直接通过存储设备，避免了双重缓冲。</p>
+<p>  在大部分系统上，这个实现用fcntl调用来设置文件描述符的0_DIRECT标记，所以可以阅读fcntl的手册了解细节。</p>
+<p>  如果RAID卡支持预读，这个设置不会关闭RAID卡的预读。这个设置只能关闭操作系统和文件系统的预读。</p>
+<p>  如果使用0_DIRECT选项，通常需要带有写缓存的RAID卡，并且设置为write-back策略，因为这是典型的唯一能保持好性能的方法。当innodb和实际存储设备之间没有缓冲时使用0_DIRECT，例如当RAID卡没有写缓存时，可能导致严重的性能下降。现在有个多个写线程，问题小一点，但通常还有问题。MySQL5.5提供了更原生异步IO。</p>
+<p>  这个选项可能导致服务器预热时间变长，特别是操作系统的缓存很大的时候。也可能导致小容量的缓冲池比缓冲IO方法操作要慢得多。这是因为操作系统不会通过保持更多数据在自己的缓存中来帮助提升性能。如果需要的数据不再缓冲池，innodb将不得不从磁盘读取。这个选项不会对innodb_per_file_table产生任何额外的损失。相反，如果不用innodb_per_file_table，当使用0_DIRECT时，可能由于一些顺序IO而遭受性能损失。这种情况的发生是因为一些文件系统的每个inode都有一个mutex。当在这些文件系统上使用0_DIRECT时，确实需要打开innodb_file_per_table</p>
+</li>
+<li><p>ALL_0_DIRECT</p>
+<p>  这个选项在percona server 和 mariadb中可用。它使得服务器再打开日志文件时，也能使用标准MySQL中打开数据文件的方式（0_DIRECT）</p>
+</li>
+<li><p>0_DSYNC</p>
+<p>  这个选项使日志文件调用open函数时设置0_SYNC标记。它使得所有的写 同步。也就是说，只有数据写到磁盘后，写操作才返回。这个选项不影响数据文件。0_SYNC标记和0_DIRECT标记的不同之处在于，0_SYNC没有禁用操作系统层的缓存。因此，它没有避免双重缓冲，而且它没有使写操作直接操作到磁盘。使用了0_SYNC标记，在缓存中写数据，然后发送到磁盘。</p>
+<p>  使用0_SYNC标记做同步写操作，听起来可能跟fsync做的事情非常相似，但是它们两个的实现无论在操作系统层是硬件层都非常不同。使用了0_SYNC标记后，操作系统可能把使用同步IO标记下传给硬件层，告诉设备不要使用缓存，另一方面，fsync告诉操作系统把修改过的缓冲数据刷写到设备上，如果设备支持，紧接着回传第一个指令给设备刷星他自己的缓存，所以，毫无疑问，数据肯定记录在了物理媒介上。另一个不同是，使用了0_SYNC的话，每个write或pwrite操作都会在函数完成之前把数据同步到磁盘，完成前函数调用是阻塞的。相对来看，不用0_SYNC标记的写入调用fsync允许写操作积累在缓存，然后一次性刷新所有的数据。</p>
+<p>  这个选项设置0_SYNC标记，不是0_DSYNC标记，因为innodb开发者发现了0_DSYNC的bug。0_SYNC和0_DSYNC类似于fsync和fdatasync：0_SYNC同时同步数据和元数据，但是0_DSYNC只同步数据。</p>
+</li>
+<li><p>async_unbuffered</p>
+<p>  这是windows下的默认值。这个选项让innodb对大部分写使用没有缓冲的IO，里外是当innodb_flush_log_at_trx_commit设置为2的时候，对日志文件使用缓冲IO.</p>
+<p>  这个选项使得innodb在windows 2000 ,xp 以及更新版本中对数据读写都使用操作系统的原生异步IO。</p>
+</li>
+<li><p>unbuffered</p>
+<p>  只对windows有效。这个选项与async_unbuffered类似，但是不使用原生异步IO。</p>
+</li>
+<li><p>normal</p>
+<p>  只对windows有效。这个选项让innodb不要使用原生异步IO或者无缓冲IO。</p>
+</li>
+<li><p>nosync和littlesync</p>
+<p>  只为开发使用</p>
+</li>
+</ul>
+<p>如果使用类unix操作系统并且RAID控制器带有电池保护的写缓存，建议使用0_DIRECT。如果不是这样，默认值或者0_DIRECT都可能是最好的选择。</p>
+<h4><span id="innodb表空间">InnoDB表空间</span></h4><hr>
+<p>innodb把数据保存在表空间内，本质上是一个由一个或多个磁盘文件组成的虚拟文件系统。innodb用表空间实现很多功能，并不只是存储表和索引。它还保存了回滚日志、插入缓冲、双写换成，以及其他内部数据结构。</p>
+<p>配置表空间。通过innodo_data_file_path配置可以定制表空间文件。这些文件都放在innodb_data_home_dir指定的目录下，如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">innodb_data_home_dir = /var/lib/mysql</span><br><span class="line">innodb_data_file_path = ibdata1:1G,ibdata2:1G,ibdata3:1G</span><br></pre></td></tr></table></figure>
+<p>这里在三个文件中创建了3G的表空间。有时人们并不清楚可以使用多个文件分散驱动器的负载，像这样：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">innodb_data_file_path = /disk1/ibdata1:1G;/disk2/ibdata2:1G;...</span><br></pre></td></tr></table></figure>
+<p>在这个例子中，表空间文件确实放在代表不同驱动器的不同目录中，InnoDB把这些文件首尾相连组合起来。因此，通常这种方式并不能获得太多收益。InnoDB先填满第一个文件，当第一个文件满了再用第二个，如此循环；负载并没有真的按照希望的高新能方式分布。用RAID控制器分布负载是更聪明的方式。</p>
+<p>为了允许表空间在超过了分配的空间时还能增长，可以像这样配置最后一个文件自动扩展：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ibdaa3:1G:autoextend</span><br></pre></td></tr></table></figure>
+<p>磨人的行为是创建单个10MB的自动扩展文件。如果让文件可以自动扩展，那么最好给表空间大小设置一个上限，别让它扩展的太大，因为一旦扩展了，就不能收缩回来。例如，下面的例子现只能自动扩展文件最多道2GB：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ibdata3:1G:autoextend:max:2G</span><br></pre></td></tr></table></figure>
+<p>管理一个单独的表空间可能有点麻烦，尤其是如果它是自动扩展的，并且希望回收空间时（因为这个原因，建议关闭自动扩展功能，至少设置一个合理的空间范围）。回收空间唯一的方式是导出数据，关闭MySQL，删除所有文件，修改配置，重启，让InnoDB创建新的数据文件，然后倒入数据。InnoDB的这种表空间管理方式很让人头疼，不能简单地删除文件或者改变大小。如果表空间损坏了，InnoDB会拒绝启动。对日志文件也一样的严格。如果想myisam一样随便移动文件，一定要谨慎。</p>
+<p>innobd_file_per_table选项让InnoDB为每张表使用一个文件。它在数据字典存储为 表名.ibd的数据。这使得删除一张表时回收空间简单多了，并且可以容易地分散表到不同的磁盘上。然而，把数据放到多个文件，总体来说可能导致更多的空间浪费，因为单个InnoDB表空间的内部碎片浪费分不到了多个.ibd文件。<strong>对于非常小的表，这个问题更大，因为InnoDB的页大小是16KB。即使表只有1KB的数据，仍然需要至少16KB的磁盘空间。</strong></p>
+<p>即使打开innodb_file_per_table选项，依然需要为回滚日志和其他系统数据创建共享表空间。没有把所有数据存在其中是明智的做法，但最好还是关闭它的自动增长，因为无法在不导入全部数据的情况下给共享表空间瘦身。</p>
+<p>一些人喜欢使用innodb_file_per_table，只是因为特别容易管理，并且可以看到每个表的文件。例如，可以通过查看文件的大小来确认表的大小，这比使用show table status来看快多了，这个命令需要执行很多复杂的工作来判断一个表分配了多少页面。</p>
+<p>设置innodb_per_file也有不好的一面：更差的drop table性能。这可能导致显而易见的服务器端阻塞，有如下两个原因：</p>
+<ul>
+<li>删除表需要从文件系统层去删除文件，这可能在某些文件系统(ext3)上会很慢。可以通过欺骗文件系统来缩短这个过程：把.ibd文件链接到一个0字节的文件，然后手动删除这个文件，而不用等待MySQL来做。</li>
+<li>让打开这个选项，每张表都在InnoDB中使用自己的表空间。结果是，移除表空间实际上需要InnoDB锁定和扫描缓冲池，查找属于这个表空间的页面，在一个有庞大的缓冲池的服务器上做这个操作是非常慢的。如果打算删除很多InnoDB表（包括临时表）并且用了innodo_file_per_table，可能会从percona esrver包含的一个修复中获益，它可以让服务器慢慢滴清理掉属于被删除表的页面。只需要设置innodb_lazy_drop_table这个选项。</li>
+</ul>
+<p>我们建议使用innodb_file_per_table并且给共享表空间设置大小范围，这样可以舒服点（不用处理那些空间回收的事）。如果遇到任何头痛的场景，考虑使用percona的修复</p>
+<p>事实上没有必要把innodb文件放在传统的文件系统上。像许多的传统数据库服务器一样，InnoDB提供使用裸设备的选项，例如，一个没有格式化的分区作为它的存储。然而，今天的文件系统已经可以存放足够大的文件，所以已经没有必要使用这个选项。使用裸设备可能提升几个百分点的性能，但是我们不认为这点效提升足以抵消这样做带来的坏处，我们不能直接用文件管理数据。当把数据存在一个裸设备分区时，不能使用mv,cp等任何其他工具来操作它。最终，这点小的性能收益显然不值得。</p>
+<p>行的旧版本和表空间。在一个写压力大的环境下，innodb的表空间可能增长得非常大。如果事物保持打开状态很久（即使它们没有做任何事），并且使用默认的repeatable read事务隔离级别，innodb将不能删除旧的行版本，因为没提交的事务依然需要看到它们。innodb把旧版本存在非共享表空间，所以如果有更多的数据在更新，共享表空间会持续增长。有时这个问题并非是没提交的事务的原因，也坑那是工作负载的问题：清理过程只有一个线程处理，直到最近的MySQL版本才改进，这可能导致清理线程处理速度跟不上旧版本行增加的速度。</p>
+<p>无论发生何种情况，show innodb status的数据都可以帮助定位问题。查看历史链表的长度会显示了回滚日志的大小，以页为单位。</p>
+<p>分析transactios部分的第一行和第二行可以证实这个观点，这部分展示了当前事务号以及清理线程完成到了哪个点。如果这个差距很大，可能有大量的没有清理的事务。例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">transactios</span><br><span class="line">trx id counter 90157601</span><br><span class="line">purge done for trx&apos;s n:o &lt;0 90157601 undo n:0&lt;0 0</span><br></pre></td></tr></table></figure>
+<p>事务标识表示是一个64比特的数字。有两个32比特的数字组成，所以需要一点数学计算来计算差距。我在这个例子中就很简单了，因为这个例子中有3028个潜在的没有被清理的事物（innotop可以做这个计算）。我们说潜在的,是因为这跟有很多没有清理的行是有很大差别的。只有改变了数据的事务，才会创建旧版本的行，但是有很多事务，没有修改数据。与此相反，一个事务也可能修改很多行。</p>
+<p>如果有个很大的回滚日志，并且表空间因此增长很快，可以强制MySQL减速来使innodb的清理线程可以跟得上。这听起来不怎么样，但是没有办法。否则，innobd将保持数据持续写入，填充磁盘最后磁盘空间爆满，或者表空间大于定义的上限。</p>
+<p>为了控制写入速度，可以设置innodb_max_purge_lag变量为一个大于0的值。这个值标识innobd开始延迟后面的语句更新数据之前，可以等待被清除的最大的实物数量。你必须知道工作负载以决定一个合理的值。例如，事务平均影响1KB的行,并且可以允许表空间里有100mb的未清理行,那么可以设置这个值为100000.</p>
+<p>牢记，没有清理的行版本会对所有查询产生影响，因为他们事实上使得表和索引更大了。如果清理线程确实跟不上，性能可能显著的下降。设置innodb_max_purge_lag变量也会降低性能，但是伤害较少。</p>
+<p>在更新版本的MySQL中，清理过程已经显著地提升了性能，并且从其他内部工作任务中分离出来。甚至可以创建多个专用的清理线程来更快地做这个后台工作。如果可以利用这些特性，会比限制副武器的服务能力要好得多。</p>
+<h4><span id="双写缓冲doublewrite-buffer">双写缓冲（Doublewrite buffer）</span></h4><hr>
+<p>innodb使用双写缓冲来避免页没写完整所导致的数据损坏。当一个磁盘写操作不能完整的完成时，不完整的页写入就可能发生。16KB的页可能只有一部分被写到磁盘上有多种多样的原因。可能导致页没有写完整,双写缓冲，在这种情况发生时可以保证数据完整性。</p>
+<p>双写缓冲是表空间一个特殊的保留区域,在一些连续的块中足够保存100个页.本质上是有个最近写回的页面的备份拷贝。档innodb从缓冲池刷新页面到磁盘时，首先把他们写到双鞋缓冲。然后再把它们写到其所属的数据区域中。这可保证每个页面都写入都是原子，并且持久化的.</p>
+<p>这意味着每个页都要写两遍。但是因为innodb写页面到双写缓冲是顺序的。并且只调用一次fsync刷新到磁盘。尽管实际上对性能的冲击是比较小的。通常只有几个百分点。肯定没有一半那么多。这个开销在固态硬盘上更明显。这个策略允许日日文件更加高效。因为双写缓冲给了innodb一个非常牢固的保障。数据页不会损坏，innodb日志记录没必要包含整个页，它们更像是页面的二进制变化量。</p>
+<p>如果有一个不完整的页写到了双写缓冲。原始的页依然会在磁盘上它的真实位置。当innodb回复时，他用原始页面替换了双鞋缓冲中的损坏页面。然而，如果双写缓冲成功写入，但写到页的真实位置失败了，innodb在恢复时将使用双写缓冲中的拷贝来替换。innodb知道什么时候页面损坏了，因为每个页面在末尾都有校验值，限值是最后写到页面的东西。如果应用的内容和校验值不匹配，说明这个页面是损坏的。因此在恢复的时候，innodb只需要读取双鞋缓冲中每个页面，并且验证校验值，如果一个页面的校验值不对，就从它的原始位置读取这个页面。</p>
+<p>有些场景下，双写缓冲确实没必要。例如，你也许想在备库上禁止双写缓冲。此外一些文件系统（ZFS）做了同样的事，所以没有必要再让innodb做一遍。可以通过设置innodb_doublewrite为0来关闭双写缓冲。</p>
+<h4><span id="其他的io配置项">其他的IO配置项</span></h4><p><strong><em>sync_binlog</em></strong>选项控制MySQL怎么刷新二进制日志到磁盘。默认值是0，意味着MySQL并不刷新，有操作系统自己决定什么时候刷新缓存到持久化设备。如果这个值比0大，他指定了两次刷新到磁盘的动作之间间隔多少次二进制日志写操作（如果autocommit被设置了，每个独立的语句都是一次写，否则就是一个事务一次写）。把它设置为0和1以外的值是很罕见的。</p>
+<p>如果没有知识sync_binlog为1，那么崩溃以后可能导致二进制日志没有同步事务数据。这可以轻易地导致复制终端，并且使得及时回复变得不可能。无论如何，可以把这个值设置为1来获得安全的报账。这样就会要求MySQL同步把二进制日志和事务日志这两个文件刷新到两个不同的位置。这坑你需要磁盘寻道，相对来说是个很慢的操作。</p>
+<p>像innodb日志文件一样，把二进制日志放到一个带有电池保护的写缓存的RAID卷，可以极大地提升性能。事实上，写和刷新二进制缓存其实比innodb事务日志要昂贵多了，因为不像innodb事务日志，每次写二进制日志都会增加它们的大小。这需要me次写入文件系统都更新元信息。所以，设置sync_binlog=1可能比innodb+flush_log_at_trx_commit=1对性能的孙海要大得多，尤其是网络文件系统弄个，例如NFS。</p>
+<p>一个跟性能无感的提示，关于二进制文件。如果需要哪个expire_logs_day选项来自定清理旧的二进制日志，就不要用rm命令去删。服务器会感到困惑并且拒绝自动删除它们，并且purge master logs也将停止工作。解决的办法是，如果发现了这种情况，就手动重新同步“主机名-bin.index”文件，可以用磁盘上现有日志文件的列表来更新。</p>
+<p>把带有电池保护写缓存的高质量RAID控制器设置为使用写回策略，可以支持每秒数千的写入，并且依然会保证写到持久化存储，数据写到了带有电池的高速缓存。所以即使系统断电它也能存在，但电源恢复时，RAID控制器将会在磁盘被设置为可用前,把数据从缓存中写到磁盘。因此，一个带有电池保护写缓存的RAID控制器可以显著地提升性能。这是非常值得的投资当然固态硬盘也是另一个选择</p>
+<h3><span id="myisam的io配置">myisam的IO配置</span></h3><hr>
+<p>myisam通常每次写操作之后就把索引变更刷新到磁盘。如果你打算在一张表上做很多修改，那么毫无疑问批量，操作操作会更快一些。一种办法是用lock tables延迟写入，直到解锁这些表。这是个提升性能的很有价值的技巧。因为它使得你精确控制哪些写被延迟，以及什么时候把它们刷到磁盘。可以精确延迟那些希望延迟的语句。</p>
+<p>通过设置delay_key_write变量，也可以延迟索引的写入。如果这么做，修改的键缓冲块知道表被关闭才会刷新。可能的配置如下：</p>
+<ul>
+<li><p>off</p>
+<p>  myisam每次写操作后刷新键缓冲（键缓存，key buffer）中的脏块到磁盘，除非表被lock tables锁定了</p>
+</li>
+<li><p>on</p>
+<p>  打开延迟键写入，但是只对用delay_key_write选项创建的表有效。</p>
+</li>
+<li><p>all</p>
+<p>  所有的myisam表都会使用延迟键写入。</p>
+</li>
+</ul>
+<p>延迟键写入在某些场景下可能很有帮助，但是通常不会带来很大的性能提升。当键缓冲的读命中很好但写命中不好时，数据有比较小，这可能很有用。当然也有一小部分缺点：</p>
+<ul>
+<li>如果服务器并且块没有刷到磁盘，索引可能会损坏。</li>
+<li>如果很多写被延迟了，MySQL可能需要花费更长时间去关闭表，因为必须等待缓冲刷新到磁盘。在MySQL 5这可能引起很长的表缓存锁</li>
+<li>由于上面提到的原因，flush tables可能需要很长时间。如果为了做逻辑卷快照或者其他备份操作，而执行flush tables with read lock，那可能增加操作的时间。</li>
+<li>键缓冲中没有刷回去的脏块可能占用空间，导致从磁盘上读取的新块没有空间存放。因此，查询语句可能需要等待myisam释放一些键缓存的空间</li>
+</ul>
+<p>另外，除了配置myisam的索引IO可以配置myisam怎样尝试从损坏中恢复。myisam_recover选项控制myisam怎样寻找和修复错误。需要在配置文件或者命令行中设置这个选项。可以通过下面的sql语句查看选项的值，但是不能修改</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">variables</span> <span class="keyword">like</span> <span class="string">'myisam_recover_options'</span></span><br></pre></td></tr></table></figure>
+<p>打开这个选项通知MySQL在表打开时，检查是否损坏，并且在找到问题的时候进行修复。可以设置的值如下</p>
+<ul>
+<li><p>default</p>
+<p>  使MySQL尝试修复任何被标记为崩溃或者没有标记为完全关闭的表。默认值不要求在恢复时执行其他动作。跟大多数变量不同，这里default值不是充值变量的值为编译值，本质上意味着没有值。</p>
+</li>
+<li><p>backup</p>
+<p>  让MySQL将数据文件的备份写到.BAK文件，以便随后进行检查。</p>
+</li>
+<li><p>force </p>
+<p>  即使.MYD文件中丢失的数据可能超过一行，也让恢复继续。</p>
+</li>
+<li><p>quick</p>
+<p>  除非有删除快，否则跳过恢复。块中有已经删除的行也依然会占用空间，但是可以被后面的insert语句重用。这可能比较有用，因为myisam大表的恢复可能花费相当长的时间。</p>
+</li>
+</ul>
+<p>可以使用多个配置，用逗号分隔，例如，backup,force 会强制恢复并且创建备份。</p>
+<p>建议打开这个选项，尤其是只有一些小的myisam表时。服务器运行着一些损坏的myisam表时很危险的，因为它们有时可以导致更多数据损坏，甚至服务器崩溃。然而， 如果有很大的表，原子恢复是不切实际的：它导致服务器打开所有的myisam表时都会检查和修复，这是低效的做法。在这段时间，MySQL会阻止连接做任何工作。如果有一大堆的myisam表，比较好的主意还是启动后用check tables 和 repair table命令来做，这样对服务器影响比较小。不管哪种方式，检查和修复表都是很重要的。</p>
+<p>打开数据文件的内存映射访问是另一个有用的myisam选项，内存映射使得myisam直接通过操作系统的页面缓存访问.myd文件，表面系统调用的开销。在MySQL5.1和更新的版本中，可以通过myisam_use_mmap选项打开内存映射。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2020/12/23/Book Nodes/高性能MySQL/6-MySQL架构与历史/" rel="next" title="MySQL架构与历史，基础">
+                  <i class="fa fa-chevron-left"></i> MySQL架构与历史，基础
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2020/12/29/Book Nodes/高性能MySQL/8-操作系统和硬件优化/" rel="prev" title="MySQL操作系统和硬件优化">
+                  MySQL操作系统和硬件优化 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#null"><span class="nav-number">1.</span> <span class="nav-text">MySQL的IO行为</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">1.0.1.</span> <span class="nav-text">innodb 事务日志</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.0.1.1.</span> <span class="nav-text">innodb怎样打开和刷新日志以及数据文件</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">1.0.2.</span> <span class="nav-text">InnoDB表空间</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">1.0.3.</span> <span class="nav-text">双写缓冲（Doublewrite buffer）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">1.0.4.</span> <span class="nav-text">其他的IO配置项</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">1.1.</span> <span class="nav-text">myisam的IO配置</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="温海林"
+    src="/uploads/images/fbb1.jpg">
+  <p class="site-author-name" itemprop="name">温海林</p>
+  <div class="site-description" itemprop="description">Fake it, make it!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">89</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/wenslo" title="GitHub &rarr; https://github.com/wenslo" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/564544234@qq.com" title="E-Mail &rarr; 564544234@qq.com"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">温海林</span>
+</div>
+  <div class="theme-info">主题 – <a href="https://pisces.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.4.2
+  </div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

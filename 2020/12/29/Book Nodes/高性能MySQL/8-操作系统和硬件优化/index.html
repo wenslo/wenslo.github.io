@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.4.2',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="MySQL操作系统和硬件优化">
+<meta name="keywords" content="MySQL">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL操作系统和硬件优化">
+<meta property="og:url" content="https://wenslo.github.io/2020/12/29/Book Nodes/高性能MySQL/8-操作系统和硬件优化/index.html">
+<meta property="og:site_name" content="温海林的博客">
+<meta property="og:description" content="MySQL操作系统和硬件优化">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-12-31T13:03:04.761Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL操作系统和硬件优化">
+<meta name="twitter:description" content="MySQL操作系统和硬件优化">
+
+<link rel="canonical" href="https://wenslo.github.io/2020/12/29/Book Nodes/高性能MySQL/8-操作系统和硬件优化/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>MySQL操作系统和硬件优化 | 温海林的博客</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">温海林的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">技术，工作，生活，随笔</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://wenslo.github.io/2020/12/29/Book Nodes/高性能MySQL/8-操作系统和硬件优化/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
+      <meta itemprop="name" content="温海林">
+      <meta itemprop="description" content="Fake it, make it!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温海林的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL操作系统和硬件优化
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-12-29 09:48:07" itemprop="dateCreated datePublished" datetime="2020-12-29T09:48:07+08:00">2020-12-29</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-12-31 21:03:04" itemprop="dateModified" datetime="2020-12-31T21:03:04+08:00">2020-12-31</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index">
+                    <span itemprop="name">MySQL</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">MySQL操作系统和硬件优化</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3><span id="1什么限制了mysql的性能">1.什么限制了MySQL的性能</span></h3><hr><p>最常见的两个瓶颈是CPU和IO资源。当数据可以放在内存中或者可以从磁盘中以足够块的速度读取时，CPU可能出现瓶颈。把大量的数据完全放到大容量的内存中，以现在的硬件条件是完全可行的。</p><a id="more"></a>
+
+<p>另一方面，IO瓶颈，一般发生在工作所需的数据远远超过有效内存容量的时候。如果应用程序是分布在网络上的，如果有大量的查询和低延迟的要求，瓶颈可能转移到网络上，而不再是磁盘IO。</p>
+<h4><span id="2-如何为mysql选择cpu">2 如何为MySQL选择CPU</span></h4><hr>
+<p>档升级或者购买硬件的时候，应当考虑下工作负载是不是CPU密集型。可以通过CPU利用率来判断是否是CPU密集型的工作负载，但是仅看CPU整体的负载是不合理的，还需要看看CPU使用率和大多数重要的查询的IO的平衡，并注意CPU负载是否均匀分配。</p>
+<h5><span id="21-哪个更好更快的cpu还是更多的cpu">2.1 哪个更好，更快的CPU还是更多的CPU</span></h5><hr>
+<p>当遇到CPU密集型的工作时,MySQL通常可以从更快的CPU中获益。但这不是绝对的，因为还依赖于负载情况和CPU数量。古老的MySQL在多CPU上有扩展性问题，即使新版本也不能对单个查询并发利用多个CPU。因此，CPU速度限制了每个CPU密集型查询的响应时间。</p>
+<p>调优服务器的目标：</p>
+<ul>
+<li><p>低延时（快速响应）</p>
+<p>  要做到这一点，需要高速CPU，因为每个查询只能使用一个CPU。</p>
+</li>
+<li><p>高吞吐</p>
+<p>  如果能同时运行很多查询语句，则可以从多个CPU处理查询中受益。然后，实践中，取决于具体情况。因为MySQL还不能再多个CPU中完美扩展，能用多少CPU是有极限的。不过新版本可以。</p>
+</li>
+</ul>
+<p>MySQL复制也能在高速CPU下工作的很好，而多CPU对复制的帮助不大。如果工作负载是CPU密集型，主库上的并发任务传递到备库以后会被简化为串行任务，这样即使备库硬件比主库好，也可能无法保持跟主库之间的同步。也就是说，备库的瓶颈通常是IO子系统，而不是CPU。</p>
+<p>如果有一个CPU密集型的工作负载，考虑是需要更快的CPU还是更多CPU的另外一个因素是查询语句实际在做什么。在硬件层面，一个查询可以在执行或等待。处于等待状态常见的原因是在运行队列中等待（进程已经是可运行状态，但所有的CPU都忙）、等待闩锁（Latch）或锁（Lock）、等待磁盘或网络。那么你期望查询是等待什么呢？如果等待闩锁或锁，通常需要更快的CPU；如果在运行队列中等待，那么更多或者更快的CPU都有可能有帮助。（也有可能例外，例如，查询等待InnoDB日志缓冲区的mutex，直到IO完成前都不会释放，这可能表型需要更多的IO容量）。</p>
+<p>这就是说，MySQL在某些工作负载下可以有效地利用很多CPU。例如，假设有很多连接查询的是不同表（假设这些查询不会造成表锁的竞争，实际上对myisam和memory表可能会有问题），并且副武器的总吞吐量比任何单个查询的响应时间都更重要。吞吐量在这种情况下可以非常高，因为线程可以同时运行而互不争用。</p>
+<p>再次说明，在理论上这可能更好的工作：不管查询是读取不同的表还是相同的表，InnoDB都会有一些全局共享的数据结构，而myisam在每个缓冲区都有全局所。而且不仅仅是存储引擎，服务器层也会有全局所。以前InnoDB承担了所有的骂名，但最近做了一些改进后，暴露了服务器层中的其他瓶颈。例如臭名昭著的lock_open互斥量（Mutex），在MySQL5.1和更早版本中可能就是个大问题，另外还有其他一些服务器级别的互斥量（例如查询缓存）</p>
+<h5><span id="23-扩展到多个cpu和核心">2.3 扩展到多个CPU和核心</span></h5><hr>
+<p>多CPU在联机事务处理（OLTP）系统的场景中非常有用。这些系统通常执行许多小的操作，并且是从多个连接发起请求，因此可以在多个CPU上运行。在这样的环境中，并发可能成为瓶颈。大多数web应用程序都属于这一类。</p>
+<p>OLTP服务器一般使用InnoDB，尽管它在多CPU的环境中还存在一些未解决的并发问题。然而，不只是InnoDB可能成为瓶颈：任何共享资源都是潜在的竞争点。InnoDB之所以获得大量关注是因为它是高并发环境下最常见的存储引擎。但myisam在大压力时的表现也不好，即使不修改任何数据只是读取数据也是如此。许多并发瓶颈，如InnoDB的行锁和myisam的表锁，没有办法优化，除了尽可能快地处理人物之外。没有别的办法解决，这样，锁就可以尽快分配给等待的任务。如果有一个锁是造成它们都在等待的原因，那么不管有多少CPU都一样。因此，即使是一些高并发工作负载，也可以从更快的CPU中收益。</p>
+<p>实际上有两种类型的数据库并发问题，需要不同的方法来解决</p>
+<ul>
+<li><p>逻辑并发问题</p>
+<p>  应用程序可以看到自愿的竞争，如表或者行锁争用。这些问题通常需要好的策略来解决，如改变应用程序、使用不同的存储引擎、改变服务器的配置，或使用不同的锁定提示或事务隔离级别。</p>
+</li>
+<li><p>内部并发问题</p>
+<p>  比如信号量、访问innodb缓冲池页面的资源争用，等等。可以尝试通过改变服务器的设置、改变操作系统，或使用不同的硬件解决这些问题，但通常只能缓解而无法彻底消灭。在某些情况下，使用不同的存储引擎或给存储引擎打补丁，可以帮助缓解这些问题。</p>
+</li>
+</ul>
+<p>MySQL是吧的扩展模式是指它可以有效利用的CPU数量，以及在压力不断增长的情况下如何扩展，这同时取决于工作负载和系统架构。通过系统架构的手段是指通过调整操作系统和硬件，而不是通过优化使用MySQL的应用程序。CPU架构（RISC、CISC、流水线深度等）、CPU型号和操作系统都影响MySQL的扩展模式。这也是为什么说基础测试是非常重要的：一些系统可以在不断增加的并发下依然运行的很好，而另一些的表现则糟糕的多。</p>
+<p>有些系统在更多的处理器下，甚至可能降低整体性能。这是普遍的情况，我们了解到许多人试图升级到有多个CPU的系统。最后只能被迫恢复到旧系统。因为这种升级反而降低了性能。如果规划一个大的升级必须要同时考虑硬件，服务器版本和工作负载。</p>
+<p>现在CPU的两个复杂之处也值得提一下，首先是频率调整，这是一种电源管理技术。可以根据CPU的压力而动态的改变CPU的时钟速度。问题是他有时不能很好的处理间歇性突发的短查询的情况。因为操作系统可能需要一段时间来决定CPU的时钟是否应该变好。结果查询可能会有一段时间的速度。比较慢。并且响应时间增加了，频率调整可以能使得间歇性的工作负载性能低下，但可能更重要的是他会导致性能波动。</p>
+<p>第二个复杂之处是boost技术。周技术改变了我们的CPU模式的看法，我们曾经以为四核2GhzCPU有四个同样强大的核心，不管其中有些闲置或非闲置。由此，一个完美的可扩展系统，当它使用所有四个内核的时候，预计可以得到四倍的提升。但是现在已经不是这样了，因为它系统只使用一个核心时。处理器和运行在更高的时钟速度上。例如3GHz。这给很多的规划容量和可扩展性建模的工具处了一个难题。因为系统性能表现不再是线性的变化了。这也意味着，空闲CPU并不代表相同规模的资源浪费。如果有一台服务器上只运行了备库的复制，复制执行是单线程的。所以有三个CPU是空闲的。因此可以认为利用这些CPU执行其他任务而不影响复制，那就错了。</p>
+<h4><span id="3-平衡内存和磁盘内置">3 平衡内存和磁盘内置</span></h4><hr>
+<p>配置大量内存最大的原因不是因为可以在内存中保存大量数据，最终目的是避免磁盘IO。磁盘io比在内存中访问数据要慢的多。关键是要平衡内存和磁盘的大小，速度，成本和其他因素。以便为工作负载提供高性能的表现。</p>
+<p>最近被使用的数据可能很快再次被使用，以及相邻的数据可能很快需要使用。这些算法非常有效，因为他们算好的空间和时间的局部性原理。</p>
+<p>从程序员的视角看，CPU寄存器和高速缓存是透明的，并且与硬件架构相关。管理他们是编译器和CPU的工作。然而程序员会有意识的注意到内存和硬盘的不同。并且在程序中通常区分使用他们。</p>
+<p>在数据库服务器上尤其明显。其行为往往非常符合我们刚刚提到的预测算法所做的预测。设计良好的数据会缓存，其效率通常超过操作系统的缓存。因为搜索系统缓存是为通用任务设计的，数据库库缓存，更了解数据库存取数据的需求。它包含特殊用途的逻辑，以帮助满足这些需求。此外，系统调用不需要访问数据库中的缓存数据。内存和存储是唯一可以改变的东西。</p>
+<h5><span id="31-随机io和顺序io">3.1 随机IO和顺序IO</span></h5><hr>
+<p>数据库服务器同时使用顺序和随机IO。随机IO从缓存中收益最多。想象有一个典型的混合工作负载。青黄的包含单行查找和多行范围扫描。可以说服自己相信这个说法。典型的情况是热点数据随机分布。因此，缓存这些数据将有助于避免昂贵的磁盘寻道。相反，顺序读取一般只需要扫描一次数据。所以缓存对他是没用的。除非能完全放在内存中缓存起来。</p>
+<p>顺序读取不能从缓存中受益的给另一个原因是他们比随机读快。这有以下两个原因：</p>
+<ul>
+<li><p>顺序IO比随机IO块。</p>
+<p>  顺序操作的执行速度比随机操作快，无论是在内存还是磁盘上。假设磁盘每秒可以做100个随机IO操作。并且合约完成每秒50M的顺序读取。如果每行100字节，随机读，可以每秒读100行。相比之下，顺序都可以每秒都50万行，是随机读的5000倍。或几个数量级的差异。因此，在这种情况下，随机IO可以从缓存中获得很多好处。</p>
+<p>  顺序访问内存行的速度也快于随机访问。现在的内存芯片通常可以随机访问约25万次100字节的行。或者每秒500万次的顺序访问。请注意，内存随机访问速度比磁盘随机访问快了2500倍，而内存中顺序访问只有磁盘10倍的速度。</p>
+</li>
+<li><p>存储引擎执行顺序读比随机读块</p>
+<p>  一个随机读一般意味着存储引擎必须执行索引操作。通常需要通过B树的数据结构查找，并且和其他值比较。相反，连续读取一般需要遍历一个简单的数据结构，例如链表。这样就减少了很多工作。反复这样操作，连续读取的速度就比随机读要快了。</p>
+</li>
+</ul>
+<p>最后，随机读取通常只要查找特定的行，但不仅仅只读取一行，而是要读取一整页的数据，其中大部分是不需要的。这浪费了很多工作。另一方面，顺序读取数据，通常发生在想要的页面上的所有行，所以更符合成本收益。</p>
+<p>综上所述，通过缓存顺序读取可以节省一些工作，但缓存随机读取可以计生工作的工作。换句话说，如果能负担得起，增加内存是解决随机IO读取问题最好的办法。</p>
+<h5><span id="32-缓存读和写">3.2 缓存，读和写</span></h5><hr>
+<p>如果有足够的内存,就可以完全避免磁盘读取请求。如果所有的数据文件都可以放在内存中，一旦服务区缓存热起来了，所有的读操作都会在缓存命中。虽然还是会有逻辑读取，不过物理读取就没有了。但写入时不同的问题。写入可以像读一样在内存中完成，但迟早要被写入到磁盘，所以它是需要持久化的。换句话说，缓存可延缓写入，但不能想消极读取一样消除写入。</p>
+<p>事实上，除了允许写入被延迟，缓存可以允许他们被集中操作，主要通过一下两个重要途径：</p>
+<ul>
+<li><p>多次写入，一次刷新</p>
+<p>  一片数据可以在内存中改变很多次，而不需要把所有的新值写到磁盘。当数据最终被刷新到磁盘后，最后一次物理写之前发生的修改都被持久化了。例如，许多语句可以更新内存中的计数器。如果计数器递增100次，然后写到磁盘，100次修改就被合并为一次写。</p>
+</li>
+<li><p>IO合并</p>
+<p>  许多不同部分的数据可以在内存中修改，并且这些修改可以合并在一起，通过一次磁盘操作完成物理写入。</p>
+</li>
+</ul>
+<p>这就是为什么许多交易系统使用预写日志（WAL）策略。预写日志采用在内存中变更页面，而不马上刷新到磁盘上的策略，因为刷新磁盘通常需要随机IO,这非常慢。相反，如果把变化的记录写到一个连续的日志文件，这就很快了。后台线程可以稍后把修改的页面刷新到磁盘，并在刷新过程中优化写操作。</p>
+<p>写入从缓存中大大受益，因为它把随机IO更多地转换到连续IO。异步写通常是由操作系统批量处理，使他们能以更优化的方式书信到磁盘。同步写必须在写入到磁盘之后才能完成。这就是为什么它们受益于RAID控制器中电池供电的回写高速缓存。</p>
+<h5><span id="33-工作集是什么">3.3 工作集是什么</span></h5><hr>
+<p>每个应用程序都有一个数据的工作集，就是做这个工作确实需要用到的数据。很多数据库都有大量不在工作集内的数据。</p>
+<p>可以把数据库想象为有抽屉的办公桌。工作集就是放在桌面上的完成工作必须使用的文件。桌面是这个比喻中的主缓存，而抽屉就是硬盘。就像完成工作不需要办公桌里每一张纸一样，也不需要把每个数据库状态内存中来获得最佳性能，只需要工作集就可以。</p>
+<p>工作集大小的不同取决于应用程序。对于某些应用程序工作及可能是总数据大小的1%。而对于其他应用。有可能接近百分之百。当工作集不能完全放在内存中时，数据库必须在磁盘和内存之间交换数据。已完成工作。这就是为什么内存不足，有可能看起来却像IO问题。有事没有办法把整个工作机的数据放在内存中。而并且有时也并不真的想这么做(例如，应用需要大量的顺序IO)。工作集能否完全放在内存中,对应用程序体系结构的设计会产生很大影响。</p>
+<p>工作机可以定义为基于时间的百分比。例如，一小时的工作集可能是一个小时内数据库使用的95%的页面，除了5%的的最不常用的页面。百分比是考虑这个问题最有用的方式，因为每小时可能需要访问的数据只有1%，但超过24小时，需要访问的数据可能增加到整个数据库中20%的不同页面。根据需要被缓存起来的数据量的多少，来思考工作集会更加直观，缓存的数据越多，工作负载就越可能成为CPU密集型。如果不能缓存足够的数据，工作集就不能完全放在内存中。</p>
+<p>应该依据最常用的页面集来考虑工作集，而不是最频繁读写的页面集。这意味着，确定工作集需要在应用程序内有测量的模块，而不能仅仅看外部资源的利用，例如IO访问,因为页面的IO操作跟逻辑访问页面不是同一回事。例如，MySQL可能把一个页面读入内存，然后访问它数百万次，但如果查看strace，只会看到一个IO操作。缺乏确定工作集所需的检测模块，最大的原因是没有对这个主题有比较多的研究。</p>
+<p>工作集包括数据和索引，所以应该采用缓存单位来计数。一个缓存单位是存储引擎工作的数据最小单位。</p>
+<p>不同存储引擎的缓存单位大小是不一样的，因此也使得工作集的大小不一样。例如，InnoDB在默认情况下是16KB的页。如果InnoDB做一个单行查找需要读取磁盘，就需要把该行的整个页面读入缓冲池进行缓存，这会引起一些缓存的浪费。假设要随机访问100字节的行。InnoDB将用掉缓冲池中很多额外的内存来缓存这些行，因为每一行都必须读取和缓存一个完整的16KB页面.因为工作集也包括索引,InnoDB也会读取并缓存查找行所需的索引树的一部分.InnoDB的索引页大小也是16KB，这意味着访问一个100字节的行可能一共要使用32KB的缓存空间（有可能更多，这取决于索引树有多深）。因此，缓存单位也是在InnoDB中精心挑选聚集索引非常重要的另一个原因。聚集索引不仅可以优化磁盘访问，还可以帮助在同一页面存储相关的数据，因此在缓存中可以尽量放下整个工作集。</p>
+<h5><span id="34-找到有效的内存磁盘比例">3.4 找到有效的内存/磁盘比例</span></h5><hr>
+<p>找到一个良好的内存/磁盘比例最好的方式是通过实验和基准测试。如果可以把所有东西放入内存，你就大功告成了，后面没有必要再为此考虑什么。但大多数的时候不可能这么做，所以要用数据的一个子集来做基准测试，看看将会发生什么。测试的目标是一个可接受的缓存命中率。缓存未命中是当有查询请求数据时，数据不能在内存中命中，服务器需要从磁盘获取数据。</p>
+<p>缓存命中率实际上也会决定使用了多少CPU，所以评估缓存命中率的最好方法是查看CPU使用率。例如，若CPU使用了99%的时间工作，用了1%的时间等待IO，那缓存命中率还是不错的。</p>
+<p>考虑下工作集是如何影响高速缓存命中率的。首先重要的一点，要认识到工作集不仅是一个单一的数字而是一个统计分布，并且缓存命中率是非线性分布的。例如，有10G内存，并且未缓存命中率为10%，可能会认为只需要增加11%以上的内存，就可以降低缓存的未命中率到0。但实际上，诸如缓存单位的大小之类的问题会导致缓存效率低下，可能意味着理论上需要50GB的内存,才能把未命中率降低到1%。即使与一个完美的缓存单位相匹配，理论预测也可能是错误的：例如数据访问模式的因素也可能让事情更复杂。解决1%的缓存未命中率甚至可能需要500GB的内存，这取决于具体的工作负载。</p>
+<p>有时候很容易去优化一些可能不会带来多少好处的地方。例如，10%的未命中率可能导致80%的CPU使用率，这已经是相当不错的了。假设增加内存，并能够让缓存未命中率下降到5%，简单来说，将提供另外约6%的数据给CPU。再简化一下，也可以说，把CPU使用率增加到了84.8%。然而，考虑到为了得到这个结果需要购买的内存，这不一定是一个大胜利。在现实中，因为内存和磁盘访问速度之间的差异、CPU真正操作的数据，以及许多其他因素，降低缓存未命中率到5%可能都不会太多改变CPU使用率。</p>
+<p>这就是为什么我们说，你应该争取一个可接受的缓存命中率，而不是将缓存未命中率降低到零。没有一个应该作为目标的数据，因为可以接受怎么定义，取决于应用程序和工作负载。有些应用程序有1%的缓存未命中都可以工作得非常好，而另一些应用实际上需要这个比例低到0.01才能良好运转。</p>
+<p>最好的内存/硬盘的比例还取决于系统上的其他组件。假设有16GB的内存、20GB的数据，以及大量未使用的磁盘空间系统。该系统在80%的CPU利用水平下运行的很好。如果想在这个系统上放置两倍多的数据，并且保持相同的性能水平，你可能会认为只需要让CPU数量和内存量也增加到两倍。然而，即使系统中的每个组件都按照增加的负载扩展相同的量（一个不切实际的假设），这依然可能会使得系统无法正常工作。有20GB数据的系统可能使用了某些组件超过50%的容量。例如，它可能已经用掉了每秒IO最大操作数的80%。并且在系统内排队也是非线性的。服务器将无法处理两倍的负载。因此，最好的内存/磁盘比例取决于系统中最薄弱的组件。</p>
+<h5><span id="35-选择硬盘">3.5 选择硬盘</span></h5><hr>
+<p>如果无法满足让足够的数据在内存中的目标。例如，估计将需要500GB的内存才能完全让CPU负载起当前的IO系统，那么应该考虑一个更强大的IO子系统，有时甚至要牺牲内存为代价。同时，应用程序的设计应该能够处理IO等待。</p>
+<p>这听起来似乎有悖常理。毕竟我们刚刚说过。更多的内存可以缓解IO子系统的压力，减少IO等待.为什么要加强IO子系统？如果只增加内存能解决问题吗？当然就在所涉及的因素之间的平衡。例如读写之间的平衡。每个艾欧操作的大小。以及每秒有多少这样的操作发生。例如，若需要快速写日志。就不能通过增加大量有效内存来避免磁盘写入。在这种情况下，投资一个高性能的IO系统。投资电池支持的写缓存或者固态存储。可能是个更好的主意。</p>
+<p>从传统磁盘读取数据的过程分为三个步骤。</p>
+<ul>
+<li>移动读取磁头到磁盘表面上的正确位置。</li>
+<li>等待磁盘旋转。所有所需的数据在读取磁头下。</li>
+<li>等待磁待磁盘旋转过去，所有所需的数据都被读取磁头读出。</li>
+</ul>
+<p>磁盘执行这些操作有多快？可以浓缩为两个数字：访问时间（步骤一和步骤二合并）和传输速度。这两个数字也决定延迟和存储量。不管是需要快速访问时间还是快速的传输速度或者两者混合，依赖于与正在运行的查询语句的种类，从完成一次磁盘都读取所需要的总时间来说，小的随机查找以步骤一和步骤二为主。而大的顺序读主要是第三步。</p>
+<p>其他一些因素也会影响磁盘的选择，哪个重要取决于应用。假设正在为一个在线应用选择磁盘。例如一个受欢迎的新闻网站。有大量小的磁盘随机读取。可能需要考虑下列因素。</p>
+<ul>
+<li><p>存储容量</p>
+<p>  对在线应用来说，容量很少成为问题。现在的磁盘足够大了。如果不够，用RAID把小磁盘组合起来是标准做法</p>
+</li>
+<li><p>传输速度</p>
+<p>  现在磁盘通常数据传输速度非常快。正如我们前面看到的，究竟多快，主要取决于主轴转速和数据存储在磁盘表面上的密度。再加上主机系统的接口的限制。无论如何，传输速度通常不是在线应用的限制因素。你们他们一般会做很多小的随机查找。</p>
+</li>
+<li><p>访问时间</p>
+<p>  对随机查找的速度而言，这是个主要因素，所以应该寻找更快的访问时间的磁盘。</p>
+</li>
+<li><p>物理尺寸</p>
+<p>  所有其他条件都相同的情况下，磁盘的物理尺寸也会带来差别。越小的磁盘，移动读取磁头需要的时间就越短。服务器级的2.5英寸磁盘性能。往往比他们的更大的盘更快，他们还可以节省电力，并且通常会融入机箱中。</p>
+</li>
+</ul>
+<p>和CPU一样,MySQL如何扩展到多个磁盘上取决于存储引擎和工作负载，InnoDB能很好地扩展到多个磁盘驱动器。然而，myisam的表锁限制其写的可扩展性，因此写繁重的工作加在myisam上，可能无法从多个驱动器中收益。虽然操作系统的文件系统缓冲和后台并发写入会有点帮助，但myisam相对于innodb在写可扩展性上有更多的限制。</p>
+<p>和CPU一样，更多的磁盘也不并总是更好。有些应用要求低延迟需要的是更快的驱动器，更不是更多的驱动器。例如，复制通常在更快的驱动器上表现更好，因为备库的更新是单线程的。</p>
+<h4><span id="4-固态存储">4.  固态存储</span></h4><hr>
+<p>高质量闪存设备具备：</p>
+<ul>
+<li>相比硬盘有更好的随机读写性能，闪存设备通常读明显比写要快。</li>
+<li>相比硬盘有更好的顺序读写性能。但是相比较而言不如随机IO的改善那么大，因为硬盘随机IO比顺序IO慢得多。入门级固态硬盘的顺序读取实际上还可能比传统硬盘慢</li>
+<li>相比硬盘能更好的支持并发。闪存设备可以支持更多的并发操作，事实上，只有大量的并发请求才能真正实现最大吞吐量。</li>
+</ul>
+<p>最重要的事情是提升随机IO和并发性。闪存记忆体可以再高并发下提供很好的随机IO性能，这正是范式化的数据库所需要的。设计非范式化的schema最常见的原因之一是为了避免随机IO，并且使得查询可能转化为顺序IO。</p>
+<h5><span id="优化固态存储上的mysql">优化固态存储上的MySQL</span></h5><hr>
+<ul>
+<li><p>增加innodb的IO容量</p>
+<p>  闪存比机械硬盘支持更高的并发量。所以可以增加读写线程数到10或15来获得更好的结果。也可以在两千到两万范围内调整innodb_io_capacity选项，这要看设备实际上能支撑多大的IOPS。尤其是对官方的innodb很有必要，内部很多算法依赖这个配置。</p>
+</li>
+<li><p>让innodb日志文件更大</p>
+<p>  即使最近版本的innodb中改进了崩溃恢复算法，也不应该把磁盘上的日志文件调的太大，因为崩溃恢复需要随机IO访问，会导致恢复需要很长一段时间。闪存存储让这个过程快很多，所以可以设置更大的innodb日志文件，以帮助提升和稳定性能。对oracle官方的innodb，这个设置尤其重要，它维持一个持续的脏页刷新比例有点麻烦，除非有相当大的日志文件，4G或者更大，在写的时候对服务器来说是个不错的选择。</p>
+</li>
+<li><p>把一些文件从闪存移到RAID</p>
+<p>  除了把innodb日志文件设置的更大，把日志文件从数据文件中拿出来，单独放在一个带有电池保护写缓存的RAID组上而不是固态设备上，也是个好主意。这么做有几个原因。一个原因是日志文件的IO类型，在闪存设备上不比在这样一个RAID组上要快。innodb写日志是以512字节为单位的顺序IO写下去,并且除了崩溃恢复会顺序读取，其他时候绝不会去读。这样的IO操作类型用闪存设备是很浪费。并且把小的写入操作从闪存转移到RAID卷也是个好主意，因为很小的写入会增加闪存设备的写放大因子，会影响一些设备的使用寿命。大小写操作混合到一起也会引起某些设备延时的增加。</p>
+<p>  基于相同的原因，有时把二进制日志文件转移到RAID卷也会有好处。并且你可能会认为ibdata1文件也适合放在RAID卷上，因为ibdata1文件包含双写缓冲和插入缓冲。尤其是双写缓冲会进行很多重复写入。在percona server中，可以把双写缓冲从ibdata1文件中拿出来，单独存放到一个文件，然后把这个文件放在RAID卷上。</p>
+<p>  还有另一个选择：可以利用percona server的特性，使用4KB的块写事务日志,而不是512字节.因为这会匹配大部分内存本身的块大小,所以可以获得更好的效果.</p>
+</li>
+<li><p>禁用预读</p>
+<p>  预读通过通知和预测读取模式来优化设备的访问,一旦认为某些数据在未来需要被访问到,就会从设备上读取这些数据。实际上在innodb中有两种类型的预读，我们发现在多种情况下的性能问题，其实都输预读以及它的内部工作方式造成的。在许多情况下，开销比收益大，尤其是在闪存存储，但没有证据证明提升多少性能。</p>
+</li>
+<li><p>配置InnoDB刷新算法</p>
+<p>  这决定innodb什么时候、刷新多少、刷新哪些页面，这是个非常复杂的主题。建议innodb_adaptive_checkpoint选项为keep_average，不要用默认值estimate。可以确保更持续的性能，避免服务器抖动<br>  另外建议为闪存设备设置innodb_flush_neighbor_page=0。这样可以避免innodb尝试查找相邻的脏页一起刷写。这个算法可能会导致更大快的写、更高的延迟以及内部竞争。在闪存存储设备商完全没必要，也没有什么收益，因为相邻的页面单独刷新不会冲击性能</p>
+</li>
+<li><p>禁用双写缓冲的可能</p>
+<p>  相对于把双写缓存转移到闪存设备，可以考虑直接诶关闭它。并且这个收益在闪存设备上比在传统磁盘上要高得多，禁用双写缓冲在闪存存储上可以提高MySQL整体性能差不多50%。</p>
+</li>
+<li><p>限制插入缓冲大小</p>
+<p>  插入缓冲（变更缓冲）设计用来减少当更新行不在内存中的非唯一索引引起的随机IO。在硬盘驱动器上，减少随机IO可以带来巨大的性能提升。对某些类型的工作服在，当工作集比内存大很多时，差异可能达到近两个数量级。插入缓冲在这类场景下就很有用。<br>  然而，对闪存就没必要了。闪存上随机IO非常快,所以即使完全禁用插入缓冲,也不会带来太大影响，尽管如此，可能你也不想完全禁用插入缓存。所以最好还是启用，因为IO只是修改不在内存中的索引页面的开销的一部分.对内存设备而言，最重要的配置是控制最大允许的插入缓冲大小，可以限制为一个相对比较小的值，而不是让它无限制地增长，这可以避免消耗设备上的大量空间，并避免ibdata1文件变得非常大的情况。</p>
+</li>
+</ul>
+<p>修改页大小，修改innodb页面校验算法。服务器开启超线程，当使用闪存存储时，会有很大帮助，因为磁盘通常不再是瓶颈，任务会更多地从IO密集变为CPU密集。</p>
+<h4><span id="5-为备库选择硬件">5 为备库选择硬件</span></h4><hr>
+<p>固态硬盘，最好是相同的硬件和配置，能承受主库的所有写入。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2020/12/26/Book Nodes/高性能MySQL/7-MySQL的IO行为/" rel="next" title="MySQL的IO行为">
+                  <i class="fa fa-chevron-left"></i> MySQL的IO行为
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2020/12/30/Book Nodes/高性能MySQL/9-MySQL的复制/" rel="prev" title="MySQL的复制">
+                  MySQL的复制 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">1.</span> <span class="nav-text">1.什么限制了MySQL的性能</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">1.1.</span> <span class="nav-text">2 如何为MySQL选择CPU</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.1.1.</span> <span class="nav-text">2.1 哪个更好，更快的CPU还是更多的CPU</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.1.2.</span> <span class="nav-text">2.3 扩展到多个CPU和核心</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">1.2.</span> <span class="nav-text">3 平衡内存和磁盘内置</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.2.1.</span> <span class="nav-text">3.1 随机IO和顺序IO</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.2.2.</span> <span class="nav-text">3.2 缓存，读和写</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.2.3.</span> <span class="nav-text">3.3 工作集是什么</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.2.4.</span> <span class="nav-text">3.4 找到有效的内存/磁盘比例</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.2.5.</span> <span class="nav-text">3.5 选择硬盘</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">1.3.</span> <span class="nav-text">4.  固态存储</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.3.1.</span> <span class="nav-text">优化固态存储上的MySQL</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">1.4.</span> <span class="nav-text">5 为备库选择硬件</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="温海林"
+    src="/uploads/images/fbb1.jpg">
+  <p class="site-author-name" itemprop="name">温海林</p>
+  <div class="site-description" itemprop="description">Fake it, make it!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">89</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/wenslo" title="GitHub &rarr; https://github.com/wenslo" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/564544234@qq.com" title="E-Mail &rarr; 564544234@qq.com"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">温海林</span>
+</div>
+  <div class="theme-info">主题 – <a href="https://pisces.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.4.2
+  </div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>
