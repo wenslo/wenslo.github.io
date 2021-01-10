@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.4.2',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="MySQL的可扩展性">
+<meta name="keywords" content="MySQL">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL的可扩展性">
+<meta property="og:url" content="https://wenslo.github.io/2021/01/06/Book Nodes/高性能MySQL/10-MySQL的可扩展性/index.html">
+<meta property="og:site_name" content="温海林的博客">
+<meta property="og:description" content="MySQL的可扩展性">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2021-01-10T07:31:08.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MySQL的可扩展性">
+<meta name="twitter:description" content="MySQL的可扩展性">
+
+<link rel="canonical" href="https://wenslo.github.io/2021/01/06/Book Nodes/高性能MySQL/10-MySQL的可扩展性/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>MySQL的可扩展性 | 温海林的博客</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">温海林的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">技术，工作，生活，随笔</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://wenslo.github.io/2021/01/06/Book Nodes/高性能MySQL/10-MySQL的可扩展性/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
+      <meta itemprop="name" content="温海林">
+      <meta itemprop="description" content="Fake it, make it!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温海林的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL的可扩展性
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-01-06 10:22:07" itemprop="dateCreated datePublished" datetime="2021-01-06T10:22:07+08:00">2021-01-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-01-10 15:31:08" itemprop="dateModified" datetime="2021-01-10T15:31:08+08:00">2021-01-10</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MySQL/" itemprop="url" rel="index">
+                    <span itemprop="name">MySQL</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">MySQL的可扩展性</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>扩展方式有两种</p><h4><span id="向上扩展">向上扩展</span></h4><hr><p>加内存，选更强的CPU，加IO性能更强的设备。但是最好是MySQL的最新版本，不然的话，无法获得最好的性能。单服务器首先会达到读限制，特别是执行复杂的读查询时。类似这样的查询在MySQL内部是单线程的，因此只能使用一个CPU，这种情况下，加核心也无法提升多少性能，除非使用更快的CPU。当数据变得庞大以至于无法有效缓存时，内存也会成为瓶颈，通常表现为很高的磁盘使用率。</p><a id="more"></a>
+
+
+<p>当主库升级到高端硬件后，一般是不太可能配制出一台能够跟上主库的强大备库的。一个高负载的主库通常可以承担比拥有同样的配置的备库更多的工作，因为备库的复制线程无法高效的利用多核CPU和磁盘资源。</p>
+<h4><span id="向外扩展">向外扩展</span></h4><hr>
+<p>复制、拆分、数据分片</p>
+<p>最简单的就是通过复制将数据分发到多个服务器上，然后将备库用于读查询。这种技术对于以读为主的应用很有效。但是也有一些缺点，例如重复缓存。</p>
+<p>另一个常见的方法是将工作负载分布到多个节点。许多大型的MySQL应用不能自动分布负载，就算有也没有做到完全的自动化。在MySQL架构中，一个节点(node)就是一个功能部件。如果没有规划冗余和高可用性，那么一个节点就可能是一台服务器。如果设计的是能够故障转移的冗余系统，那么一个节点通常可能是下面的某一种：</p>
+<ul>
+<li>一个主-主复制双机结构，拥有一个主动服务器和被动服务器</li>
+<li>一个主库和多个备库</li>
+<li>一个主动服务器，并使用分布式复制块设备（DRBD）作为备用服务器</li>
+<li>一个基于存储区域网络（SAN）的集群</li>
+</ul>
+<p>大多数情况下，一个节点内的所有服务器应该拥有相同的数据。我们倾向于把主-主复制架构作为两台服务器的主动-被动节点。</p>
+<h5><span id="1-按功能拆分">1. 按功能拆分</span></h5><hr>
+<p>按功能拆分，或者说按职责拆分，意味着不同的节点执行不同的任务。将独立的服务器或节点分配给不同的应用，这样每个节点只包含它的特定应用所需要的数据。如果应用很庞大，每个功能区域还可以拥有其专用的web服务器，但没有专用的数据库服务器这么常见。</p>
+<p>另一个可能的按功能划分方法是对单个服务器的数据进行划分，并确保划分的表的集合之间不会执行关联操作。当必须执行关联操作时，如果对性能要求不高，可以在应用中做关联。虽然有一些变通的办法，但它们有一个共同点，就是每种类型的数据只能在单个节点上找到。这并不是一种通用的分布数据的方法，因为很难做到高效，并且相比其他方案没有任何优势。</p>
+<p>归根结底，还是不能通过功能划分来无限的进行扩展，因为如果一个功能区域被捆绑到单个MySQL节点，就只能进行垂直扩展。其中的一个应用或者功能区域最终增长到非常庞大时，都会迫使你去寻求一个不同的策略。如果进行了太多的功能划分，以后就很难采用根据扩展性的设计了</p>
+<h5><span id="2-数据分片">2. 数据分片</span></h5><hr>
+<p>目前用于扩展大型MySQL应用的方案中，数据分片是最通用而且最成功的方法。它把数据分割成一小片，或者说一块，然后存储到不同的节点中。</p>
+<p>数据分片在和某些类型的按功能划分联合使用时非常有用。大多数分片系统也有一些全局的数据不会被分片（城市列表，登录数据）。全局数据一般存储在单个节点上，并且通常保存在类似memcached这样的缓存里。</p>
+<p>事实上，大多数应用只会对需要的数据做分片，通常是那些将会增长的非常庞大的数据。假设正在构建的博客服务，预计会有1000W用户，这时候就无须对注册用户进行分片，因为完全可将所有的用户放到内存中。假如用户达到5亿，那么就可能需要对用户数据分片。用户所产生的的内容。例如发表的文章和评论，几乎肯定需要进行数据分片，因为这些数据非常庞大，而且还会越来越多。</p>
+<p>大型应用可能有多个逻辑数据集，并且处理方式也可以各不相同。可以将它们存储到不同的服务器组上，但这并不是必须的。还可以以多种方式对数据进行分片，这取决于如何使用他们。</p>
+<p>分片技术和大多数应用的最初设计有着显著的差异，并且很难将应用从单一数据存储转换为分片架构。如果在应用设计出去就已经预计到分片，那实现起来就容易的多。</p>
+<p>许多一开始没有建立分片架构的应用都会碰到规模扩大的情形。例如，可以使用复制来扩展博客服务的读查询，直到它不再奏效。然后可以把服务器划分为三个部分：用户信息，文章，以及评论。可以将这些数据放到不同的服务器上（按功能划分），也许可以使用面向服务的架构，并在应用层执行联合查询。</p>
+<p>最后，可以通过用户ID来对文章和评论进行分片，而将用户信息保留在单个节点上。如果为全局节点配置一个主-备结构并为分片节点使用主-主结构，最终的数据可能如下图所示、</p>
+<p>如果事先知道应用会扩大到很大的规模，并且清除按功能划分的局限性，就可以跳过中间步骤，直接从单个节点升级为分片数据存储。事实上，这种前瞻性可以帮你避免由于粗糙的分片方案带来的挑战。</p>
+<p>采用分片的应用常会有一个数据库访问抽象层，用以降低应用和分片数据存储之间通信的复杂度，但无法完全隐藏分片。因为相比数据存储，应用通常更了解查询相关的一些信息。太多的抽象会导致低效率，例如查询所有的节点，可实际上需要的数据只在单一节点上。</p>
+<p>分片数据存储看起来像是优雅的解决方案，但很难实现。那为啥要选择这个架构？因为：想扩展写容量，就必须切分数据。如果只有单台主库，那么不管有多少备库，写容量都是无法扩展的。对于上述缺点，数据分片是首选方案。</p>
+<p><strong>如非必要，尽量不分片，首先看是否能通过性能调优或者更好的应用和数据库设计来推迟分片。如果能足够长时间的推迟分片，也许可以直接购买更大的服务器，升级MySQL到性能更优的版本，然后继续使用单台服务器，也可以增加或减少复制。</strong></p>
+<p><strong>简单地说，对单台服务器而言，数据大小或写负载变得太大时，分片将会是不可避免的。如果不分片，而是尽可能的优化应用，系统能扩展到什么程度呢？答案可能会让你感到惊讶。有些非常受欢迎的应用，可能会以为一开始就分片了，但实际上知道已经值数十亿美元并且流量机器巨大也没有采用分片的设计。分片不是城里唯一的游戏，在没有必要的情况下，采用分片的架构来构建应用会步履维艰。</strong></p>
+<h5><span id="3-选择分区键partitioning-key">3. 选择分区键（partitioning key）</span></h5><hr>
+<p>数据分片最大的挑战是查找和获取数据：如何查找数据取决于如何进行分片。有很多种方法，其中有一些方法会比另外一些好。</p>
+<p>我们的目标是对那些最重要并且频繁查询的数据减少分片（记住，可扩展性法则的其中一条就是要避免不同节点之间的交互）。这其中最重要的是如何为数据选择一个或多个分区键。分区键决定了每一行分配到哪一个分片中。如果知道一个对象的分区键，就可以回答如下两个问题：</p>
+<ul>
+<li>应该在哪里存储数据？</li>
+<li>应该从哪里取到希望得到的数据？</li>
+</ul>
+<p>先看一个例子。假设像MySQL NDB Cluster那样来操作，并对每个表的主键使用哈希里将数据分割到各个分片中。这是一种非常简单的实现，但可扩展性不好，因为可能需要频繁检查所有分片来获得需要的数据。例如，如果想查看user3的博客文章，可以从哪里找到呢？由于使用主键值而非用户名进行分割，博客文章可能均匀分散在所有的数据分片中。使用主键值hash简化了判断数据存储在何处的操作，但却可能增加获取数据的难度，具体取决于需要什么数据以及是否知道主键。</p>
+<p>跨多个分片的查询比单个分片上的查询性能要差，但只要不涉及太多的分片，也不会太糟糕。最糟糕的情况是不知道需要的数据存储在哪里，这时候就需要扫描所有的分片。</p>
+<p>一个好的分区键常常是数据库中一个非常重要的实体的主键。这些键值决定了分片单元。例如，如果使用用户ID或客户端ID来分割数据，分片单元就是用户或者客户端。</p>
+<p>确定分区键一个比较好的办法是用实体-关系图，或一个等效的能显示所有实体及其关系的工具来展示数据模型。尽管把相关联的实体靠的更近。这样可以很直观的找出候选分区键。当然不要仅仅看图，同样也要考虑应用的查询。即使两个实体在某些方面是相关联的，但如果很少或几乎不对其做关联操作，也可以打断这种联系来实现分片。</p>
+<p>某些数据模型比其他的更容易进行分片，具体取决于实体-关系图中的关联性程度。图中，左边展示了一个易于分片的数据模型，右边的那个则很难分片。</p>
+<p>左边的数据模型比较容易分片，因为与之相连的子图中大多数节点只有一个连接，很容易切断子图之间的联系。右边的数据则很难分片，因为它没有类似的子图。辛亏大多数数据模型更像左边的图。</p>
+<p>选择分区键的时候，尽可能选择那些能够避免跨分片查询的，但同时也要让分片足够小，以免过大的数据片导致问题。如果可能，应该期望分片尽可能同样小，这样在为不同数量的分片进行分组时能够很容易平衡。例如，如果应用只在美国使用，并且希望将数据集分割为20个分片，则可能不应该按照州来划分，因为加利福尼亚的人口非常多。但是可以按照县或者电话区号来划分，因为尽管不是均匀分布的，但是足以选择20个集合以粗略的表示等同的密集程度，并且基本上避免跨分片查询。</p>
+<h5><span id="4-多个分区键">4. 多个分区键</span></h5><hr>
+<p>复杂的数据模型会使数据分片更加困难。许多应用拥有多个分区键，特别是存在两个或者多个维度的时候。换句话话说，应用需要从不同的角度看到有效且连贯的数据视图，这意味着某些数据在系统内至少需要存储两份。</p>
+<p>例如，需要将博客应用的数据按照用户ID和文章ID进行分片，因为这两者都是应用查询数据时比较普遍的方式。试想一下这种情形：频繁的读取某个用户的所有文章，以及某个文章的所有评论。如果按用户分片就无法找到谋篇文章的所有评论，而按照文章分片则无法找到某个用户的所有文章。如果希望这两个查询都落到同一个分片上，就需要从两个维度进行分片。</p>
+<p>需要多个分区键并不意味着需要去设计两个完全冗余的数据存储。我们来看看另一个例子：一个社交网站下的读书俱乐部站点，该站点的所有用户都可以对书进行评论。该网站可以显示所有书籍的所有评论，也能显示某个用户已经读过或评论过的所有书籍。</p>
+<p>假设为用户数据和书籍数据都设计了分片数据存储。而评论同时拥有用户ID和评论ID，这样就跨越了两个分片的便捷。实际上却无须荣誉存储两份评论数据，替代方案是，将评论和用户数据一起存储，然后把每个评论的标题和ID与书籍数据存储在一起.这样在渲染大多数关于某本书的评论的视图时无需同时访问用户和书籍数据存储,如果需要显示完整的评论内容,可以从用户数据存储中获得。</p>
+<h5><span id="5-跨分片查询">5. 跨分片查询</span></h5><hr>
+<p>大多数分片应用多少都有一些查询需要对多个分片的数据进行聚合或关联操作。例如，一个读书俱乐部网站要显示最受欢迎或最活跃的用户，就必须访问每一个分片。如何让这类查询很好地执行，是实现数据分片的架构中最困难的部分。虽然从应用的角度来看，这是一条查询，但实际上需要拆分成多条并行执行的查询，每个分片上执行一条。一个设计良好的数据库抽象层能够减轻这个问题，但类似的查询仍然会比分片内查询要慢并且更加昂贵，所以通常会更加依赖缓存。</p>
+<p>跨分片查询也可以借助汇总表来执行。可以遍历所有分片来生成汇总表并将结果在每个分片上冗余存储。如果在每个分片上存储重复数据太过浪费，也可以把汇总表放到另外一个数据存储中，这样就只需要存储一份了。</p>
+<p>为分片的数据通常存储在全局节点中，可以使用缓存来分担存储。</p>
+<p>如果数据的均衡分布非常重要，或者没有很好的分区键，一些应用会采用随机分片的方式。分布式检索应用就是个很好的例子。这种场景下，跨分片查询和聚合查询非常常见。</p>
+<p>跨分片查询并不是数据分片面临的唯一难题。维护数据一致性同样困难。外键无法在分片间内工作，因此需要由应用来检查参照一致性，或者只在分片内使用外键，因为分片内的内部一致性可能是最重要的。还可以使用XA事务，但由于开销太大，现实中使用很少。</p>
+<p>还可以设计一些定期执行的清理过程。例如，如果一个用户的读书俱乐部账号到期，并不需要立刻将其移除。可以写一个定期任务将用户评论从每个书籍分片中移除。也可以写一个检查脚本周期性运行以确保分片间的数据一致性。</p>
+<h5><span id="6-分配数据-分片和节点">6. 分配数据、分片和节点</span></h5><hr>
+<p>分片和节点不一定是一对一的关系，应该尽可能的让分片的大小比节点容量小很多，这样就可以在单个节点上存储多个分片。</p>
+<p>保持分片足够小更容易管理。这将使得数据的备份和恢复更加容易，如果表很小，那么像改变表结构这样的操作会更加容易。例如，假设有一个100GB的表,你可以直接存储,也可以将其划分为100个1GB的分片，并存储在单个节点上。现在假如要向表上增加一个索引，在单个100GB的表上的执行时间会比100个1GB分片执行的总时间更长，因为1GB的分片更容易全部加载到内存中。并且在执行alter table时还会倒是数据不可用，阻塞1GB的数据比阻塞100GB的数据要好得多。</p>
+<p>小一点的分片也便于抓你有。这有助于重新分配容量，平衡各个节点的分片。转译分片的效率一般都不高。通常需要先将受影响的分片设置为只读模式，提取数据，然后转移到另外一个节点。这包括使用mysqldump获取数据然后使用mysql命令将其重新导入。</p>
+<p>除了在节点间移动分片，你可能还需要考虑在分片间移动数据，并尽量不中断整个应用提供服务。如果分片太大，就很难通过移动整个分片来平衡容量，这时候可能需要将一部分数据转移到其他分片。分片间转移数据比转移分片要更复杂，应该尽量避免这么做。这也是我们建议设置分片大小机娘易于管理的原因之一。</p>
+<p>分片的相对大小取决于应用的需求。简单的说，我们说的易于管理的大小是指保持表足够小，以便能在5或者10分钟内提供日常的维护工作，例如alter table, check table 或者 optimize table。</p>
+<p>如果将分片设置的太小，会产生太多的表，这可能引发文件系统或者MySQL内部结构的问题。另外太小的分片还会导致跨分片查询增多。</p>
+<h5><span id="7-在节点上部署分片">7. 在节点上部署分片</span></h5><hr>
+<p>需要确定如何在节点上部署数据分片，下面是一些常用的办法：</p>
+<ul>
+<li>每个分片使用单一数据库，并且要求数据库名要相同。典型的应用场景是需要每个分片都能镜像到原应用的结构。这在部署多个应用实例，并且每个实例对应一个分片时很有用。</li>
+<li>将多个分片的表放到一个数据库中，在每个表名上包含分片号（例如bookclub.comments_23）。这种配置下，单个数据库可以支持多个数据分片。</li>
+<li>为每个分片使用一个数据库，并在数据库中包含所有应用需要的表。在数据库名中包含分片号（例如bookclub_23.comments），但表名不包括分片号。当应用连接到单个数据库并且不在查询中指定数据库名时，这种做法很常见。优点是无需为每个分片专门编写查询，也便于对只使用单个数据库的应用进行分片。</li>
+<li>每个分片能使用一个数据库，并在数据库名和表名中包含分片号（例如表名可以是bookclub_32.comment_23）</li>
+<li>在每个节点上运行多个MySQL实例，每个实例上有一个或多个分片，可以使用上面提高的方式的任意组合来安排分片。</li>
+</ul>
+<p>如果在表名中包含了分片号，就需要在查询模版里插入分片号。这在新应用中很容易实现，但旧的很困难。构建新应用时，查询模板并不是问题，我们更倾向于使用每个分片一个数据库的方式，并把分片号写到数据库名和表名中。这回增加例如alter table的复杂度，但也有下面的一些优点：</p>
+<ul>
+<li>如果分片全部在一个数据库中，转移分片会比较容易。</li>
+<li>因为数据库本身是文件系统的一个目录，所以可以很方便的管理一个分片的文件。</li>
+<li>如果分片互不关联，则很容易查看分片的大小。</li>
+<li>全局唯一表名可避免误操作。如果表名每个地方都相同，很容易因为连接到错误的节点而查询了错误的分片，或者是将一个分片的数据导入另外一个分片的表中。</li>
+</ul>
+<p>为一已有的应用增加分片支持的结果往往是一个节点对应一个分片。这种简化的设计可以减少对应用查询的修改。分片对应用而言通常是一种颠覆性的改变，所以应尽可能简化它。如果在分片后，每个节点看起来就像是整个应用数据的缩略图，就无须去改变大多数查询或者担心查询是否传递到期望的节点。</p>
+<h5><span id="8-固定分配">8. 固定分配</span></h5><hr>
+<p>将数据分配到分片中有两种主要的方法：固定分配和动态分配。两种方法都需要一个分区函数，使用行的分区键值作为输入，返回存储该行的分片。</p>
+<p>固定分配使用的分区函数仅仅依赖与分区键的值。哈希函数和取模运算就是很好的例子。这些函数按照每个分区键的值将数据分散到一定数量的桶中。</p>
+<p>假设有100个桶，你希望弄清楚用户111该放到哪个桶里。如果使用的是对数字求模的方式，答案很简单：111对100取模为11，所以应该将其放到第11个分片中。</p>
+<p>而如果使用CRC32()函数来做哈希，答案是81.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">CRC32</span>(<span class="number">111</span>) % <span class="number">100</span>;</span><br></pre></td></tr></table></figure>
+<p>固定分配的主要优点是简单，开小弟，甚至可以在应用中直接硬编码。</p>
+<p>但是固定分配也有如下缺点：</p>
+<ul>
+<li>如果分片很大并且数量不都，就很难平衡不同分片之间的负载。</li>
+<li>固定分片的方式无法自定义数据到哪个分片上，这一点对于那些在分片间负载不均衡的应用来说尤其重要。一些数据可能比其他的更加活跃，如果这些热点数据都分配到同一个分片中，固定分配的方式就无法通过热点数据转移的方式来平衡负载。（如果每个分片的数量切分的比较小，这个问题就没那么严重，根据大数定律，这样做会更容易将热点数据平均分配到不同分片。）</li>
+<li>修改分片策略通常比较困难，因为需要重新分配已有的数据。例如，如果通过模10的哈希函数来进行分片，就会有10个分片。如果应用增长使得分片变大，如果要拆分成20个分片，就需要对所有数据进行重新哈希，这会导致更新大量数据，并在分片间转移数据。</li>
+</ul>
+<p>正是由于这些现实，我们倾向于为新应用选择动态分配的方式。但如果是为已有的应用做分片，使用固定分配策略可能会更容易些，因为它更简单。也就是说，大多数使用固定分配的应用最后迟早要使用动态分配策略。</p>
+<h5><span id="9动态分配">9.动态分配</span></h5><hr>
+<p>另外一个选择是使用动态分配，将每个数据单元映射到一个分片。假设一个有两列的表，包括用户ID和分片ID。<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> user_to_shard(</span><br><span class="line">    user_id <span class="built_in">int</span> <span class="keyword">not</span> <span class="literal">null</span>,</span><br><span class="line">    shard_id <span class="built_in">int</span> <span class="keyword">not</span> <span class="literal">null</span>,</span><br><span class="line">    primary <span class="keyword">key</span> (user_id)</span><br><span class="line">);</span><br></pre></td></tr></table></figure></p>
+<p>这个表本身就是分区函数。给定分区键（用户ID）的值就可以获得分片号。如果该行不存在，就从目标分片中找到并将其加入到表中。也可以推迟更新，这就是动态分配的含义。</p>
+<p>动态分配增加了分区函数的开销，因为需要额外调用一次外部资源，例如目录服务器（存储映射关系的数据存储节点）。出于效率方面的考虑，这种架构常常需要更多的分层。例如，可以使用一个分布式缓存系统将目录服务器的数据加载到内存中，因为这些数据平时改动很小。或者更普遍的，你可以直接向user表中增加一个shard_id用于存储分片号。</p>
+<p>动态分配的最大好处是可以对数据存储位置做细粒度的控制。这使得均衡分配数据到分片更容易，并可提供适应未知改变的灵活性。</p>
+<p>动态映射可以在简单的键一分片（key-to-shard）映射的基础上建立多层次的分片策略。例如，可以建立一个双重映射，将每个分片单元指定到一个分组中，然后尽可能将这些组保持在同一个分片中。这样可以利用分片亲和性，避免跨分片查询。</p>
+<p>如果使用动态分配策略，可以生成不均衡的分片。如果服务器能力不相同，或者希望将其中一些分片用于特定目的（例如归档数据），这可能会有用。如果能够做到随时重新平衡分片，也可以为分片和节点间维持一一对应的映射关系，这不会浪费容量。也有些人喜欢简单的每个节点一个分片的方式。（但是请记住，保持分片尽可能小是有好处的）</p>
+<p>动态分配以及灵活的利用分片亲和性有助于减轻规模扩大而带来的跨分片查询问题。假设一个跨分片查询涉及四个节点，当使用固定分配时，任何给定的查询可能需要访问所有分片，但动态分配策略则可能只需要在其中的三个节点上运行同样的查询。这看起来没什么大区别，但考虑一下当数据存储增加到400个分片时会发生什么？固定分配策略需要访问400个分片，而动态分配方式依然只需要访问3个。</p>
+<p>动态分配可以让分片策略根据需要变得很复杂。固定分配则没有这么多选择。</p>
+<h5><span id="10-混合动态分配和固定分配">10. 混合动态分配和固定分配</span></h5><hr>
+<p>可以混合使用固定分配和动态分配。这种方法通常很有用，有时候甚至必须要混合使用。目录映射不太大时，动态分配可以很好胜任。但如果分片单元太多，效果就会变差。</p>
+<p>以一个存储网站链接的系统为例。这样一个站点需要存储数百亿的行，所使用的分区键是源地址和目的地址URL的组合（这两个URL的任意一个都有可能有好几亿的链接，因此，单独一个URL并不适合做分区键）。但是在映射表中存储所有的源地址和和目的地址URL组合并不合理,因为数据量太大了，每个URL都需要很多存储空间。</p>
+<p>一个解决方案是将URL项链并将其哈希到固定数目的桶中,然后把桶动态的映射到分片上.如果桶的数目足够大，例如100W个，你就能把大多数数据分配到每个分片上，获得动态分配的大部分好处，而无须使用庞大的映射表。</p>
+<h5><span id="11-显式分配">11. 显式分配</span></h5><hr>
+<p>第三种分配策略是在应用插入新的数据行时，显式的选择目标分片。这种策略在已有的数据上很难做到。所以在为应用增加分片时很少使用。但在某些情况下还是有用的。</p>
+<p>这个方法是把数据分片号编码到ID中，这和之前提到的避免主-主复制主键冲突策略比较相似。例如，应用要创建一个用户3，将其分配到第11个分片中，并使用bigint列的高八位来保存分片号。这样最终的ID就是(11&lt;&lt;56)+3，即792633534417207299。应用可以很方便的从中抽取出用户ID和分片号，如下例所示：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> (<span class="number">792633534417207299</span> &gt;&gt; <span class="number">56</span>) <span class="keyword">as</span> shard_id, <span class="number">792633534417207299</span> &amp; ~(<span class="number">11</span> &lt;&lt; <span class="number">56</span>) <span class="keyword">as</span> user_id;</span><br></pre></td></tr></table></figure>
+<p>现在假设要为该用户创建一条评论，并存储在同一个分片中。应用可以为该用户分配一个评论ID 5,然后以同样的方式组合 5 和分片号 11。</p>
+<p>这种方法的好处是每个对象的ID同时包含了分区键，而其他方法通常需要一次关联或者查找来确定分区键。如果要从数据库中检索某个特定的评论，无须知道哪个用户拥有它；对象ID会告诉你到哪里去找.如果对象是通过用户ID动态分片的,就得先找到该评论的用户,然后通过目录服务器找到对应的数据分片。</p>
+<p>另一个解决方案是将分区键存储在一个单独的列里。例如，你可能不会单独引用评论5，但是评论5属于用户3。这种方法可能会让一些人不高兴，因为这不违背第一范式；然而额外的列会增加开销、编码，以及其他不便之处。（这也是我们将两值存在单独一列的优点之一）</p>
+<p>显式分配的缺点是分片方式是固定的，很难做到分片间的负载均衡。但结合固定分配和动态分配，该方法就能很好地工作。不再像之前那样哈希到固定数目的桶里并将其映射到节点，而是将桶作为对象的一部分进行编码。这样应用就能够控制数据的存储位置，因此可以将相关联的数据一起放到同样的分片中。</p>
+<p>正常情况下并不推荐这样用。尽可能使用动态分配，避免显示分配。</p>
+<h5><span id="12-重新均衡分片数据">12. 重新均衡分片数据</span></h5><hr>
+<p>如有必要，可以通过在分片间移动数据来达到负载均衡。在分片之间移动数据的好处很明显。例如，当需要升级硬件时，可以将用户数据从旧分片转移到新分片上，而无须暂停整个分片的服务或将其设置为只读。</p>
+<p>然而，我们也应该尽量避免重新均衡分片数据，因为这可能会影响用户使用。在分片间转移数据也使得为应用增加新特性更加困难，因为新特性可能还需要包含针对重新均衡脚本的升级。如果分片足够小，就无须这么做；也可以经常移动整个分片来重新均衡负载，这比移动分片中的部分数据要容易得多（并且以每行数据开销来衡量的话，更有效率）</p>
+<p>一个较好的策略是使用动态分片策略，并将新数据随机分配到分片中。当一个分片快满时，可以设置一个标志位，告诉应用不要再往这里放数据了。如果未来需要向分片中放入更多数据，可以直接把标记位清除。</p>
+<p>假设安装了一个新的MySQL节点，上面有个100个分片。先将他们的标记设置为1，这样应用就知道它们正准备接受新数据。一旦它们的数据足够多时（例如，每个分片10000个用户），就把标记位设置为0.之后，如果节点因为大量废弃账号导致敷在不足，可以重新打开一些分片向其中增加新用户。</p>
+<p>如果升级应用并且增加的新特性会导致每个分片的查询负载升高，或者只是算错了负载，可以把一些分片移到新节点来减轻负载。缺点是操作期间整个分片会变成只读或者处于离线状态。这需要根据实际情况来看是否能接受。</p>
+<p>另外一种使用的较多的策略是为每个分片设置两台备库，每个备库都有该分片的完整数据。然后每个备库负责其中一半的数据，并完全停止在主库上查询。这样每个备库都会有一半它不会用到的数据。然后在后台移除不需要的数据即可。</p>
+<h5><span id="13-生成全局唯一id">13. 生成全局唯一ID</span></h5><hr>
+<p>当希望把一个现有系统转换为分片数据存储时，经常会需要在多台机器上生成全局唯一ID。单一数据存储时通常可以使用AUTO_INCREMENT列来获取唯一ID。但涉及多台服务器时就不奏效了。以下几种方法可以解决这个问题</p>
+<ul>
+<li><p>使用auto_increment_increment 和  auto_increment_offset</p>
+<p>  这两个服务器变量可以让MySQL以期望的值和偏移量来增加auto_increment列的值。列一个最简单的场景，只有两台服务器，可以配置这两台服务器自增幅度为2，其中一台的偏移量设置为1，另外一台为2。这样一台服务器总会包含偶数，另外一台总是包含奇数。这种这是可以配置到服务器的每一个表里。</p>
+<p>  这种方法简单，并且不依赖于某个节点，因此是生成唯一ID的比较普遍的方法.但是这需要非常仔细的配置服务器。很容易因为配置错误生成重复数字，特别是当增加服务器需要改变其角色，或进行灾难恢复时。</p>
+</li>
+<li><p>全局节点中创建表</p>
+<p>  在一个全局数据库节点中创建一个包含auto_increment的表，应用可以通过这个表来生成唯一数字</p>
+</li>
+<li><p>使用memcached</p>
+<p>  在memcached中有个Incr()函数，可以自动增长一个数字并返回结果。或者redis</p>
+</li>
+<li><p>批量分配数字</p>
+<p>  应用可以从一个全局节点中请求一批数字，用完后再申请。</p>
+</li>
+<li><p>使用复合值</p>
+<p>  可以使用一个复合值来做唯一ID，例如分片号和自增数的组合</p>
+</li>
+<li><p>使用GUID值</p>
+<p>  可以使用UUID()来生成全局唯一值.注意，尽管这个函数在基于语句的复制时不能正确复制，但可以先获得这个值，在存放到应用的内存中，然后作为数字在查询中使用。GUID的值很大并且不连续，因此不适合作为innodb表的主键。有一个函数UUID_SHORT()，能够生成连续的值，并使用64位代替了之前的128位。</p>
+</li>
+</ul>
+<p>如果使用全局分配器来产生唯一ID，要注意避免单点争用成为应用的性能瓶颈。</p>
+<p>memcached没有持久性。推荐redis。</p>
+<h5><span id="14-分片工具">14. 分片工具</span></h5><hr>
+<p>在设计数据分片应用时，首先要做的事情是编写能够查询多个数据源的代码。</p>
+<p>如果没有任何抽象层，直接让应用访问多个数据源，那绝对是一个很差的设计，因为这会增加大量的编码复杂性。最好的办法是将数据源隐藏在抽象层中，这个抽象层主要完成以下任务：</p>
+<ul>
+<li>连接到正确的分片并执行查询</li>
+<li>分布式一致性校验</li>
+<li>跨分片结果集聚合</li>
+<li>跨分片关联操作</li>
+<li>锁和事务管理</li>
+<li>创建新的数据分片并重新平衡分片</li>
+</ul>
+<p>sharding-jdbc，  hibernate-shard</p>
+<h4><span id="通过多实例扩展">通过多实例扩展</span></h4><p>——————————</p>
+<p>不要在一台性能强悍的服务器上只运行一个服务器实例，可以让数据分片足够小，以使每台机器上都能放置多个分片，每台服务器上运行多个实例，然后划分服务器的硬件资源，将其分配给每个实例。</p>
+<p>这样做尽管比较繁琐，但确实有效。这是一种向上扩展和向外扩展你的组合方案。也可以用其他方法实现，不一定需要分片，但分片对于大型服务器上的了联合扩展具有天然的适应性。</p>
+<p>虚拟化技术实现合并扩展的话，IO损耗非常惊人。性能下降很快</p>
+<p>另一种选择是运行多个MySQL实例，每个实例监听不同的网络端口，或绑定到不同的IP地址.</p>
+<p>有时候网络可能会成为瓶颈。可以通过使用多块网卡并进行绑定来解决这个问题。但linux内核可能会不理想，因为老的内核对每个绑定社保的网络中断只能使用一个CPU。因此不要把太多的连线绑定到很少的虚拟设备商，否则会遇到内核层的网络瓶颈。新的没事。</p>
+<p>另一个方法是将每个MySQL实例绑定到特定的CPU核心上。有两点好处：第一，由于MySQL内部的可扩展性，当核心数较少时，能够在每个核心上获得更好的心梗。第二，当实例在多个核心上运行线程时，由于需要在多核心上同步数据，因而会有一些额外的开销。这可以避免硬件本身的可扩展性限制。限制MySQL到少数几个核心能能够帮助减少CPU核心之间的交互。注意到问题没？将进程绑定到具有相同物理套接字的核心上可以获得最优的效果。</p>
+<h4><span id="通过集群扩展">通过集群扩展</span></h4><h4><span id="向内扩展">向内扩展</span></h4><hr>
+<p>处理不断增长的数据和负载最简单的办法是对不再需要的数据进行归档和清理。这种操作可能会带来显著的成效，具体取决于工作负载和数据特性。这种做法并不用来代替其他策略，但可以作为争取时间的短期策略，也可以作为处理大数据量的长期计划之一。</p>
+<p>设计归档和清理策略时需要考虑到如下几点：</p>
+<ul>
+<li><p>对应用的影响</p>
+<p>  关键是能高效的找到要删除的行，然后一小块一小块的移除。通常需要平衡一次归档的行数和事务的大小，以找到一个锁竞争和事务负载量的平衡。还需要设计归档任务在必要的时候让步于事务处理</p>
+</li>
+<li><p>要归档的行</p>
+<p>  在知道某些数据不再使用后，就可以立即清理或归档它们。也可以设计应用去归档哪些几乎不怎么使用的数据。可以把归档的数据置于核心表附近，通过视图来访问，或完全转移到别的服务器上。</p>
+</li>
+<li><p>维护数据一致性</p>
+<p>  当数据存在联系时，会导致归档和清理工作更加复杂。一个设计良好的归档任务能够保证数据的逻辑一致性，或至少在应用需要时能够保证一致，而无须在大量事务中包含多个表</p>
+<p>  当数据间存在联系时，哪个表首先归档是个问题。在归档时需要考虑孤立行的影响。可以选择违背外键约束（est foreign_key_checks=0）或者暂时吧悬空指针记录放到一边。如果应用层认为这些相关联的表有层次关系，那么归档的顺序也应该和它一样。例如，如果应用总是先检查订单再检查发货单，就先归档订单。应用应该看不到孤立的发货单，因此接下来就可以将发货单归档。</p>
+</li>
+<li><p>避免数据丢失</p>
+<p>  如果是在服务器间归档，归档期间可能就无法做分布式事务处理，也有可能将数据归档到myisam或其他非事务型的存储引擎中。因此，为了避免数据丢失，也在从源表中删除时，要保证已经在目标机器上保存。将归档数据单独写到一个文件里也是个好主意。可以将归档任务设计为能够随时关闭或重启，并且不会引起不一致或索引冲突之类的错误。</p>
+</li>
+<li><p>解除归档</p>
+<p>  可以通过一些解除归档策略来减少归档的数据量。它可以帮助你归档那些不确定是否需要的数据，并在以后可以通过选项进行回退。如果可以设置一些检查点让系统来检查是否有需要归档的数据，那么这应该是一个很容易实现的策略。例如，要对不活跃的用户进行归档，检查点就可以设置在登录验证时。如果因为用户不存在导致登录失败，可以去检查归档数据中是否存在该用户，如果有，则从中取出来并完成登录。</p>
+</li>
+</ul>
+<p>保持活跃数据独立，即使并不真的把老数据转移到别的服务器，许多应用也能受益于活跃数据和非活跃数据的隔离。这有助于高效利用缓存，并为活跃的和不活跃的数据使用不同的硬件或应用架构。下面列举了几种做法：</p>
+<ul>
+<li><p>将表划分为几个部分</p>
+<p>  分表，常用数据，小字段，一张表，明显改善内存利用率。</p>
+</li>
+<li><p>MySQL分区</p>
+</li>
+<li><p>基于时间的数据分区</p>
+<p>  一般新数据比旧数据更加活跃。在两个节点的分片上存储用户数据，新数据总是进入活跃节点，该节点使用更大的内存和磁盘，另外一个节点存储旧数据，使用非常大但很缓慢的磁盘。对于很多应用而言这是合理的假设，依靠10%的数据满足90%的要求。可以通过动态分片来轻松实现。</p>
+</li>
+</ul>
+<h3><span id="负载均衡">负载均衡</span></h3><hr>
+<p>负载均衡的基本思路很简单：在一个服务器集群汇总尽可能的平均负载量。通常的做法是在服务器前端设置一个负载均衡器。然后负载均衡器将请求的连接路由到最空闲的可用服务器。</p>
+<p>负载均衡有五个常见目的。</p>
+<ul>
+<li><p>可扩展性</p>
+<p>  负载均衡对某些扩展策略有帮助，例如读写分离时从备库读数据。</p>
+</li>
+<li><p>高效性</p>
+<p>  负载均衡有助于更有效的利用资源，因为它能够控制请求被路由到何处。如果服务器处理能力各不相同，这就尤为重要：你可以把更多的工作分配给性能更好的机器</p>
+</li>
+<li><p>可用性</p>
+<p>  一个灵活的负载均衡解决方案能够使用时刻保持可用的服务器。</p>
+</li>
+<li><p>透明性</p>
+<p>  客户端无需知道是否存在负载均衡设置，也不需要关心在负载均衡器的背后有多少机器，它们的名字是什么。负载均衡器给客户端看到的只是一个虚拟的服务器</p>
+</li>
+<li><p>一致性</p>
+<p>  如果应用是有状态的（数据库事务，网站会话），那么负载均衡服务器就应将相关的查询指向同一个服务器，以防止状态丢失。应用无需去跟踪到底连接的是哪个服务器。</p>
+</li>
+</ul>
+<p>MySQL里，负载均衡架构通常和数据分片和复制紧密相关。例如，可以再MySQL cluster集群的多个SQL节点上做负载均衡，也可以在多个数据中心间做负载均衡，其中每个数据中心又可以使用数据分片架构，每个节点实际上是拥有多个备库的主-主复制对结构，这里又可以做负载均衡。对于高可用性策略也同样如此：在一个架构里可以配置多层的故障转译机制。</p>
+<p>负载均衡有许多微妙之处，举个栗子，其中一个挑战就是管理读/写策略。有些负载均衡技术本身能够实现这一点，但其他的需要应用自己知道哪些节点是刻度的或可写的。</p>
+<h4><span id="直接连接">直接连接</span></h4><hr>
+<p>有些人认为负载均衡就是配置在应用和MySQL服务器之间的东西。但这并不是唯一的负载均衡方法。你可以在保持应用和MySQL连接的情况下使用负载均衡。事实上，集中化的负载均衡系统只有存在一个对等值换的服务器池时才能很好工作。如果应用需要做一些决策，例如在备库上执行读操作是否安全，就需要直接连到服务器。</p>
+<h5><span id="复制上的读写分离">复制上的读写分离</span></h5><hr>
+<p>除了可能出现的一些特定逻辑，应用为负载均衡做决策是非常高效的。例如，如果有两个完全相同的备库，你可以选择在备库还是主库上执行查询。由于备库复制是异步的，因此主要的难点是如何处理备库上的脏数据。应该将备库用作只读的，而主库可以同时处理读和写查询。</p>
+<p>通常需要修改应用以适应这种分离需求。然后应用就可以使用主库来进行写操作，并将读操作分配到主库和备库上；如果不太关心数据是否是脏的，可以使用备库，而对需要即时数据的请求使用主库。称之为读写分离。</p>
+<p>如果使用的是主动-被动模式的主-主复制对，同样也需要考虑这个问题。使用这种配置时，只有主动服务器接受写操作。如果能够接受读到脏数据，可以将读分配给被动服务器</p>
+<p>最大的问题是如何避免由于读了脏数据引起的奇怪问题。一个典型的例子是当一个用户做了某些修改，例如增加了一条博客文章的评论，然后重新加载页面，但并没有看到更新，因为应用从备库读取到了脏的数据。比较常见的读写分离方法如下：</p>
+<ul>
+<li><p>基于查询分离</p>
+<p>  最简单分离方法是将所有不能容忍脏数据的读和写查询分配到主动或主库服务器上。该策略很容易实现，但是不实用，因为很少有查询能容忍脏数据</p>
+</li>
+<li><p>基于脏数据分离</p>
+<p>  这是对基于查询分离方法的小改进。需要做一些额外的工作，让应用检查复制延迟，以确定备库数据是否太旧。许多报表类应用都使用这个策略，主需要晚上加载的数据复制到备库，它们并不关心是不是跟上了主库。</p>
+</li>
+<li><p>基于会话分离</p>
+<p>  另一个决定能否从备库读数据的稍微复杂一点的方法是判断用户自己是否修改了数据。用户不需要看到其他用户的最新数据，但需要看到自己的更新。可以在会话层设计一个标记位，表名做了更新，就将该用户的查询在一段时间内总是指向主库。这是我们通常推荐的策略，因为他是在简单和有效性之间的一种很好的拖鞋。</p>
+<p>  可以把基于会话的分离方法和复制延迟监控结合起来。如果用户在10秒前更新了数据，而所有备库延迟在5秒内，就可以安全地从备库中读取数据。但为整个会话选择同一个备库是一个很好的主意，否则用户可能会奇怪有些备库的更新速度比其他服务器要慢。</p>
+</li>
+<li><p>基于版本分离</p>
+<p>  这和基于会话的分离方式相似：你可以跟踪对象的版本号或者时间戳，通过从备库读取对象的版本或时间戳来判断数据是否足够新。如果备库的数据太旧，可以从主库获取新的数据。即使对象本身没有变化，但如果是顶层对象，只要下面的任何对象有变化，也可以增加版本号，这简化了脏数据检查（只需要检查顶层对象一处就能判断是否有更新）。例如，在用户发表了一篇新文章后，可以更新用户的版本。这样就会从主库去读取数据</p>
+</li>
+<li><p>基于全局版本/会话分离</p>
+<p>  这个办法是基于版本分离和基于会话分离的变种。当应用执行写操作时，在提交事务后，执行一次show master status操作。然后在缓存中存储主库日志坐标，作为被修改对象或者会话的版本号。当应用连接到备库时，执行show slave status并将备库上的坐标和缓存中的版本号相对比。如果备库相比记录点更新，就可以安全的读取备库数据。</p>
+</li>
+</ul>
+<p>大多数读写分离都需要监控复制延迟来决策读查询的分配，不管是通过复制或负载均衡器，或者中间件。如果这么做，需要注意show slave status得到的seconds_behind_master列的值并不能准确的用于监控延迟。pt-heartbeat工具能够帮助监控延迟，并维护元数据，例如二进制日志位置，这可以减轻之前我们讨论的一些策略存在的问题。</p>
+<p>如果不在不用昂贵的硬件来承载压力，就可以不使用复制来扩展读操作，这样当然更简单。这可以避免在主备上分离读的复杂性。有些人认为这很有意义；也有人认为会浪费硬件。这种分歧是由于不同的目的引起的：你是只需要可扩展性，还是要同时具有可扩展性和高利用率？如果需要高利用率，那么备库除了保存数据副本外还需要承担其他任务，就不得不处理这些额外的复杂度。</p>
+<h5><span id="修改应用的配置">修改应用的配置</span></h5><hr>
+<p>还有一个分发负载的方法是重新配置应用。例如，你可以配置多个机器来分担生成大报表操作的负载。每台机器可以配置成连接到不同的MySQL备库，并为第N个用户或网站生成报表。</p>
+<p>这样的系统很容易实现，但如果需要修改一些代码，包括配置文件修改，就会变得非常脆弱且难以处理。硬编码有着固有的限制，需要在每台服务器上修改硬编码，或者在一个中心服务器上修改，然后通过文件副本或代码控制更新命令发布到其他服务器上。如果将配置存储在服务器或缓存中，就可以避免这些麻烦</p>
+<h5><span id="修改dns名">修改DNS名</span></h5><hr>
+<p>比较粗糙，最大的问题无法完全控制DNS</p>
+<ul>
+<li>修改DNS并不是立刻生效的，也不是原子的。将DNS的变化传递到整个网络或在网络间传播都需要比较长的时间</li>
+<li>DNS数据会在各个地方缓存下来，它的过期时间是建议性质的而非强制的</li>
+<li>可能需要应用或者服务器重启才能使修改后的DNS完全生效</li>
+<li>多个IP地址共用一个DNS名并依赖于轮询行为来均衡请求，这并不是一个好主意。因为轮询行为并不总是可预知的</li>
+<li>DBA可能没有权限直接访问DNS</li>
+</ul>
+<h5><span id="转移ip地址">转移IP地址</span></h5><hr>
+<p>一个比较方便的技术是为每个物理服务器分配一个固定的IP地址。该IP地址固定在服务器上，不再改变。然后可以为每个逻辑上的服务使用一个虚拟IP地址。它们能够很方便的在服务器间转移，这使得转移服务和应用无需再重新配置应用。</p>
+<h4><span id="引入中间件">引入中间件</span></h4><hr>
+<p>最靠谱的方法</p>
+<ul>
+<li>负载均衡器</li>
+<li>负载均衡算法</li>
+<li>在服务池中增加/移除服务器</li>
+</ul>
+<h3><span id="一主多备间的负载均衡">一主多备间的负载均衡</span></h3><hr>
+<p>最常见的就是一个主库加多个备库。</p>
+<ul>
+<li><p>功能分区</p>
+<p>  对于特定的目的可以通过配置备库或一组备库来极大的扩展容量。一些比较常见的功能包括报表、分析、数据昂库，以及全文检索</p>
+</li>
+<li><p>过滤和数据分区</p>
+<p>  可以使用复制过滤技术在相似的备库上对数据做分区。只要数据在主库上已经被隔离到不同的数据库或表中，这种方法就可以奏效。不幸的是，没有内建的办法在行级别上进行复制过滤。需要使用一些独创的技术来实现，例如触发器和一组不同的表。</p>
+<p>  即使不把数据分区到各个备库上，也可以通过对读进行分区而不是随机分配来提高缓存效率。例如，可以把对以字母A-M开头的用户名的读操作分配给一个给定的备库，把以N-Z开头的分配给另外一个。者能够更好的利用每台机器的缓存，因为分离读更可能在缓存中找到相关的数据。最好的情况下，当没有写操作时，这样是用的缓存相当于两台服务器缓存的综合。相比之下，如果随机的在备库上分配读操作，每个机器的缓存本质上还是重复的数据，而总的有效缓存效率和一个备库缓存一样，不管有多少台备库</p>
+</li>
+<li><p>将部分写操作转移到备库</p>
+<p>  主库并不总是需要处理写操作中的所有工作，它需要知道数据处于哪个时间点，哪怕需要等待一会才能到达这个点，可以使用函数master_pos_wait()阻塞知道备库赶上了设置的主库同步点。另一种替代方案是使用复制心跳来检查延迟情况。</p>
+</li>
+<li><p>同步写操作</p>
+<p>  也可以使用master_post_wait()函数来确保写操作已经被同步到一个或多个备库上。如果应用需要模拟同步复制来保证数据安全性，就可以在多个备库上轮流执行master_pos_wait()函数。这就类似创建了一个同步屏障，当任意一个备库出现复制延迟时，都可能花费很长时间完成，所以最好在确实需要的时候才使用这种方法。（如果你的目的知识确保某些备库拥有时间，可以只等待一台备库接收到时间。MySQL增加了半同步复制，可以支持）</p>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2020/12/31/Book Nodes/高性能MySQL/5-MySQL高级特性/" rel="next" title="MySQL高级特性">
+                  <i class="fa fa-chevron-left"></i> MySQL高级特性
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+                <a href="/2021/01/10/Book Nodes/高性能MySQL/11-MySQL备份与恢复/" rel="prev" title="MySQL的备份与恢复">
+                  MySQL的备份与恢复 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">1.</span> <span class="nav-text">向上扩展</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">2.</span> <span class="nav-text">向外扩展</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.1.</span> <span class="nav-text">1. 按功能拆分</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.2.</span> <span class="nav-text">2. 数据分片</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.3.</span> <span class="nav-text">3. 选择分区键（partitioning key）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.4.</span> <span class="nav-text">4. 多个分区键</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.5.</span> <span class="nav-text">5. 跨分片查询</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.6.</span> <span class="nav-text">6. 分配数据、分片和节点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.7.</span> <span class="nav-text">7. 在节点上部署分片</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.8.</span> <span class="nav-text">8. 固定分配</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.9.</span> <span class="nav-text">9.动态分配</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.10.</span> <span class="nav-text">10. 混合动态分配和固定分配</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.11.</span> <span class="nav-text">11. 显式分配</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.12.</span> <span class="nav-text">12. 重新均衡分片数据</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.13.</span> <span class="nav-text">13. 生成全局唯一ID</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">2.14.</span> <span class="nav-text">14. 分片工具</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">3.</span> <span class="nav-text">通过多实例扩展</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">4.</span> <span class="nav-text">通过集群扩展</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">5.</span> <span class="nav-text">向内扩展</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number"></span> <span class="nav-text">负载均衡</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">1.</span> <span class="nav-text">直接连接</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.1.</span> <span class="nav-text">复制上的读写分离</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.2.</span> <span class="nav-text">修改应用的配置</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.3.</span> <span class="nav-text">修改DNS名</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">1.4.</span> <span class="nav-text">转移IP地址</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">2.</span> <span class="nav-text">引入中间件</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number"></span> <span class="nav-text">一主多备间的负载均衡</span></a></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="温海林"
+    src="/uploads/images/fbb1.jpg">
+  <p class="site-author-name" itemprop="name">温海林</p>
+  <div class="site-description" itemprop="description">Fake it, make it!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">91</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/wenslo" title="GitHub &rarr; https://github.com/wenslo" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/564544234@qq.com" title="E-Mail &rarr; 564544234@qq.com"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">温海林</span>
+</div>
+  <div class="theme-info">主题 – <a href="https://pisces.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.4.2
+  </div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>
