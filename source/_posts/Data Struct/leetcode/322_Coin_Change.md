@@ -41,5 +41,32 @@ $f[x] = min\{f(27-2)+1,f(27-5)+1,f(27-7)+1\}$ 的边界情况是[x-2] || [x-5] |
 
 如果从$f[27]$，$f[26]$倒序开始计算的时候，比如，$f[27]$的时候，发现$f[26]$还没有计算，这样重复计算会很多。从$f[1]$,$f[2]$开始的话，就会发现，当计算$f[6]$的时候，$f[5]$已经计算过了，避免了很多重复计算。
 
+也就是说，初始条件为：f[0] = 0
+
+然后计算f[1],f[2],...f[27]
+
+当计算到f[x]时，f[x-2],f[x-5],f[x-7]，都已经有值了
+
 #### 代码如下
 
+```java
+public int f() {
+        int amount = 27;
+        int[] coins = new int[]{2, 5, 7};
+        int[] f = new int[27 + 1];
+
+        f[0] = 0;
+        for (int i = 1; i <= amount; i++) {
+            f[i] = Integer.MAX_VALUE;
+            for (int j = 0; j < coins.length; j++) {
+                if (i >= coins[j] && f[i - coins[j]] != Integer.MAX_VALUE) {
+                    f[i] = Math.min(f[i - coins[j]] + 1, f[i]);
+                }
+            }
+        }
+        if (f[amount] == Integer.MAX_VALUE) {
+            return -1;
+        }
+        return f[amount];
+    }
+```
