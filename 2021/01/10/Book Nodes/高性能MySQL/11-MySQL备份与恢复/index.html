@@ -60,7 +60,7 @@
 <meta property="og:site_name" content="温海林的博客">
 <meta property="og:description" content="MySQL的备份与恢复">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2021-01-10T08:07:07.271Z">
+<meta property="og:updated_time" content="2021-01-12T14:48:26.634Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="MySQL的备份与恢复">
 <meta name="twitter:description" content="MySQL的备份与恢复">
@@ -251,7 +251,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-01-10 16:07:07" itemprop="dateModified" datetime="2021-01-10T16:07:07+08:00">2021-01-10</time>
+                <time title="修改时间：2021-01-12 22:48:26" itemprop="dateModified" datetime="2021-01-12T22:48:26+08:00">2021-01-12</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -282,7 +282,17 @@
 <li>领导改变想法</li>
 <li>审计</li>
 <li>测试</li>
-</ul><h3><span id="2-定义备份需求">2. 定义备份需求</span></h3><hr>
+</ul><h3><span id="2-定义备份需求">2. 定义备份需求</span></h3><hr><p>只有备份是不够的，还需要有一个恢复系统，但是，让备份系统平滑工作比构造良好的恢复过程和工具更容易。原因如下：</p><a id="more"></a>
+
+
+
+<ul>
+<li>备份在先。只有已经做了备份才可能恢复，因此在构建系统时，注意力自然会集中到备份上</li>
+<li>备份由脚本和任务自动完成。会花一些事件调优备份过程，但是天天同样重视恢复不可能。</li>
+<li>备份是日常任务，恢复常常发生在危急情况下</li>
+<li>因为安全的需要，如果正在做异地备份，可能需要对备份数据进行加密，或采取其他错误来进行保护。安全性往往只关注数据被盗用的结果，但是如果没有人能怼用来恢复数据的加密卷解锁，或者需要从一个整块的加密文件中抽取单个文件时，损害有多大？<br>-</li>
+</ul>
+
     </div>
 
     
@@ -306,6 +316,9 @@
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
+                <a href="/2021/01/12/Data Struct/leetcode/322_Coin_Change/" rel="prev" title="动态规划，leetcode q322 coin change">
+                  动态规划，leetcode q322 coin change <i class="fa fa-chevron-right"></i>
+                </a>
             </div>
           </div>
       </footer>
@@ -360,20 +373,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">91</span>
+          <span class="site-state-item-count">92</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-count">12</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-count">21</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
