@@ -1,5 +1,5 @@
 ---
-title: 动态规划，lintcode 144 Unique Paths
+title: 动态规划，lintcode 114 Unique Paths
 
 categories: 
 
