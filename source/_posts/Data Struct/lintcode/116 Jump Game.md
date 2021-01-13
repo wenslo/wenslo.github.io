@@ -24,23 +24,44 @@ description: 动态规划
 
 ##### 先确定最后一步
 
-首先确定最后一步为 $f(x) = f.length - f[x]$
+最后一步为n-1
+那么前一步也就是i < n- 1
+那么最后一步的最大距离为：$n - 1 -i <= a_i$
 
 ##### 拆分子问题
 
-那么子问题就变为 $f(x-1) = f.length - f[x] - f[x -1]$
+那么子问题就变为 f[j]表示能不能到达数组j
+
 
 ##### 转移方程
 
-由上面的可知，$f[1] + f[2] + ... + f[i] >= f.length$
-转移方程就为 
+$$ f[j] = OR_{ 0 <= i< j }(f[i] AND i + a[i] >= j) $$
 
 ##### 确定初始条件和边界
 
-如果数组只有一个数值，那么就一定能到达数组的最后一步，也就是说，f[0] 一定能到达数组的最后一步，也就为：f[0] > f.length;
-由于判断是否能到达数组的最后一个位置，那么也就是说，$f[last] >= f.length$
+初始条件：f[0] = ture
 
 ##### 确定计算顺序
 
+从左到右，从小到大
 
 ##### 代码如下
+
+```java
+    public boolean canJump(int[] A) {
+        int n = A.length;
+        boolean f[] = new boolean[n];
+        f[0] = true;
+        for (int j = 1; j < n; j++) {
+            f[j] = false;
+            for (int i = 0; i < j; i++) {
+                if (f[i] && i + A[i] >= j) {
+                    f[j] = true;
+                    break;
+                }
+            }
+
+        }
+        return f[n - 1];
+    }
+```
