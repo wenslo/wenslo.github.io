@@ -239,5 +239,93 @@ gunzip -c sakila-backup.sql.gz | grep 'INSERT INTO `actor`' | mysql sakila
 
 对于MySQL做基于时间点的恢复常见的方法是还原最近一次全备份，然后从那个时间点开始重放二进制日志，就可以恢复到任何希望的时间点。甚至可以不太费力的恢复单个数据库。
 
-最主要的缺点是二进制日志重放可能会是一个很慢的过程。它大体上等同于复制。
+最主要的缺点是二进制日志重放可能会是一个很慢的过程。它大体上等同于复制。如果有一个备库，并且已经测量到SQL线程的利用率有多高，那么对重放二进制日志会有多快心里就有数了。
 
+一个典型场景是对有害的语句的结果做回滚操作，例如DROP TABLE 。看个简化的例子，myisam，半夜，备份任务在运行与下面所列相当的语句，复制数据库到同一服务器上的其他地方。
+
+```shell
+flush tables with read loack;
+cp -a /var/lib/mysql/sakila /backup/sakila;
+mysql -e "show master statsu" --vertial > /backup/master.info;
+unlock tables;
+```
+然后，假设有人在晚些时间运行下列语句。
+
+```sql
+use sakila;
+drop table sakila.payment;
+```
+
+我们先假设可以单独的恢复整个数据库。再假设是知道后来出问题才意识到这个有问题的语句。目标是恢复数据库中除了有问题的语句之外所有发生的事务。也就会说，其他表已经做的所有修改都必须保持，包括有问题的语句运行之后的修改。
+
+首先，停掉MySQL以阻止更多的修改，然后从备份中仅恢复sakila数据库。
+
+```shell
+/etc/init.d/mysql stop
+mv /var/lib/mysql/sakila /var/lib/mysql/sakila.tmp
+cp -a /backup/sakial /var/lib/mysql
+```
+
+再到运行的服务器的my.cnf中添加如下配置以禁止正常的连接。
+
+```mysql
+skip-networking
+socket/tmp/mysql_recover.sock
+```
+
+现在可以安全启动服务器了
+
+```shell
+/etc/init.d/mysql start
+```
+
+下一个任务是从而禁止日志中分出需要重放和忽略的语句。事发时，自半夜的备份以来，服务器只创建了一个二进制日志。我们可以用grep来检查二进制日志文件以找到问题语句。
+
+```shell
+mysqlbinlog --database=sakila /var/log/mysql/mysql-bin.000215 | grep -B3 -i 'drop table sakila.payment'
+```
+
+可以看到，我们想忽略的语句在日志文件中的352位置，下一个语句位置是429.可以用下面的命令重放日直到352位置，然后从429继续。
+
+```shell
+mysqlbinlog --database=sakila /var/log/mysql/mysql-bin.000215 --stop-position=352 | mysql -u root - p
+mysqlbinlog --database=sakila /var/log/mysql/mysql-bin.000215 --start-position=429 | mysql -u root - p
+```
+
+### 更高级的恢复技术
+
+#### 延时复制
+
+停止备库，使用start slave until来重放事件知道要执行问题语句。接着，执行 set global sql_slave_skip_counter=1来跳过问题语句。
+
+然后要做的就是执行start slave ，让备库执行完所有的中级日志。这样就利用备库完成了基于时间点的恢复中所有冗长的工作。现在可以将备库提升为主库。
+
+即使没有延时的备库来加速恢复，普通的备库也有好处，至少会把主库的二进制日志复制到另外的机器上。如果主库的磁盘坏了，备库上的中继日志可能就是唯一能够获取到的最接近主库二进制日志的东西了。
+
+#### 使用日志服务器进行恢复
+
+下面是利用日志服务器进行恢复的步骤：
+
+- 将需要恢复的服务器叫做server1
+- 在另外一台叫做server2的服务器上恢复昨晚的备份。在这台服务器上运行恢复进程，以免在恢复时犯错而导致事情更糟糕
+- 按照之前的做法，设置日志服务器来接收server1的二进制日志
+- 改变server2的配置文件，增加：replicate-to-table=sakial.payment
+- 重启server2，然后用change master to 来让它成为日志服务器的备库。配置它从昨晚备份的二进制日志坐标读取。这时候切记不要运行start slave
+- 检测server2上的show slave status的输出，验证一切正常。三思而行
+- 找到二进制日志中问题语句的位置，在server2上执行start slave until来重放事件知道该位置。
+- 在server2上用stop slave停掉复制进程。现在应该有被删除表，因为现在从库停止在被删除之前的时间点。
+- 将所需表从server2复制到server1.
+
+### InnoDB损坏修复
+
+- 二级索引损坏
+
+    一般可以用optimize table 来修复损坏的二级索引；此外，也可以用select into outfile，删除和重建表，然后load data infile的方法。
+
+- 聚簇索引损坏
+
+    如果是聚簇索引损坏，也许只能用innodb_force_recovery选项来导出表。
+
+- 损坏系统结构
+
+    系统结构包括事务日志，表空间的撤销日志和数据字典。这种损坏可能需要做整个数据库的导出和还原，因为innodb内部绝大部分工作都可能受到影响。
