@@ -60,7 +60,7 @@
 <meta property="og:site_name" content="温海林的博客">
 <meta property="og:description" content="MySQL的备份与恢复">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2021-01-13T15:31:39.347Z">
+<meta property="og:updated_time" content="2021-01-16T07:28:41.045Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="MySQL的备份与恢复">
 <meta name="twitter:description" content="MySQL的备份与恢复">
@@ -251,7 +251,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-01-13 23:31:39" itemprop="dateModified" datetime="2021-01-13T23:31:39+08:00">2021-01-13</time>
+                <time title="修改时间：2021-01-16 15:28:41" itemprop="dateModified" datetime="2021-01-16T15:28:41+08:00">2021-01-16</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -354,6 +354,104 @@
 <p>文件一致性，例如，一条大的update语句执行时备份反映不出文件的状态。</p>
 <h3><span id="4-管理和备份二进制日志">4 管理和备份二进制日志</span></h3><hr>
 <p>对于基于时间点的恢复是必须的，跟容易进行频繁的备份。经常备份二进制日志是个好主意。</p>
+<p>需要决定日志的过期策略以防止磁盘被二进制日志写满。日志增长多大取决于负载和日志格式（基于行的日志会导致更大的日志）。通常使用<strong>expre_log_days</strong>来告诉MySQL定期清理日志。</p>
+<h3><span id="5-备份数据">5 备份数据</span></h3><hr>
+<h4><span id="生成逻辑备份">生成逻辑备份</span></h4><p>对于逻辑备份，有两种方式，SQL导出和符号分隔文件</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysqldump test t1</span><br></pre></td></tr></table></figure>
+<p>导出文件包含表结构和数据，以有效SQL命令写出。但是mysqldump默认选项对生成一个巨大的备份不太适合。</p>
+<p>mysqldump不是生成SQL逻辑备份的唯一工具。SQL逻辑备份本来就有一些缺点：</p>
+<ul>
+<li><p>schema 和 数据存储在一起</p>
+<p>  如果想从单个文件恢复会很方便，但是如果只想回复一个表或指向恢复数据就很困难了，可以通过导出两次的方式减缓这个问题，一次只导出数据，一次只导出schema</p>
+</li>
+<li><p>巨大的SQL语句</p>
+<p>  服务器分析和执行SQL语句的工作量非常大，所以加载数据时会非常慢</p>
+</li>
+<li><p>单个巨大的文件</p>
+<p>  大部分文本编辑器不能编辑巨大的或者包含非常长的行的文件。linux 和 unix可以，但是保持文件小型化是必要的</p>
+</li>
+<li><p>逻辑备份的成本很靠</p>
+</li>
+</ul>
+<p>这些意味着在表变大的时候会变得不可用。不过还有一个选择，<strong>导出数据到符号分隔的文件中</strong>。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">into</span> <span class="keyword">outfile</span> <span class="string">'/tmp/t1.txt'</span></span><br><span class="line"><span class="keyword">fields</span> <span class="keyword">terminated</span> <span class="keyword">by</span> <span class="string">','</span> optinally <span class="keyword">enclosed</span> <span class="keyword">by</span> <span class="string">'"'</span></span><br><span class="line"><span class="keyword">lines</span> <span class="keyword">terminated</span> <span class="keyword">by</span> <span class="string">'\n'</span> <span class="keyword">from</span> test.t1;</span><br></pre></td></tr></table></figure>
+<p>可以使用SQL命令 SELECT INTO OUTFILE 以符号分隔文件格式创建数据的逻辑备份（mysqldump —tab）。符号分隔文件以ASCII展示的原始数据，没有SQL，注释和列名。比起SQL导出,符号分隔文件更紧凑，更易于用命令行工具操作，最大的有点事备份和还原速度更快。可以和导出时使用一样的选项，用load data infile方法加载数据到表中</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">into</span> <span class="keyword">infile</span> <span class="string">'/tmp/t1.txt'</span></span><br><span class="line"><span class="keyword">into</span> <span class="keyword">table</span> test.t1</span><br><span class="line"><span class="keyword">fields</span> <span class="keyword">terminated</span> <span class="keyword">by</span> <span class="string">','</span> <span class="keyword">optionally</span> <span class="keyword">enclosed</span> <span class="keyword">by</span> <span class="string">'"'</span></span><br><span class="line"><span class="keyword">lines</span> <span class="keyword">terminated</span> <span class="keyword">by</span> <span class="string">'\n'</span>;</span><br></pre></td></tr></table></figure>
+<p>符号分隔的恢复速度，比sql导出，快了接近一倍，但是导出的时候，时间差异不大。</p>
+<p>但是select into outfile方法也有一些限制</p>
+<ul>
+<li>只能被分到运行MySQL服务器机器上的文件中</li>
+<li>运行MySQL的系统用户必须有文件目录的写权限，因为是由MySQL服务器来执行文件的写入，而不是运行SQL命令的用户</li>
+<li>出于安全原因，不能覆盖已经存在的文件，不管文件权限如何。</li>
+<li>不能直接导出到压缩文件中</li>
+<li>某些情况下很难进行正确的导出或导入，例如非标准的字符集。</li>
+</ul>
+<h4><span id="文件快照系统">文件快照系统</span></h4><p>LVM使用写时复制的技术来创建快照。例如，对整个卷的某个瞬间的逻辑副本。这与数据库中的MVCC有点像，不同的是它只保留一个老的数据版本。</p>
+<p>注意，说的不是物理副本。逻辑副本看起来好像包含了创建快照时卷中所有的数据，但实际上一开始快照是不包含数据的。相比复制数据到快照中，LVM知识简单地标记创建快照的时间点，然后对该快照请求读数据，实际上是从原试卷中读取的。因此，初始的复制基本上是一个瞬间就能完成的操作，不管创建快照的卷多大。</p>
+<p>当原始卷中某些数据有变化时，LVM在任何变更写入之前，会复制受影响的块到快照预留的区域中。LVM不保留数据的多个老版本，因此对原始卷中变更块的额外写入并不需要对快照做其他更多的工作。换句话手，每个块只有第一次写入才会导致写时复制。</p>
+<p>现在，在快照中请求这些块时，LVM会从复制块中而不是从原始卷中读取。所以，可以继续看到快照中相同时间点的数据而不需要阻塞任何原始卷。</p>
+<p>快照会在/dev目录下创建一个新的逻辑卷，可以像挂载其他设备一样挂载它。</p>
+<p>理论上讲，这种技术可以对一个非常大的卷做快照，而只需要非常少的物理存储空间。但是，必须设置足够的空间，保证在快照打开时，能够保存所有期望在原始卷上更新的数据。如果不预留足够的写时复制空间，当快照用完所有的空间后，设备就会变得不可用。这个影响就像拔出一个外部设备，任何从设备上读的备份工作都会因为IO错误而失败。</p>
+<h3><span id="从备份中恢复">从备份中恢复</span></h3><hr>
+<h4><span id="恢复物理备份">恢复物理备份</span></h4><p>简单复制文件到正确位置，是否需要关闭MySQL取决于存储引擎，innodb必须关闭。</p>
+<p>如果使用innodb的file-per-table特性，innodb会将每个表的数据和索引存储于一个.ibd文件中。可以在服务器运行时通过复制这些文件来备份和还原单个表。</p>
+<p>还原的时候，需要确保拥有权限，而且需要观察MySQL日志，同时，也需要使用show table status来监测日志。</p>
+<h4><span id="还原逻辑备份">还原逻辑备份</span></h4><p>加载导出文件前，需要考虑一下，文件有多大，需要多久加载完，以及在启动前还需要做什么事情，例如，禁掉二进制日志是个好主意，除非需要将还原操作复制到备库。服务器加载一个巨大的导出文件的代价很高，并且写二进制日志会增加更多的开销，对一些存储引擎也有影响。因为巨大的回滚段会导致文件，应该可控，并且逐个提交事务。</p>
+<p>有两种类型的逻辑备份，所以，就应该有两种类型的还原操作。</p>
+<h5><span id="加载sql文件">加载SQL文件</span></h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql &lt; sakila-backup.sql</span><br></pre></td></tr></table></figure>
+<p>也可以使用source命令加载文件。如果是mysql管理用户，就可以关闭二进制记录，然后加载文件而不需要重启服务器</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">set SQL_LOG_BIN = 0;</span><br><span class="line">SOURCE sakila-backup.sql;</span><br><span class="line">SET SQL_LOG_BIN = 1;</span><br></pre></td></tr></table></figure>
+<p>如果备份做过压缩，不要分别解压缩和加载。应该在单个操作中完成解压缩和加载。会快很多</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gunzip -c sakila-backup.sql.gz | mysql</span><br></pre></td></tr></table></figure>
+<p>如果指向恢复单个表，如果数据没有分行但是有schema信息，那么还原数据并不难</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grep 'INSERT INTO ``actor' sakila-backup.sql | mysql sakila</span><br></pre></td></tr></table></figure>
+<p>如果文件时压缩过的，那么命令如下</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gunzip -c sakila-backup.sql.gz | grep 'INSERT INTO `actor`' | mysql sakila</span><br></pre></td></tr></table></figure>
+<h5><span id="加载符号分隔文件">加载符号分隔文件</span></h5><p>如果是通过select into outfile导出的符号分隔文件，可以使用load data infile通过相同的参数来加载。也可以使用mysqlimport，这是load data infile的一个包装。</p>
+<p>使用load data infiel有一个好的优化技巧，load data file必须从文本文件中读取，因此，如果是压缩文件很多人会在加载前先解压缩，这是非常慢的磁盘密集型的操作。可以使用官道。</p>
+<h4><span id="基于时间点的恢复">基于时间点的恢复</span></h4><p>对于MySQL做基于时间点的恢复常见的方法是还原最近一次全备份，然后从那个时间点开始重放二进制日志，就可以恢复到任何希望的时间点。甚至可以不太费力的恢复单个数据库。</p>
+<p>最主要的缺点是二进制日志重放可能会是一个很慢的过程。它大体上等同于复制。如果有一个备库，并且已经测量到SQL线程的利用率有多高，那么对重放二进制日志会有多快心里就有数了。</p>
+<p>一个典型场景是对有害的语句的结果做回滚操作，例如DROP TABLE 。看个简化的例子，myisam，半夜，备份任务在运行与下面所列相当的语句，复制数据库到同一服务器上的其他地方。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">flush tables with read loack;</span><br><span class="line">cp -a /var/lib/mysql/sakila /backup/sakila;</span><br><span class="line">mysql -e "show master statsu" --vertial &gt; /backup/master.info;</span><br><span class="line">unlock tables;</span><br></pre></td></tr></table></figure>
+<p>然后，假设有人在晚些时间运行下列语句。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> sakila;</span><br><span class="line"><span class="keyword">drop</span> <span class="keyword">table</span> sakila.payment;</span><br></pre></td></tr></table></figure>
+<p>我们先假设可以单独的恢复整个数据库。再假设是知道后来出问题才意识到这个有问题的语句。目标是恢复数据库中除了有问题的语句之外所有发生的事务。也就会说，其他表已经做的所有修改都必须保持，包括有问题的语句运行之后的修改。</p>
+<p>首先，停掉MySQL以阻止更多的修改，然后从备份中仅恢复sakila数据库。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/etc/init.d/mysql stop</span><br><span class="line">mv /var/lib/mysql/sakila /var/lib/mysql/sakila.tmp</span><br><span class="line">cp -a /backup/sakial /var/lib/mysql</span><br></pre></td></tr></table></figure>
+<p>再到运行的服务器的my.cnf中添加如下配置以禁止正常的连接。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">skip-networking</span><br><span class="line">socket/tmp/mysql_recover.sock</span><br></pre></td></tr></table></figure>
+<p><br>现在可以安全启动服务器了</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/etc/init.d/mysql start</span><br></pre></td></tr></table></figure>
+<p>下一个任务是从而禁止日志中分出需要重放和忽略的语句。事发时，自半夜的备份以来，服务器只创建了一个二进制日志。我们可以用grep来检查二进制日志文件以找到问题语句。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysqlbinlog --database=sakila /var/log/mysql/mysql-bin.000215 | grep -B3 -i 'drop table sakila.payment'</span><br></pre></td></tr></table></figure>
+<p>可以看到，我们想忽略的语句在日志文件中的352位置，下一个语句位置是429.可以用下面的命令重放日直到352位置，然后从429继续。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mysqlbinlog --database=sakila /var/log/mysql/mysql-bin.000215 --stop-position=352 | mysql -u root - p</span><br><span class="line">mysqlbinlog --database=sakila /var/log/mysql/mysql-bin.000215 --start-position=429 | mysql -u root - p</span><br></pre></td></tr></table></figure>
+<h3><span id="更高级的恢复技术">更高级的恢复技术</span></h3><h4><span id="延时复制">延时复制</span></h4><p>停止备库，使用start slave until来重放事件知道要执行问题语句。接着，执行 set global sql_slave_skip_counter=1来跳过问题语句。</p>
+<p>然后要做的就是执行start slave ，让备库执行完所有的中级日志。这样就利用备库完成了基于时间点的恢复中所有冗长的工作。现在可以将备库提升为主库。</p>
+<p>即使没有延时的备库来加速恢复，普通的备库也有好处，至少会把主库的二进制日志复制到另外的机器上。如果主库的磁盘坏了，备库上的中继日志可能就是唯一能够获取到的最接近主库二进制日志的东西了。</p>
+<h4><span id="使用日志服务器进行恢复">使用日志服务器进行恢复</span></h4><p>下面是利用日志服务器进行恢复的步骤：</p>
+<ul>
+<li>将需要恢复的服务器叫做server1</li>
+<li>在另外一台叫做server2的服务器上恢复昨晚的备份。在这台服务器上运行恢复进程，以免在恢复时犯错而导致事情更糟糕</li>
+<li>按照之前的做法，设置日志服务器来接收server1的二进制日志</li>
+<li>改变server2的配置文件，增加：replicate-to-table=sakial.payment</li>
+<li>重启server2，然后用change master to 来让它成为日志服务器的备库。配置它从昨晚备份的二进制日志坐标读取。这时候切记不要运行start slave</li>
+<li>检测server2上的show slave status的输出，验证一切正常。三思而行</li>
+<li>找到二进制日志中问题语句的位置，在server2上执行start slave until来重放事件知道该位置。</li>
+<li>在server2上用stop slave停掉复制进程。现在应该有被删除表，因为现在从库停止在被删除之前的时间点。</li>
+<li>将所需表从server2复制到server1.</li>
+</ul>
+<h3><span id="innodb损坏修复">InnoDB损坏修复</span></h3><ul>
+<li><p>二级索引损坏</p>
+<p>  一般可以用optimize table 来修复损坏的二级索引；此外，也可以用select into outfile，删除和重建表，然后load data infile的方法。</p>
+</li>
+<li><p>聚簇索引损坏</p>
+<p>  如果是聚簇索引损坏，也许只能用innodb_force_recovery选项来导出表。</p>
+</li>
+<li><p>损坏系统结构</p>
+<p>  系统结构包括事务日志，表空间的撤销日志和数据字典。这种损坏可能需要做整个数据库的导出和还原，因为innodb内部绝大部分工作都可能受到影响。</p>
+</li>
+</ul>
 
     </div>
 
@@ -419,7 +517,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">1.</span> <span class="nav-text">1. 为什么要备份？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">2.</span> <span class="nav-text">2. 定义备份需求</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">3.</span> <span class="nav-text">3 设计MySQL备份方案</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">3.1.</span> <span class="nav-text">3.3 备份什么</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">3.2.</span> <span class="nav-text">3.4 存储引擎和一致性</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">4.</span> <span class="nav-text">4 管理和备份二进制日志</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">1.</span> <span class="nav-text">1. 为什么要备份？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">2.</span> <span class="nav-text">2. 定义备份需求</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">3.</span> <span class="nav-text">3 设计MySQL备份方案</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">3.1.</span> <span class="nav-text">3.3 备份什么</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">3.2.</span> <span class="nav-text">3.4 存储引擎和一致性</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">4.</span> <span class="nav-text">4 管理和备份二进制日志</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">5.</span> <span class="nav-text">5 备份数据</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">5.1.</span> <span class="nav-text">生成逻辑备份</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">5.2.</span> <span class="nav-text">文件快照系统</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">6.</span> <span class="nav-text">从备份中恢复</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">6.1.</span> <span class="nav-text">恢复物理备份</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">6.2.</span> <span class="nav-text">还原逻辑备份</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">6.2.1.</span> <span class="nav-text">加载SQL文件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#null"><span class="nav-number">6.2.2.</span> <span class="nav-text">加载符号分隔文件</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">6.3.</span> <span class="nav-text">基于时间点的恢复</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">7.</span> <span class="nav-text">更高级的恢复技术</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">7.1.</span> <span class="nav-text">延时复制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">7.2.</span> <span class="nav-text">使用日志服务器进行恢复</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">8.</span> <span class="nav-text">InnoDB损坏修复</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -435,20 +533,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">94</span>
+          <span class="site-state-item-count">97</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-count">14</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-count">24</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
