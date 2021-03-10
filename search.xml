@@ -1,6 +1,112 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>RabbitMQ 进阶概念</title>
+    <url>/2021/03/10/Book%20Nodes/RabbitMQ%E5%AE%9E%E6%88%98%E6%8C%87%E5%8D%97/2021-03-10-%E8%BF%9B%E9%98%B6/</url>
+    <content><![CDATA[<h3><span id="消息何去何从">消息何去何从</span></h3><p>mandatory和immediate是channel.basicPublish方法中的两个参数，都有当消息传递过程中不可达目的地时将消息返回给生产者的功能。RabbitMQ提供的备份交换器可以将未能被交换器路由的消息（没有绑定队列或者没有匹配的绑定）存储起来，而不用返回给客户端。</p><a id="more"></a>
+<h4><span id="mandatory-参数">mandatory 参数</span></h4><p>当mandatory为true时，交换器无法根据自身的类型和路由键找到一个符合条件的队列，那么RabbitMQ会调用BasicReturn命令将消息返回给生产者。当mandatory参数设置为false时，出现上述情形，则消息直接被丢弃。</p>
+<p>生产者可以通过调用channel.addReturnListener来添加ReturnListener监听器实现。如果没有将消息成功路由到队列，监听器的方法会执行。</p>
+<h4><span id="immediate参数">immediate参数</span></h4><p>当immediate参数为true的时候，如果交换器在将消息路由到队列时发现队列上并不存在任何消费者，那么这条消息将不会存入队列中。当与路由键匹配的所有队列都没有消费者时，该消息会通过Basic.Return返回至生产者。</p>
+<p>概括来说，mandatory参数告诉服务器至少将消息路由到一个队列中，否则将消息返回给生产者。immediate参数告诉服务器，如果该消息关联的队列上有消费者，则立刻投递，如果所有匹配的队列上都没有消费者，则直接将消息返还给生产者，不用讲消息存储队列而等待消费者了。</p>
+<p>3.0后取消了immediate，建议采用TTL和DLX。</p>
+<h4><span id="备份交换器">备份交换器</span></h4><p>Alternate Exchange，备胎交换器。生产者在发送消息的时候如果不设置mandatory参数，那么消息在未被路由的情况下将会丢失；如果设置了mandatory参数，那么需要添加ReturnListener的编程逻辑，生产者的代码将变的复杂。如果既不想复杂化生产者的编程逻辑，又不想消息丢失，那么可以使用备份交换器，这样可以将未被路由的消息存储在RabbitMQ中，在需要的时候去处理这些消息。</p>
+<p>可以在通过声明交换器（调用chnnel.exchangeDeclare方法）的时候添加alternate-exchange参数来实现，也可以通过策略的方式实现。如果两者同时使用，前者的优先级会更高，会覆盖掉Policy的设置。</p>
+<p>备份交换器建议设置为fanout类型，需要注意的是，消息被重新发送到备份交换器时的路由键和从生产者发出的路由键是一样的。</p>
+<p>备份交换器，有下面几种特殊情况</p>
+<ul>
+<li><p>如果设置的备份交换器不存在，客户端和RabbitMQ服务端都不会有异常出现，此时消息会丢失</p>
+</li>
+<li><p>如果备份服务器没有绑定任何队列，客户端和RabbitMQ服务端都不会有异常出现，此时消息会丢失</p>
+</li>
+<li><p>如果备份交换器没有任何匹配的队列，客户端和RabbitMQ服务端都不会有异常出现，此时消息会丢失</p>
+</li>
+<li><p>如果备份交换器和mandatory参数一起使用，那么mandatory参数无效</p>
+</li>
+</ul>
+<h3><span id="过期时间-ttl">过期时间 TTL</span></h3><p>Time to Live的简称</p>
+<h4><span id="设置消息的ttl">设置消息的TTL</span></h4><p>有两种方法可以设置消息的TTL。第一种是通过队列属性设置，队列中所有消息都有相同的过期时间。第二种是对消息本身进行单独设置，每条消息的TTL可以不同.如果两种方法一起使用，则消息的TTL以两者之间较小的那个数值为准.消息在队列中的生存时间一旦超过设置的TTL值时，就会变成死信，消费者将无法在收到该消息。</p>
+<p>TTL设置为0，则表示除非此时可以直接将消息投递给消费者，否则该消息会被立刻丢弃。</p>
+<p>对于第一种设置队列TTL属性的方法，一旦消息过期，就会从队列中抹去，而在第二种方法中，即使消息过期，也不会马上从队列中抹去，因为每条消息是否过期是在即将投递到消费者之前判定的。</p>
+<p>为什么这两种方法处理的方式不一样？因为第一种方法里，队列中已过期的消息肯定在队列头部，RabbitMQ只需要定期从队头开始扫描是否有过期的消息即可。而第二种方法里，每条消息的过期时间不同，如果要删除所有过期消息势必要扫描整个队列，所以不如等到此消息即将被消费时再判定是否过期，如果过期再进行删除即可。</p>
+<h3><span id="死信队列">死信队列</span></h3><p>Dead-Letter-Exchange，当消息在一个队列中变成死信后，它能被重新发送到另一个交换器中，这个交换器就是DLX，绑定于DLX的队列就称之为死信队列。</p>
+<p>消息变成死信一般是由于以下几种情况：</p>
+<ul>
+<li>消息被拒绝，并且设置requeue参数为false</li>
+<li>消息过期</li>
+<li>队列达到最大长度</li>
+</ul>
+<p>DLX可以处理异常情况下，消息不能够被消费者正确消费而被置入死信队列中的情况，后续分析程序可以通过消费这个死信队列中的内容来分析当时所遇到的异常情况，进而可以改善和优化系统，DLX配合TTL还可以实现延迟队列的功能</p>
+<h3><span id="延迟队列">延迟队列</span></h3><p>场景很多，比如：</p>
+<ul>
+<li><p>订单系统，有30分钟的时间进行支付</p>
+</li>
+<li><p>智能家居，指定的时间进行工作</p>
+</li>
+</ul>
+<p>DLX死信队列，同样可以看成为延迟队列。假设一个应用中需要将每条消息都设置为10秒的延迟，生产者通过exchange.normal这个交换器将发送的消息存储在queue.normal这个队列中。消费者订阅的并非是queue.normal这个队列，而是queue.dlx这个队列。当消息从queue.normal这个队列中过期之后被存到queue.dlx这个队列中，消费者就恰巧消费到了延迟10秒的这条信息。</p>
+<h3><span id="优先级队列">优先级队列</span></h3><p>优先级高的队列具备优先被消费的特权。这个也有前提，如果消费者的生产速度大于生产者的生产速度，并且Broker中没有消息堆积的情况下，对发送的消息设置优先级，也就没有什么实际意义。因为生产者刚生产完一条消息就被消费者消费了，那么久相当于Broker中至多只有一条消息，对于单条消息来说，优先不优先没啥意义。</p>
+]]></content>
+      <categories>
+        <category>RabbitMQ</category>
+      </categories>
+      <tags>
+        <tag>消息队列</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>RabbitMQ 入门概念</title>
+    <url>/2021/03/10/Book%20Nodes/RabbitMQ%E5%AE%9E%E6%88%98%E6%8C%87%E5%8D%97/2021-03-10-%E6%A6%82%E5%BF%B5/</url>
+    <content><![CDATA[<p>整体模型架构如图：</p><hr><h3><span id="概念">概念</span></h3><h4><span id="生产者和消费者">生产者和消费者</span></h4><p>Producer：生产者，投递消息的一方。消息一般包含两个部分：消息体和标签，消息体可以称之为payload，一般是一个带有业务逻辑结构的数据，例如JSON。消息的标签用来表述这条信息，比如一个交换器的名称和一个路由键。生产者把消息交给RabbitMQ，RabbitMQ之后会根据标签把消息发送给感兴趣的消费者。</p><a id="more"></a>
+
+
+<p>Consumer：消费者，接收消息的一方。消费者消费消息时，只是消费消息体（payload）。在路由的过程中，消息的标签会丢弃，存入消息队列中的消息只有消息体，消费者也只会消费到消息体，也就不知道消息的生产者是谁</p>
+<p>Broker：消息中间件的服务节点。 或者可以看为一个RabbitMQ服务实例。</p>
+<h4><span id="队列">队列</span></h4><p>Queue：队列，RabbitMQ的内部对象，用来存储消息。RabbitMQ中消息只能存储在队列中，这一点和Kafka相反。Kafka将消息存储在topic（主题）这个逻辑层面，而相对应的队列逻辑只是topic实际存储文件中的位移标识。RabbitMQ的生产者生产消息并最终投递到队列中，消费者可以从队列中获取消息并消费。</p>
+<p>多个消费者可以订阅同一个队列，这时候，队列中的消息会被平均分摊（Round-Robin，即轮训）给多个消费者进行处理。</p>
+<p>RabbitMQ不支持队列层面的广播消费，如果需要广播消费，需要在其上进行二次开发</p>
+<h4><span id="交换器路由键绑定">交换器，路由键，绑定</span></h4><p>Exchange：交换器。生产者将消息发送到Exchange，由X将消息路由到一个或者多个队列中。如果路由不到，或许会返回给生产者，或者直接丢弃。</p>
+<p>RabbitMQ中的交换器有四种类型，分别有着不用的路由策略。</p>
+<p>分别是</p>
+<ul>
+<li><p>fanout </p>
+<p>它会把所有发送到该交换器的消息路由到所有与该交换器绑定的队列中</p>
+</li>
+<li><p>direct</p>
+<p>它会将消息路由到那些BindingKey和RoutingKey完全匹配的队列中</p>
+</li>
+<li><p>topic</p>
+<p>匹配模式</p>
+</li>
+<li><p>headers</p>
+<p>根据消息内容中的headers属性进行匹配。</p>
+</li>
+</ul>
+<p>RountingKey：路由键。Consumer -&gt; X，一般会指定一个RoutingKey，用来指定这个消息的路由规则，而这个Routing Key需要与交换器类型和绑定键（BindingKey）联合使用才能最终生效</p>
+<p>在交换器类型和BindingKey固定的情况下，生产者可以在发送消息给交换器时，通过指定RoutingKey来决定消息流向哪里。</p>
+<p>Binding：绑定。RabbitMQ中通过绑定将交换器与队列关联起来，在绑定的时候一般会指定一个BindingKey，这样才能正确的将消息路由到队列。</p>
+<p>生产者将消息发送给交换器的时候，需要一个RoutingKey，当BindingKey和RoutingKey相匹配时，消息会被路由到对应的对垒中。在绑定多个队列到同一个交换器器的时候，这些绑定允许使用相同的Bindingkey。BindingKey并不是在所有的情况下都生效，依赖于交换器类型。</p>
+<h4><span id="connection-channel">Connection  Channel</span></h4><p>生产和和消费者和Broker建立连接的时候，这个连接就是一条TCP连接，也就是Connection，一旦TCP连接建立起来，客户端可以紧接着创建一个AMQP信道，每条信道都会被指派一个唯一的ID。信道是建立在Connection之上的虚拟连接，RabbitMQ处理的每条AMQP指令都是通过信道完成的。</p>
+<p>RabbitMQ采用的是NIO的做法，TCP连接复用。每个线程把持一个信道，信道复用了Connection的TCP链接。同时RabbitMQ可以保证每个线程的私密性，就像是拥有独立的连接一样。当每个信道的流量不是很大时，复用单一的Connection可以在产生性能瓶颈的情况下有效的节省TCP连接资源。但是当信道本身的流量很大时，这时候多个信道复用一个Connection就会产生新能瓶颈，进而使整体的流量被限制了。这时候就需要开辟多个Connection，将信道均摊到这些Connection中。</p>
+<hr>
+<h3><span id="amqp协议">AMQP协议</span></h3><p>包括三层：</p>
+<ul>
+<li><p>Module Layer，协议最高层，定义了一些命令</p>
+</li>
+<li><p>Session Layer，中间层，负责将命令发送给服务器，再将服务的应答返回给客户端，主要为客户端和服务器之间的通信提供可靠性同步机制和错误处理</p>
+</li>
+<li><p>Transport Layer，最底层，传输二进制数据，提供帧的处理，信道复用，错误监测和数据表示等</p>
+</li>
+</ul>
+<p>AMQP是一个通信协议，本身是应用层的协议，填充于TCP协议层的数据部分。</p>
+]]></content>
+      <categories>
+        <category>RabbitMQ</category>
+      </categories>
+      <tags>
+        <tag>消息队列</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>可能的一些面试题</title>
     <url>/2021/03/07/Interview/%E5%8F%AF%E8%83%BD%E7%9A%84%E4%B8%80%E4%BA%9B%E9%9D%A2%E8%AF%95%E9%A2%98/</url>
     <content><![CDATA[<ol>
@@ -50,8 +156,21 @@
 </li>
 <li><p>如何解决消息队列的延时以及过期失效问题？消息队列满了之后怎么处理？有几百万消息持续积压几小时，说说怎么解决？</p>
 </li>
+<li><p>Spring Cloud 和 Dubbo 的区别是什么</p>
+</li>
+<li><p>什么是Hystrix？它如何实现容错？</p>
+</li>
+<li><p>什么是 Netflix Feign？它的优点是什么？</p>
+</li>
+<li><p>说一下spring cloud的优缺点</p>
+</li>
+<li><p>Eureka和ZooKeeper都能实现服务注册和服务发现的功能，说一说这两个的优缺点，对比一下</p>
+</li>
+<li><p>说一下工作中你用到的设计模式有哪些？怎么用的？</p>
+<p>重点说单例模式，适配器模式，策略模式，工厂模式，抽象工厂模式，门面模式，模板模式，迭代器模式，组合模式，状态模式，代理模式，复合模式</p>
+</li>
 </ol><a id="more"></a>
-<p>24.</p>
+<p>30.</p>
 ]]></content>
       <categories>
         <category>面试</category>
