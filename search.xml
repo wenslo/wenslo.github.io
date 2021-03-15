@@ -1,6 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>从Lucene到Elasticsearch 信息检索模型</title>
+    <url>/2021/03/15/Book%20Nodes/%E4%BB%8ELucene%E5%88%B0Elasticsearch/2021-03-15-%E5%BA%8F/</url>
+    <content><![CDATA[<h3><span id="分词算法概述">分词算法概述</span></h3><h4><span id="英文分词的原理">英文分词的原理</span></h4><p>基本处理流程是：输入文本、词汇分割、词汇过滤，词干提取，大写转为小写，结果输出</p><a id="more"></a>
+<h4><span id="中文分词原理">中文分词原理</span></h4><p>基于词典匹配的分词方法，基于语义理解的分词，基于词频统计的分词</p>
+<h3><span id="词典匹配分词法">词典匹配分词法</span></h3><p>把一个句子从左到右扫描一遍，遇到字典中有的词就标识出来，遇到复合词就找到最长的词匹配，遇到不认识的子串则切分成单个词。按照匹配操作的扫描方向不同，可以分为：正向匹配，逆向匹配以及双向匹配算法；按照不同长度优先匹配的情况，可以分为最长匹配和最短匹配；按照是否与词性标注过程相结合，又可以分为单纯分词方法和分词与词性标注相结合的方法。</p>
+<p>常用如下</p>
+<ul>
+<li>正向最大匹配（从左到右）</li>
+<li>逆向最大匹配（从右到左）</li>
+<li>最少切分（每一句中切除的词数最小）</li>
+</ul>
+<p>中文分词最大的问题是歧义处理，结合中文语言自身的特点，经常采用逆向匹配的切分算法，处理的精度高于正向匹配，产生的切分歧义现象也比较少。</p>
+<p>真正实用的分词系统，都是把词典分词作为基础搜狐段，集合各种语言的其他特征信息来提高切分的效果和准确度。有的实用系统中将分词和词性标注结合起来，利用句法和词法分析对分词决策提高帮助，在词性标注过程中迭代处理，利用词性和语法信息对分词结果进行检验、调整。</p>
+<h3><span id="语义理解分词法">语义理解分词法</span></h3><p>基本模式是把分词、句法、语义分析并行进行，利用句法和语义信息来处理分词的歧义。</p>
+<p>试验阶段</p>
+<h3><span id="词频统计分词法">词频统计分词法</span></h3><p>通过精心准备的中文语料中相邻共现的各个字的组合的频度进行统计，计算不同字词的共现信息。根据两个字的统计信息，计算两个汉字的相邻共现概率，统计出来的信息体现了中文环境下汉字之间结合的紧密程度。当紧密程度高于某一个阈值的时候，便可认为此字组可能构成一个词。</p>
+<p>基于词频统计的分词方法只需要对语料中的字组频度进行统计，不需要切分词典，因此又叫做无词典分词法或者统计分词方法。这种方法经常抽出一些共现程度高但不是词的常用字组，需要专门处理，提高精确度。实际应用的统计分词系统都是用一个基本的常用词词典，把字典分词和统计分词结合使用。基于统计的方法能很好地解决词典未收录新词的处理问题，即将中文分词中的串频统计和串匹配结合起来，既发挥匹配分词切分速度快、效率高的特点，有利用了无词典分词结合上下文识别生词、自动消除歧义的优点。</p>
+<hr>
+<h2><span id="倒排索引">倒排索引</span></h2><p>倒排索引，也常被成为反向索引，是一种索引方法，用来存储在全文搜索下某一个单词在一个文档或者一组文档中的存储位置的映射，他是文档检索系统中最常用的数据结构。</p>
+<h2><span id="布尔检索模型">布尔检索模型</span></h2><p>NOT &gt; AND &gt; OR</p>
+<p>优点：</p>
+<ul>
+<li>与人们的思维习惯一致</li>
+<li>表达清晰直观</li>
+<li>方便用户进行扩展和检索</li>
+<li>易于计算机实现</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>二元判定标准，缺乏文档分级的概念，不能进行关键词重要性排序，限制了检索功能</li>
+<li>没有反应概念之间内在的语义联系。所有的语义关系都被简单的匹配代替，常常很难将用户的信息需求转换为准确的布尔表达式</li>
+<li>完全匹配会导致太少的结果文档被返回，没有加权的概念，容易出现遗漏</li>
+</ul>
+<h2><span id="tf-idf权重计算">tf-idf权重计算</span></h2><p>tf-idf中文成为词频-逆文档频率，用以计算词项对于一个文档集或一个语料库中的一份文件的重要程度。<strong>词项的重要性随着它在文档中出现的次数成正比增加，但同时会随着它在文档集中出现的频率成反比下降</strong>。换句话说，如果一个词项在一篇文档中出现的频率非常高，说明其重要性比较高，但是如果这个词项在文档集中的其他的文档中出现的频率也很高，那么说明这个词语有可能是比较通用比较常见的。</p>
+<p>tf(term frequency)代表词项频率，想要计算一份文档中某个词的词频，统计该词在整篇文档中出现的次数即可。文档有长短之分，举个栗子，一篇3000字的文章中词语 足球 出现了3次，我们很难断定这篇文章是和足球相关的，但是一篇140字的微博中同样出现3次 足球 ，基本可以断定微博内容和足球有关。为了削弱文档长度的影响，需要将词频标准化，计算方法如下：</p>
+<script type="math/tex; mode=display">词频(tf_f,d)=单词在文档中的出现次数/文档的总次数</script><p>另外，词频标准化的方法不止一种，Lucene中采用了另外一种词频标准化方法：</p>
+<script type="math/tex; mode=display">词频(tf_f,d)=单词在文档中的出现次数</script><p>文档频率用df（document frequency）标识，代表文档集中包含某个词的所有文档数目。df通常比较大，把它映射到一个较小的取值范围，用逆文档频率（inverse document frequency，缩写为idf）来表示：</p>
+<script type="math/tex; mode=display">逆文档频率（idf_t）= log(文档集总的文档树/包含某个词的文档数+1) = log(N/df_t +1)</script><p>上面的式子中，分母越大，说明该词越常见，逆文档频率越小。分母中文档数加1是进行平滑处理，防止所有文档都不包含某个词时分母为0的情况发生。词项的权重用TF-IDF来表示，计算公式如下：</p>
+<script type="math/tex; mode=display">tf-idf = 词频(tf_t,d) * 逆文档频率(idf_t)</script><p>通过tf-idf可以把文档表示成n维的词项权重向量：</p>
+<script type="math/tex; mode=display">document vector = (W_1,W_2, ...W_n)</script><p>计算词项的tf-idf的Java如下所示，在TfIdfCal类中依次定义了计算词项频率tf，文档频率df，逆文档频率idf、tf-idf的方法</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TfIdfCal</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">double</span> <span class="title">tf</span><span class="params">(List&lt;String&gt; doc, String term)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">double</span> termFrequency = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span> (String str : doc) &#123;</span><br><span class="line">            <span class="keyword">if</span> (str.equalsIgnoreCase(term))</span><br><span class="line">                termFrequency++;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> termFrequency / doc.size();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">df</span><span class="params">(List&lt;List&lt;String&gt;&gt; docs, String term)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> n = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">if</span> (term != <span class="keyword">null</span> &amp;&amp; term != <span class="string">""</span>) &#123;</span><br><span class="line">            <span class="keyword">for</span> (List&lt;String&gt; doc : docs) &#123;</span><br><span class="line">                <span class="keyword">for</span> (String word : doc) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (term.equalsIgnoreCase(word)) &#123;</span><br><span class="line">                        n++;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            System.out.println(<span class="string">"term不能为null或者空字符串！"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> n;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">double</span> <span class="title">idf</span><span class="params">(List&lt;List&lt;String&gt;&gt; docs, String term)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> Math.log(docs.size() / (<span class="keyword">double</span>) df(docs, term) + <span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">double</span> <span class="title">tfidf</span><span class="params">(List&lt;String&gt; doc, List&lt;List&lt;String&gt;&gt; docs, String term)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> tf(doc, term) * idf(docs, term);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        List&lt;String&gt; doc1 = Arrays.asList(<span class="string">"人工"</span>, <span class="string">"智能"</span>, <span class="string">"成为"</span>, <span class="string">"互联网"</span>, <span class="string">"大会"</span>, <span class="string">"焦点"</span>);</span><br><span class="line">        List&lt;String&gt; doc2 = Arrays.asList(<span class="string">"谷歌"</span>, <span class="string">"推出"</span>, <span class="string">"开源"</span>, <span class="string">"人工"</span>, <span class="string">"智能"</span>, <span class="string">"系统"</span>, <span class="string">"工具"</span>);</span><br><span class="line">        List&lt;String&gt; doc3 = Arrays.asList(<span class="string">"互联网"</span>, <span class="string">"的"</span>, <span class="string">"未来"</span>, <span class="string">"在"</span>, <span class="string">"人工"</span>, <span class="string">"智能"</span>);</span><br><span class="line">        List&lt;String&gt; doc4 = Arrays.asList(<span class="string">"谷歌"</span>, <span class="string">"开源"</span>, <span class="string">"机器"</span>, <span class="string">"学习"</span>, <span class="string">"工具"</span>);</span><br><span class="line">        TfIdfCal calculator = <span class="keyword">new</span> TfIdfCal();</span><br><span class="line">        List&lt;List&lt;String&gt;&gt; documents = Arrays.asList(doc1, doc2, doc3, doc4);</span><br><span class="line">        System.out.println(calculator.tf(doc2, <span class="string">"谷歌"</span>));</span><br><span class="line">        System.out.println(calculator.df(documents, <span class="string">"谷歌"</span>));</span><br><span class="line">        <span class="keyword">double</span> tfidf = calculator.tfidf(doc2, documents, <span class="string">"谷歌"</span>);</span><br><span class="line">        System.out.println(<span class="string">"TF-IDF（谷歌）= "</span> + tfidf);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2><span id="向量空间模型">向量空间模型</span></h2>]]></content>
+      <categories>
+        <category>Elasticsearch</category>
+      </categories>
+      <tags>
+        <tag>搜索引擎</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>RabbitMQ 进阶概念</title>
     <url>/2021/03/10/Book%20Nodes/RabbitMQ%E5%AE%9E%E6%88%98%E6%8C%87%E5%8D%97/2021-03-10-%E8%BF%9B%E9%98%B6/</url>
     <content><![CDATA[<h3><span id="消息何去何从">消息何去何从</span></h3><p>mandatory和immediate是channel.basicPublish方法中的两个参数，都有当消息传递过程中不可达目的地时将消息返回给生产者的功能。RabbitMQ提供的备份交换器可以将未能被交换器路由的消息（没有绑定队列或者没有匹配的绑定）存储起来，而不用返回给客户端。</p><a id="more"></a>
@@ -216,9 +266,13 @@
 <li><p>说一下工作中你用到的设计模式有哪些？怎么用的？</p>
 <p>重点说单例模式，适配器模式，策略模式，工厂模式，抽象工厂模式，门面模式，模板模式，迭代器模式，组合模式，状态模式，代理模式，复合模式</p>
 </li>
-</ol><a id="more"></a>
-<p>30.</p>
-]]></content>
+<li><p>Elasticsearch 是如何实现选举的？</p>
+</li>
+<li><p>Elasticsearch中的节点有20个，其中10个选举了一个master，另外10个选了另外一个master，怎么办</p>
+</li>
+<li><p>详细描述一下Elasticsearch索引文档的过程。</p>
+</li>
+</ol>]]></content>
       <categories>
         <category>面试</category>
       </categories>

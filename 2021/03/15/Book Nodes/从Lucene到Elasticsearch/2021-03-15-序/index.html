@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.4.2',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Lucene到Elasticsearch 信息检索模型">
+<meta name="keywords" content="搜索引擎">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从Lucene到Elasticsearch 信息检索模型">
+<meta property="og:url" content="https://wenslo.github.io/2021/03/15/Book Nodes/从Lucene到Elasticsearch/2021-03-15-序/index.html">
+<meta property="og:site_name" content="温海林的博客">
+<meta property="og:description" content="Lucene到Elasticsearch 信息检索模型">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2021-03-15T14:59:12.623Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="从Lucene到Elasticsearch 信息检索模型">
+<meta name="twitter:description" content="Lucene到Elasticsearch 信息检索模型">
+
+<link rel="canonical" href="https://wenslo.github.io/2021/03/15/Book Nodes/从Lucene到Elasticsearch/2021-03-15-序/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>从Lucene到Elasticsearch 信息检索模型 | 温海林的博客</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">温海林的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">技术，工作，生活，随笔</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://wenslo.github.io/2021/03/15/Book Nodes/从Lucene到Elasticsearch/2021-03-15-序/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/images/fbb1.jpg">
+      <meta itemprop="name" content="温海林">
+      <meta itemprop="description" content="Fake it, make it!">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温海林的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          从Lucene到Elasticsearch 信息检索模型
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-03-15 21:50:38" itemprop="dateCreated datePublished" datetime="2021-03-15T21:50:38+08:00">2021-03-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-03-15 22:59:12" itemprop="dateModified" datetime="2021-03-15T22:59:12+08:00">2021-03-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Elasticsearch/" itemprop="url" rel="index">
+                    <span itemprop="name">Elasticsearch</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <div class="post-description">Lucene到Elasticsearch 信息检索模型</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3><span id="分词算法概述">分词算法概述</span></h3><h4><span id="英文分词的原理">英文分词的原理</span></h4><p>基本处理流程是：输入文本、词汇分割、词汇过滤，词干提取，大写转为小写，结果输出</p><a id="more"></a>
+<h4><span id="中文分词原理">中文分词原理</span></h4><p>基于词典匹配的分词方法，基于语义理解的分词，基于词频统计的分词</p>
+<h3><span id="词典匹配分词法">词典匹配分词法</span></h3><p>把一个句子从左到右扫描一遍，遇到字典中有的词就标识出来，遇到复合词就找到最长的词匹配，遇到不认识的子串则切分成单个词。按照匹配操作的扫描方向不同，可以分为：正向匹配，逆向匹配以及双向匹配算法；按照不同长度优先匹配的情况，可以分为最长匹配和最短匹配；按照是否与词性标注过程相结合，又可以分为单纯分词方法和分词与词性标注相结合的方法。</p>
+<p>常用如下</p>
+<ul>
+<li>正向最大匹配（从左到右）</li>
+<li>逆向最大匹配（从右到左）</li>
+<li>最少切分（每一句中切除的词数最小）</li>
+</ul>
+<p>中文分词最大的问题是歧义处理，结合中文语言自身的特点，经常采用逆向匹配的切分算法，处理的精度高于正向匹配，产生的切分歧义现象也比较少。</p>
+<p>真正实用的分词系统，都是把词典分词作为基础搜狐段，集合各种语言的其他特征信息来提高切分的效果和准确度。有的实用系统中将分词和词性标注结合起来，利用句法和词法分析对分词决策提高帮助，在词性标注过程中迭代处理，利用词性和语法信息对分词结果进行检验、调整。</p>
+<h3><span id="语义理解分词法">语义理解分词法</span></h3><p>基本模式是把分词、句法、语义分析并行进行，利用句法和语义信息来处理分词的歧义。</p>
+<p>试验阶段</p>
+<h3><span id="词频统计分词法">词频统计分词法</span></h3><p>通过精心准备的中文语料中相邻共现的各个字的组合的频度进行统计，计算不同字词的共现信息。根据两个字的统计信息，计算两个汉字的相邻共现概率，统计出来的信息体现了中文环境下汉字之间结合的紧密程度。当紧密程度高于某一个阈值的时候，便可认为此字组可能构成一个词。</p>
+<p>基于词频统计的分词方法只需要对语料中的字组频度进行统计，不需要切分词典，因此又叫做无词典分词法或者统计分词方法。这种方法经常抽出一些共现程度高但不是词的常用字组，需要专门处理，提高精确度。实际应用的统计分词系统都是用一个基本的常用词词典，把字典分词和统计分词结合使用。基于统计的方法能很好地解决词典未收录新词的处理问题，即将中文分词中的串频统计和串匹配结合起来，既发挥匹配分词切分速度快、效率高的特点，有利用了无词典分词结合上下文识别生词、自动消除歧义的优点。</p>
+<hr>
+<h2><span id="倒排索引">倒排索引</span></h2><p>倒排索引，也常被成为反向索引，是一种索引方法，用来存储在全文搜索下某一个单词在一个文档或者一组文档中的存储位置的映射，他是文档检索系统中最常用的数据结构。</p>
+<h2><span id="布尔检索模型">布尔检索模型</span></h2><p>NOT &gt; AND &gt; OR</p>
+<p>优点：</p>
+<ul>
+<li>与人们的思维习惯一致</li>
+<li>表达清晰直观</li>
+<li>方便用户进行扩展和检索</li>
+<li>易于计算机实现</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>二元判定标准，缺乏文档分级的概念，不能进行关键词重要性排序，限制了检索功能</li>
+<li>没有反应概念之间内在的语义联系。所有的语义关系都被简单的匹配代替，常常很难将用户的信息需求转换为准确的布尔表达式</li>
+<li>完全匹配会导致太少的结果文档被返回，没有加权的概念，容易出现遗漏</li>
+</ul>
+<h2><span id="tf-idf权重计算">tf-idf权重计算</span></h2><p>tf-idf中文成为词频-逆文档频率，用以计算词项对于一个文档集或一个语料库中的一份文件的重要程度。<strong>词项的重要性随着它在文档中出现的次数成正比增加，但同时会随着它在文档集中出现的频率成反比下降</strong>。换句话说，如果一个词项在一篇文档中出现的频率非常高，说明其重要性比较高，但是如果这个词项在文档集中的其他的文档中出现的频率也很高，那么说明这个词语有可能是比较通用比较常见的。</p>
+<p>tf(term frequency)代表词项频率，想要计算一份文档中某个词的词频，统计该词在整篇文档中出现的次数即可。文档有长短之分，举个栗子，一篇3000字的文章中词语 足球 出现了3次，我们很难断定这篇文章是和足球相关的，但是一篇140字的微博中同样出现3次 足球 ，基本可以断定微博内容和足球有关。为了削弱文档长度的影响，需要将词频标准化，计算方法如下：</p>
+<script type="math/tex; mode=display">词频(tf_f,d)=单词在文档中的出现次数/文档的总次数</script><p>另外，词频标准化的方法不止一种，Lucene中采用了另外一种词频标准化方法：</p>
+<script type="math/tex; mode=display">词频(tf_f,d)=单词在文档中的出现次数</script><p>文档频率用df（document frequency）标识，代表文档集中包含某个词的所有文档数目。df通常比较大，把它映射到一个较小的取值范围，用逆文档频率（inverse document frequency，缩写为idf）来表示：</p>
+<script type="math/tex; mode=display">逆文档频率（idf_t）= log(文档集总的文档树/包含某个词的文档数+1) = log(N/df_t +1)</script><p>上面的式子中，分母越大，说明该词越常见，逆文档频率越小。分母中文档数加1是进行平滑处理，防止所有文档都不包含某个词时分母为0的情况发生。词项的权重用TF-IDF来表示，计算公式如下：</p>
+<script type="math/tex; mode=display">tf-idf = 词频(tf_t,d) * 逆文档频率(idf_t)</script><p>通过tf-idf可以把文档表示成n维的词项权重向量：</p>
+<script type="math/tex; mode=display">document vector = (W_1,W_2, ...W_n)</script><p>计算词项的tf-idf的Java如下所示，在TfIdfCal类中依次定义了计算词项频率tf，文档频率df，逆文档频率idf、tf-idf的方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TfIdfCal</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">double</span> <span class="title">tf</span><span class="params">(List&lt;String&gt; doc, String term)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">double</span> termFrequency = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span> (String str : doc) &#123;</span><br><span class="line">            <span class="keyword">if</span> (str.equalsIgnoreCase(term))</span><br><span class="line">                termFrequency++;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> termFrequency / doc.size();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">df</span><span class="params">(List&lt;List&lt;String&gt;&gt; docs, String term)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> n = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">if</span> (term != <span class="keyword">null</span> &amp;&amp; term != <span class="string">""</span>) &#123;</span><br><span class="line">            <span class="keyword">for</span> (List&lt;String&gt; doc : docs) &#123;</span><br><span class="line">                <span class="keyword">for</span> (String word : doc) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (term.equalsIgnoreCase(word)) &#123;</span><br><span class="line">                        n++;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            System.out.println(<span class="string">"term不能为null或者空字符串！"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> n;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">double</span> <span class="title">idf</span><span class="params">(List&lt;List&lt;String&gt;&gt; docs, String term)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> Math.log(docs.size() / (<span class="keyword">double</span>) df(docs, term) + <span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">double</span> <span class="title">tfidf</span><span class="params">(List&lt;String&gt; doc, List&lt;List&lt;String&gt;&gt; docs, String term)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> tf(doc, term) * idf(docs, term);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        List&lt;String&gt; doc1 = Arrays.asList(<span class="string">"人工"</span>, <span class="string">"智能"</span>, <span class="string">"成为"</span>, <span class="string">"互联网"</span>, <span class="string">"大会"</span>, <span class="string">"焦点"</span>);</span><br><span class="line">        List&lt;String&gt; doc2 = Arrays.asList(<span class="string">"谷歌"</span>, <span class="string">"推出"</span>, <span class="string">"开源"</span>, <span class="string">"人工"</span>, <span class="string">"智能"</span>, <span class="string">"系统"</span>, <span class="string">"工具"</span>);</span><br><span class="line">        List&lt;String&gt; doc3 = Arrays.asList(<span class="string">"互联网"</span>, <span class="string">"的"</span>, <span class="string">"未来"</span>, <span class="string">"在"</span>, <span class="string">"人工"</span>, <span class="string">"智能"</span>);</span><br><span class="line">        List&lt;String&gt; doc4 = Arrays.asList(<span class="string">"谷歌"</span>, <span class="string">"开源"</span>, <span class="string">"机器"</span>, <span class="string">"学习"</span>, <span class="string">"工具"</span>);</span><br><span class="line">        TfIdfCal calculator = <span class="keyword">new</span> TfIdfCal();</span><br><span class="line">        List&lt;List&lt;String&gt;&gt; documents = Arrays.asList(doc1, doc2, doc3, doc4);</span><br><span class="line">        System.out.println(calculator.tf(doc2, <span class="string">"谷歌"</span>));</span><br><span class="line">        System.out.println(calculator.df(documents, <span class="string">"谷歌"</span>));</span><br><span class="line">        <span class="keyword">double</span> tfidf = calculator.tfidf(doc2, documents, <span class="string">"谷歌"</span>);</span><br><span class="line">        System.out.println(<span class="string">"TF-IDF（谷歌）= "</span> + tfidf);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2><span id="向量空间模型">向量空间模型</span></h2>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/搜索引擎/" rel="tag"># 搜索引擎</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+                <a href="/2021/03/10/Book Nodes/RabbitMQ实战指南/2021-03-10-进阶/" rel="next" title="RabbitMQ 进阶概念">
+                  <i class="fa fa-chevron-left"></i> RabbitMQ 进阶概念
+                </a>
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+            </div>
+          </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">1.</span> <span class="nav-text">分词算法概述</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">1.1.</span> <span class="nav-text">英文分词的原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#null"><span class="nav-number">1.2.</span> <span class="nav-text">中文分词原理</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">2.</span> <span class="nav-text">词典匹配分词法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">3.</span> <span class="nav-text">语义理解分词法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#null"><span class="nav-number">4.</span> <span class="nav-text">词频统计分词法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#null"><span class="nav-number"></span> <span class="nav-text">倒排索引</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#null"><span class="nav-number"></span> <span class="nav-text">布尔检索模型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#null"><span class="nav-number"></span> <span class="nav-text">tf-idf权重计算</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#null"><span class="nav-number"></span> <span class="nav-text">向量空间模型</span></a></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <img class="site-author-image" itemprop="image" alt="温海林"
+    src="/uploads/images/fbb1.jpg">
+  <p class="site-author-name" itemprop="name">温海林</p>
+  <div class="site-description" itemprop="description">Fake it, make it!</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">100</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/wenslo" title="GitHub &rarr; https://github.com/wenslo" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/564544234@qq.com" title="E-Mail &rarr; 564544234@qq.com"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/null" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">温海林</span>
+</div>
+  <div class="theme-info">主题 – <a href="https://pisces.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.4.2
+  </div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>
